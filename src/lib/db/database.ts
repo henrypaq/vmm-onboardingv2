@@ -1,40 +1,53 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 
+// Database interfaces matching the SQL schema
+export interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'client';
+  full_name?: string;
+  company_name?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Client {
   id: string;
-  name: string;
+  admin_id: string;
   email: string;
-  company?: string;
-  status: 'active' | 'inactive' | 'pending';
+  full_name?: string;
+  company_name?: string;
+  status: 'active' | 'inactive' | 'suspended';
+  last_onboarding_at?: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface OnboardingLink {
   id: string;
-  client_id: string;
+  admin_id: string;
   token: string;
+  platforms: string[];
+  requested_permissions: Record<string, string[]>;
   expires_at: string;
-  is_used: boolean;
-  used_at?: string;
-  created_at: string;
-  created_by: string; // admin user id
-  platforms: string[]; // ['meta', 'google', 'tiktok', 'shopify']
-  requested_permissions: Record<string, string[]>; // { platform: [permissions] }
   status: 'pending' | 'in_progress' | 'completed' | 'expired';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface OnboardingRequest {
   id: string;
-  client_id: string;
   link_id: string;
+  client_id?: string;
+  client_email?: string;
+  client_name?: string;
+  company_name?: string;
+  granted_permissions: Record<string, string[]>;
+  platform_connections: Record<string, any>;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
-  granted_permissions: Record<string, string[]>; // { platform: [granted_permissions] }
-  platform_connections: Record<string, any>; // { platform: connection_data }
-  data: Record<string, any>;
   submitted_at?: string;
-  completed_at?: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface AdminPlatformConnection {
@@ -42,7 +55,7 @@ export interface AdminPlatformConnection {
   admin_id: string;
   platform: 'meta' | 'google' | 'tiktok' | 'shopify';
   platform_user_id: string;
-  platform_username: string;
+  platform_username?: string;
   access_token: string; // encrypted
   refresh_token?: string; // encrypted
   token_expires_at?: string;
@@ -52,11 +65,43 @@ export interface AdminPlatformConnection {
   updated_at: string;
 }
 
-// Database functions using Supabase
-export async function getClients(): Promise<Client[]> {
+// User functions
+export async function getUser(id: string): Promise<User | null> {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching user:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .insert([user])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating user:', error);
+    throw new Error('Failed to create user');
+  }
+
+  return data;
+}
+
+// Client functions
+export async function getClients(adminId: string): Promise<Client[]> {
   const { data, error } = await supabaseAdmin
     .from('clients')
     .select('*')
+    .eq('admin_id', adminId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -97,10 +142,28 @@ export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'u
   return data;
 }
 
-export async function getOnboardingLinks(): Promise<OnboardingLink[]> {
+export async function updateClient(id: string, updates: Partial<Client>): Promise<Client> {
+  const { data, error } = await supabaseAdmin
+    .from('clients')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating client:', error);
+    throw new Error('Failed to update client');
+  }
+
+  return data;
+}
+
+// Onboarding Link functions
+export async function getOnboardingLinks(adminId: string): Promise<OnboardingLink[]> {
   const { data, error } = await supabaseAdmin
     .from('onboarding_links')
     .select('*')
+    .eq('admin_id', adminId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -111,7 +174,7 @@ export async function getOnboardingLinks(): Promise<OnboardingLink[]> {
   return data || [];
 }
 
-export async function createOnboardingLink(link: Omit<OnboardingLink, 'id' | 'created_at'>): Promise<OnboardingLink> {
+export async function createOnboardingLink(link: Omit<OnboardingLink, 'id' | 'created_at' | 'updated_at'>): Promise<OnboardingLink> {
   const { data, error } = await supabaseAdmin
     .from('onboarding_links')
     .insert([link])
@@ -141,11 +204,34 @@ export async function getOnboardingLinkByToken(token: string): Promise<Onboardin
   return data;
 }
 
-export async function getOnboardingRequests(): Promise<OnboardingRequest[]> {
+export async function updateOnboardingLink(id: string, updates: Partial<OnboardingLink>): Promise<OnboardingLink> {
   const { data, error } = await supabaseAdmin
+    .from('onboarding_links')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating onboarding link:', error);
+    throw new Error('Failed to update onboarding link');
+  }
+
+  return data;
+}
+
+// Onboarding Request functions
+export async function getOnboardingRequests(linkId?: string): Promise<OnboardingRequest[]> {
+  let query = supabaseAdmin
     .from('onboarding_requests')
     .select('*')
     .order('created_at', { ascending: false });
+
+  if (linkId) {
+    query = query.eq('link_id', linkId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching onboarding requests:', error);
@@ -155,7 +241,7 @@ export async function getOnboardingRequests(): Promise<OnboardingRequest[]> {
   return data || [];
 }
 
-export async function createOnboardingRequest(request: Omit<OnboardingRequest, 'id' | 'created_at'>): Promise<OnboardingRequest> {
+export async function createOnboardingRequest(request: Omit<OnboardingRequest, 'id' | 'created_at' | 'updated_at'>): Promise<OnboardingRequest> {
   const { data, error } = await supabaseAdmin
     .from('onboarding_requests')
     .insert([request])
@@ -181,22 +267,6 @@ export async function updateOnboardingRequest(id: string, updates: Partial<Onboa
   if (error) {
     console.error('Error updating onboarding request:', error);
     throw new Error('Failed to update onboarding request');
-  }
-
-  return data;
-}
-
-export async function updateOnboardingLink(id: string, updates: Partial<OnboardingLink>): Promise<OnboardingLink> {
-  const { data, error } = await supabaseAdmin
-    .from('onboarding_links')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating onboarding link:', error);
-    throw new Error('Failed to update onboarding link');
   }
 
   return data;
@@ -259,5 +329,20 @@ export async function deleteAdminPlatformConnection(id: string): Promise<void> {
   if (error) {
     console.error('Error deleting admin platform connection:', error);
     throw new Error('Failed to delete platform connection');
+  }
+}
+
+// Utility functions
+export async function checkDatabaseConnection(): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('count')
+      .limit(1);
+
+    return !error;
+  } catch (err) {
+    console.error('Database connection check failed:', err);
+    return false;
   }
 }
