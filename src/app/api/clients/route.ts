@@ -1,0 +1,49 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getClients, createClient } from '@/lib/db/database';
+import { requireAuth } from '@/lib/auth/auth';
+
+export async function GET(request: NextRequest) {
+  try {
+    // TODO: Implement proper authentication
+    // const session = await requireAuth('admin');
+    
+    const clients = await getClients();
+    
+    return NextResponse.json({ clients });
+  } catch (error) {
+    console.error('Get clients error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch clients' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // TODO: Implement proper authentication
+    // const session = await requireAuth('admin');
+    
+    const clientData = await request.json();
+    
+    if (!clientData.name || !clientData.email) {
+      return NextResponse.json(
+        { error: 'Name and email are required' },
+        { status: 400 }
+      );
+    }
+
+    const client = await createClient({
+      ...clientData,
+      status: 'active',
+    });
+    
+    return NextResponse.json({ client });
+  } catch (error) {
+    console.error('Create client error:', error);
+    return NextResponse.json(
+      { error: 'Failed to create client' },
+      { status: 500 }
+    );
+  }
+}
