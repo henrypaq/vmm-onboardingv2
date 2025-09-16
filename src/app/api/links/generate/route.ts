@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       token: generatedLink.token,
       platforms: [], // TODO: Get from request
       requested_permissions: {}, // TODO: Get from request
-      expires_at: generatedLink.expiresAt,
+      expires_at: generatedLink.expiresAt.toISOString(),
       status: 'pending',
     });
 
