@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Save, Bell, Shield, Globe } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 import { OAuthConnectionCard } from '@/components/oauth/oauth-connection-card';
-import { getAdminPlatformConnections } from '@/lib/db/database';
+// Removed direct database import - using API route instead
 
 export default function AdminSettingsPage() {
   const platforms = getAllPlatforms();
@@ -21,10 +21,13 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     const loadConnectedPlatforms = async () => {
       try {
-        // For now, use hardcoded admin ID - in production, get from session
-        const adminId = '00000000-0000-0000-0000-000000000001';
-        const connections = await getAdminPlatformConnections(adminId);
-        setConnectedPlatforms(connections.map(conn => conn.platform));
+        const response = await fetch('/api/admin/platform-connections');
+        if (response.ok) {
+          const data = await response.json();
+          setConnectedPlatforms(data.connections.map((conn: any) => conn.platform));
+        } else {
+          console.error('Failed to load platform connections');
+        }
       } catch (error) {
         console.error('Error loading platform connections:', error);
       } finally {

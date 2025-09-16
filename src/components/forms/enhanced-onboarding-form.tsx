@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ClientOAuthButton } from '@/components/oauth/client-oauth-button';
 import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
-import { getOnboardingRequestByLinkId } from '@/lib/db/database';
+// Removed direct database import - using API route instead
 
 interface OnboardingFormProps {
   token: string;
@@ -32,15 +32,18 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   useEffect(() => {
     const loadOnboardingData = async () => {
       try {
-        const request = await getOnboardingRequestByLinkId(token);
-        if (request) {
-          setFormData({
-            name: request.client_name || '',
-            email: request.client_email || '',
-            company: request.company_name || '',
-          });
-          setSelectedPermissions(Object.values(request.granted_permissions).flat());
-          setConnectedPlatforms(Object.keys(request.platform_connections || {}));
+        const response = await fetch(`/api/onboarding/request?token=${token}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.request) {
+            setFormData({
+              name: data.request.client_name || '',
+              email: data.request.client_email || '',
+              company: data.request.company_name || '',
+            });
+            setSelectedPermissions(Object.values(data.request.granted_permissions || {}).flat());
+            setConnectedPlatforms(Object.keys(data.request.platform_connections || {}));
+          }
         }
       } catch (error) {
         console.error('Error loading onboarding data:', error);
