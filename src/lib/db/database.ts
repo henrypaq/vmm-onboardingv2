@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 // Database interfaces matching the SQL schema
 export interface User {
