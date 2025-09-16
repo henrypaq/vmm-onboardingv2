@@ -1,39 +1,43 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Save, Bell, Shield, Globe, Users, Search, Video, ShoppingBag, Plus, Trash2 } from 'lucide-react';
+import { Save, Bell, Shield, Globe } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
+import { OAuthConnectionCard } from '@/components/oauth/oauth-connection-card';
+import { getAdminPlatformConnections } from '@/lib/db/database';
 
 export default function AdminSettingsPage() {
   const platforms = getAllPlatforms();
-  
-  // Mock connected platforms - replace with real data from API
-  const connectedPlatforms = [
-    { id: 'meta', name: 'Meta (Facebook)', username: 'admin@company.com', status: 'connected' },
-    { id: 'google', name: 'Google', username: 'admin@company.com', status: 'connected' },
-  ];
+  const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const getPlatformIcon = (platformId: string) => {
-    switch (platformId) {
-      case 'meta': return <Users className="h-5 w-5" />;
-      case 'google': return <Search className="h-5 w-5" />;
-      case 'tiktok': return <Video className="h-5 w-5" />;
-      case 'shopify': return <ShoppingBag className="h-5 w-5" />;
-      default: return <Globe className="h-5 w-5" />;
-    }
-  };
+  // Load connected platforms on component mount
+  useEffect(() => {
+    const loadConnectedPlatforms = async () => {
+      try {
+        // For now, use hardcoded admin ID - in production, get from session
+        const adminId = '00000000-0000-0000-0000-000000000001';
+        const connections = await getAdminPlatformConnections(adminId);
+        setConnectedPlatforms(connections.map(conn => conn.platform));
+      } catch (error) {
+        console.error('Error loading platform connections:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const getPlatformColor = (platformId: string) => {
-    switch (platformId) {
-      case 'meta': return 'bg-blue-600';
-      case 'google': return 'bg-red-600';
-      case 'tiktok': return 'bg-black';
-      case 'shopify': return 'bg-green-600';
-      default: return 'bg-gray-600';
-    }
+    loadConnectedPlatforms();
+  }, []);
+
+  const handleConnect = (platformId: string) => {
+    // Redirect to OAuth flow
+    window.location.href = `/api/oauth/admin/connect/${platformId}`;
   };
 
   return (
@@ -57,60 +61,15 @@ export default function AdminSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {platforms.map((platform) => {
-                const isConnected = connectedPlatforms.some(p => p.id === platform.id);
-                return (
-                  <div key={platform.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg ${getPlatformColor(platform.id)} text-white`}>
-                          {getPlatformIcon(platform.id)}
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{platform.name}</h3>
-                          {isConnected && (
-                            <p className="text-sm text-gray-500">
-                              Connected as {connectedPlatforms.find(p => p.id === platform.id)?.username}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {isConnected ? (
-                          <>
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              Connected
-                            </Badge>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <Button size="sm" className="flex items-center space-x-2">
-                            <Plus className="h-4 w-4" />
-                            <span>Connect</span>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p className="mb-2">Available permissions:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {platform.permissions.slice(0, 3).map((permission) => (
-                          <Badge key={permission.id} variant="secondary" className="text-xs">
-                            {permission.name}
-                          </Badge>
-                        ))}
-                        {platform.permissions.length > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{platform.permissions.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {platforms.map((platform) => (
+                <OAuthConnectionCard
+                  key={platform.id}
+                  platform={platform}
+                  isConnected={connectedPlatforms.includes(platform.id)}
+                  onConnect={handleConnect}
+                  isLoading={isLoading}
+                />
+              ))}
             </div>
           </CardContent>
         </Card>

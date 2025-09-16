@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { OnboardingForm } from '@/components/forms/onboarding-form';
+import { EnhancedOnboardingForm } from '@/components/forms/enhanced-onboarding-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -115,7 +115,7 @@ export default function OnboardingPage() {
           </p>
         </div>
         
-        <OnboardingForm 
+        <EnhancedOnboardingForm 
           token={token}
           onSubmissionComplete={handleSubmissionComplete}
         />

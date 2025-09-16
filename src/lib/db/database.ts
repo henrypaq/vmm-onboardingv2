@@ -241,6 +241,34 @@ export async function getOnboardingRequests(linkId?: string): Promise<Onboarding
   return data || [];
 }
 
+export async function getOnboardingRequestByLinkId(token: string): Promise<OnboardingRequest | null> {
+  // First get the link by token
+  const { data: link, error: linkError } = await supabaseAdmin
+    .from('onboarding_links')
+    .select('id')
+    .eq('token', token)
+    .single();
+
+  if (linkError || !link) {
+    console.error('Error fetching onboarding link by token:', linkError);
+    return null;
+  }
+
+  // Then get the onboarding request by link_id
+  const { data, error } = await supabaseAdmin
+    .from('onboarding_requests')
+    .select('*')
+    .eq('link_id', link.id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching onboarding request by link ID:', error);
+    return null;
+  }
+
+  return data;
+}
+
 export async function createOnboardingRequest(request: Omit<OnboardingRequest, 'id' | 'created_at' | 'updated_at'>): Promise<OnboardingRequest> {
   const { data, error } = await supabaseAdmin
     .from('onboarding_requests')

@@ -58,7 +58,7 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
     name: 'Google',
     icon: 'Search',
     color: 'bg-red-600',
-    oauthScopes: ['analytics_read', 'ads_read', 'search_console', 'youtube_read'],
+    oauthScopes: ['https://www.googleapis.com/auth/analytics.readonly', 'https://www.googleapis.com/auth/adwords'],
     permissions: [
       {
         id: 'analytics_read',
