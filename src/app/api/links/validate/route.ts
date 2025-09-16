@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const isValid = isLinkValid(link.expiresAt, link.isUsed);
+    // Check if link has expired
+    const expiresAt = new Date(link.expires_at);
+    const isValid = isLinkValid(expiresAt, link.status === 'completed');
     
     if (!isValid) {
       return NextResponse.json(
@@ -34,8 +36,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       valid: true,
-      clientId: link.clientId,
-      expiresAt: link.expiresAt,
+      adminId: link.admin_id,
+      expiresAt: link.expires_at,
     });
   } catch (error) {
     console.error('Link validation error:', error);
