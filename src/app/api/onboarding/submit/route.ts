@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (link.isUsed) {
+    if (link.status === 'completed') {
       return NextResponse.json(
         { error: 'Link has already been used' },
         { status: 410 }
@@ -32,17 +32,24 @@ export async function POST(request: NextRequest) {
 
     // Create the onboarding request
     const onboardingRequest = await createOnboardingRequest({
-      clientId: link.clientId,
-      linkId: link.id,
+      link_id: link.id,
+      client_id: undefined, // Will be set when client connects
+      client_email: data?.email,
+      client_name: data?.name,
+      company_name: data?.company,
+      granted_permissions: permissions.reduce((acc: Record<string, string[]>, perm: string) => {
+        const [platform, scope] = perm.split(':');
+        if (!acc[platform]) acc[platform] = [];
+        acc[platform].push(scope);
+        return acc;
+      }, {}),
+      platform_connections: {},
       status: 'pending',
-      permissions,
-      data: data || {},
     });
 
-    // Mark the link as used
+    // Mark the link as completed
     await updateOnboardingLink(link.id, {
-      isUsed: true,
-      usedAt: new Date(),
+      status: 'completed',
     });
 
     return NextResponse.json({
