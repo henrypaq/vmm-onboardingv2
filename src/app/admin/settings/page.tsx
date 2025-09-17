@@ -58,10 +58,24 @@ export default function AdminSettingsPage() {
     // Check for OAuth callback success and refresh connections
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('connected') && urlParams.get('success')) {
+      const platform = urlParams.get('connected');
+      const username = urlParams.get('username');
+      console.log(`OAuth success for ${platform} as ${username}`);
+      
       // Refresh connections after successful OAuth
       setTimeout(() => {
         fetchConnections();
       }, 1000);
+      
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('error')) {
+      const error = urlParams.get('error');
+      const platform = urlParams.get('platform');
+      console.error(`OAuth error for ${platform}: ${error}`);
+      
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 

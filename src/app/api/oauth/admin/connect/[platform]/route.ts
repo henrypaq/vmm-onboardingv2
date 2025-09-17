@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { exchangeCodeForToken, fetchPlatformUserInfo, storePlatformConnection } from '@/lib/oauth/oauth-utils';
 
 // Admin OAuth connection endpoints
 // These will be used when admins connect their platform accounts in the settings
@@ -16,18 +17,34 @@ export async function GET(
   // Handle OAuth callback
   if (code) {
     try {
-      // TODO: Exchange code for access token using platform-specific APIs
-      // For now, we'll simulate a successful connection
-      
-      // TODO: Store admin platform connection in database using createAdminPlatformConnection
-      // This requires the access token, refresh token, scopes, and platform user info
-      
       console.log(`OAuth callback received for ${platform} with code: ${code}`);
       
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/admin/settings?connected=${platform}&success=true`);
+      // Get the redirect URI that was used for this OAuth flow
+      const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/admin/connect/${platform}`;
+      
+      // Exchange code for access token
+      const tokenResponse = await exchangeCodeForToken(platform, code, redirectUri);
+      console.log(`Token exchange successful for ${platform}`);
+      
+      // Fetch user information from the platform
+      const userInfo = await fetchPlatformUserInfo(platform, tokenResponse.access_token);
+      console.log(`User info fetched for ${platform}:`, userInfo);
+      
+      // Define scopes based on platform
+      const scopes = getScopesForPlatform(platform);
+      
+      // TODO: Get real admin ID from authentication/session
+      // For now, using a mock admin ID - replace with real auth
+      const mockAdminId = '00000000-0000-0000-0000-000000000001';
+      
+      // Store the platform connection in the database
+      await storePlatformConnection(mockAdminId, platform, tokenResponse, userInfo, scopes);
+      console.log(`Platform connection stored for ${platform}`);
+      
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/admin/settings?connected=${platform}&success=true&username=${encodeURIComponent(userInfo.username || userInfo.name || 'Connected')}`);
     } catch (error) {
       console.error('OAuth error:', error);
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/admin/settings?error=oauth_failed`);
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/admin/settings?error=oauth_failed&platform=${platform}`);
     }
   }
 
@@ -40,7 +57,7 @@ export async function GET(
   // Initiate OAuth flow
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/admin/connect/${platform}`;
   
-  // TODO: Generate OAuth URLs based on platform
+  // Generate OAuth URLs based on platform
   let oauthUrl = '';
   
   switch (platform) {
@@ -60,5 +77,21 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid platform' }, { status: 400 });
   }
 
+  console.log(`Redirecting to OAuth URL for ${platform}:`, oauthUrl);
   return NextResponse.redirect(oauthUrl);
+}
+
+function getScopesForPlatform(platform: string): string[] {
+  switch (platform) {
+    case 'meta':
+      return ['pages_read_engagement', 'pages_manage_posts', 'ads_read', 'pages_show_list'];
+    case 'google':
+      return ['https://www.googleapis.com/auth/analytics.readonly', 'https://www.googleapis.com/auth/adwords'];
+    case 'tiktok':
+      return ['user.info.basic', 'video.list'];
+    case 'shopify':
+      return ['read_orders', 'read_products', 'read_customers'];
+    default:
+      return [];
+  }
 }
