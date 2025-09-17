@@ -23,6 +23,7 @@ interface PlatformConnection {
 export default function AdminSettingsPage() {
   const platforms = getAllPlatforms();
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Fetch platform connections from API
   const fetchConnections = async () => {
@@ -118,7 +119,13 @@ export default function AdminSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">Loading platform connections...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {platforms.map((platform) => {
                 const isConnected = connectedPlatforms.some(p => p.id === platform.id);
                 return (
@@ -199,7 +206,8 @@ export default function AdminSettingsPage() {
                   </div>
                 );
               })}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
         {/* General Settings */}
