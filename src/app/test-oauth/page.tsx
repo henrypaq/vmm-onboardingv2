@@ -3,6 +3,8 @@
 export default function TestOAuthPage() {
   const testMetaOAuth = () => {
     console.log('Testing Meta OAuth...');
+    console.log('Current URL:', window.location.href);
+    console.log('Redirecting to:', '/api/oauth/admin/connect/meta');
     window.location.href = '/api/oauth/admin/connect/meta';
   };
 
@@ -40,6 +42,19 @@ export default function TestOAuthPage() {
           <li>After login, should redirect back to admin settings</li>
           <li>Check browser console for any errors</li>
         </ol>
+        
+        <div className="mt-4 p-4 bg-blue-50 rounded">
+          <h3 className="font-bold mb-2">Direct Link Test:</h3>
+          <p className="mb-2">Try this direct link:</p>
+          <a 
+            href="/api/oauth/admin/connect/meta" 
+            className="text-blue-600 underline hover:text-blue-800"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Direct Meta OAuth Link
+          </a>
+        </div>
       </div>
     </div>
   );

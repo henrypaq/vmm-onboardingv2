@@ -181,7 +181,9 @@ export default function AdminSettingsPage() {
                             className="flex items-center space-x-2"
                             onClick={() => {
                               console.log(`Connecting to ${platform.name}...`);
-                              window.open(`/api/oauth/admin/connect/${platform.id}`, '_self');
+                              console.log(`Platform ID: ${platform.id}`);
+                              console.log(`OAuth URL: /api/oauth/admin/connect/${platform.id}`);
+                              window.location.href = `/api/oauth/admin/connect/${platform.id}`;
                             }}
                           >
                             <Plus className="h-4 w-4" />
