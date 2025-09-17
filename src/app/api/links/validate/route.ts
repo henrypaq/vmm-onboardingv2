@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOnboardingLinkByToken } from '@/lib/db/database';
-// import { updateOnboardingLink } from '@/lib/db/database';
 import { isLinkValid } from '@/lib/links/link-generator';
 
 export async function GET(request: NextRequest) {
