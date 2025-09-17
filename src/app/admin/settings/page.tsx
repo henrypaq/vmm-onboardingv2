@@ -33,20 +33,12 @@ export default function AdminSettingsPage() {
         const data = await response.json();
         setConnectedPlatforms(data.connections || []);
       } else {
-        console.error('Failed to fetch platform connections');
-        // Fallback to mock data for now
-        setConnectedPlatforms([
-          { id: 'meta', name: 'Meta (Facebook)', username: 'admin@company.com', status: 'connected', platform: 'meta', scopes: [], connectedAt: new Date().toISOString() },
-          { id: 'google', name: 'Google', username: 'admin@company.com', status: 'connected', platform: 'google', scopes: [], connectedAt: new Date().toISOString() },
-        ]);
+        console.error('Failed to fetch platform connections:', response.status);
+        setConnectedPlatforms([]);
       }
     } catch (error) {
       console.error('Error fetching platform connections:', error);
-      // Fallback to mock data for now
-      setConnectedPlatforms([
-        { id: 'meta', name: 'Meta (Facebook)', username: 'admin@company.com', status: 'connected', platform: 'meta', scopes: [], connectedAt: new Date().toISOString() },
-        { id: 'google', name: 'Google', username: 'admin@company.com', status: 'connected', platform: 'google', scopes: [], connectedAt: new Date().toISOString() },
-      ]);
+      setConnectedPlatforms([]);
     } finally {
       setLoading(false);
     }
@@ -155,21 +147,28 @@ export default function AdminSettingsPage() {
                               size="sm"
                               onClick={async () => {
                                 try {
+                                  console.log(`Disconnecting ${platform.name}...`);
                                   const response = await fetch(`/api/admin/platform-connections/${platform.id}`, {
                                     method: 'DELETE',
                                   });
                                   
                                   if (response.ok) {
+                                    const result = await response.json();
+                                    console.log(`${platform.name} disconnected successfully:`, result);
                                     // Remove from local state
                                     setConnectedPlatforms(prev => 
                                       prev.filter(conn => conn.id !== platform.id)
                                     );
-                                    console.log(`${platform.name} disconnected successfully`);
+                                    // Show success message
+                                    alert(`${platform.name} disconnected successfully!`);
                                   } else {
-                                    console.error('Failed to disconnect platform');
+                                    const errorData = await response.json();
+                                    console.error('Failed to disconnect platform:', errorData);
+                                    alert(`Failed to disconnect ${platform.name}: ${errorData.error || 'Unknown error'}`);
                                   }
                                 } catch (error) {
                                   console.error('Error disconnecting platform:', error);
+                                  alert(`Error disconnecting ${platform.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
                                 }
                               }}
                             >
@@ -180,7 +179,10 @@ export default function AdminSettingsPage() {
                           <Button 
                             size="sm" 
                             className="flex items-center space-x-2"
-                            onClick={() => window.open(`/api/oauth/admin/connect/${platform.id}`, '_self')}
+                            onClick={() => {
+                              console.log(`Connecting to ${platform.name}...`);
+                              window.open(`/api/oauth/admin/connect/${platform.id}`, '_self');
+                            }}
                           >
                             <Plus className="h-4 w-4" />
                             <span>Connect</span>
