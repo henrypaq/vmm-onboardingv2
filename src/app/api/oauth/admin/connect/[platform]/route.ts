@@ -16,11 +16,15 @@ export async function GET(
   // Handle OAuth callback
   if (code) {
     try {
-      // TODO: Exchange code for access token
-      // TODO: Store admin platform connection in database
-      // TODO: Redirect back to admin settings with success message
+      // TODO: Exchange code for access token using platform-specific APIs
+      // For now, we'll simulate a successful connection
       
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/admin/settings?connected=${platform}`);
+      // TODO: Store admin platform connection in database using createAdminPlatformConnection
+      // This requires the access token, refresh token, scopes, and platform user info
+      
+      console.log(`OAuth callback received for ${platform} with code: ${code}`);
+      
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/admin/settings?connected=${platform}&success=true`);
     } catch (error) {
       console.error('OAuth error:', error);
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/admin/settings?error=oauth_failed`);

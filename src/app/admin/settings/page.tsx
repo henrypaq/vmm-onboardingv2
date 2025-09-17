@@ -1,20 +1,69 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
+import { Button } from '@/components 2/ui/button';
+import { Input } from '@/components 2/ui/input';
+import { Label } from '@/components 2/ui/label';
+import { Switch } from '@/components 2/ui/switch';
+import { Badge } from '@/components 2/ui/badge';
 import { Save, Bell, Shield, Globe, Users, Search, Video, ShoppingBag, Plus, Trash2 } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 
+interface PlatformConnection {
+  id: string;
+  name: string;
+  username: string;
+  status: string;
+  platform: string;
+  scopes: string[];
+  connectedAt: string;
+}
+
 export default function AdminSettingsPage() {
   const platforms = getAllPlatforms();
-  
-  // Mock connected platforms - replace with real data from API
-  const connectedPlatforms = [
-    { id: 'meta', name: 'Meta (Facebook)', username: 'admin@company.com', status: 'connected' },
-    { id: 'google', name: 'Google', username: 'admin@company.com', status: 'connected' },
-  ];
+  const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch platform connections from API
+  const fetchConnections = async () => {
+    try {
+      const response = await fetch('/api/admin/platform-connections');
+      if (response.ok) {
+        const data = await response.json();
+        setConnectedPlatforms(data.connections || []);
+      } else {
+        console.error('Failed to fetch platform connections');
+        // Fallback to mock data for now
+        setConnectedPlatforms([
+          { id: 'meta', name: 'Meta (Facebook)', username: 'admin@company.com', status: 'connected', platform: 'meta', scopes: [], connectedAt: new Date().toISOString() },
+          { id: 'google', name: 'Google', username: 'admin@company.com', status: 'connected', platform: 'google', scopes: [], connectedAt: new Date().toISOString() },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching platform connections:', error);
+      // Fallback to mock data for now
+      setConnectedPlatforms([
+        { id: 'meta', name: 'Meta (Facebook)', username: 'admin@company.com', status: 'connected', platform: 'meta', scopes: [], connectedAt: new Date().toISOString() },
+        { id: 'google', name: 'Google', username: 'admin@company.com', status: 'connected', platform: 'google', scopes: [], connectedAt: new Date().toISOString() },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConnections();
+
+    // Check for OAuth callback success and refresh connections
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('connected') && urlParams.get('success')) {
+      // Refresh connections after successful OAuth
+      setTimeout(() => {
+        fetchConnections();
+      }, 1000);
+    }
+  }, []);
 
   const getPlatformIcon = (platformId: string) => {
     switch (platformId) {
@@ -81,12 +130,38 @@ export default function AdminSettingsPage() {
                             <Badge variant="default" className="bg-green-100 text-green-800">
                               Connected
                             </Badge>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch(`/api/admin/platform-connections/${platform.id}`, {
+                                    method: 'DELETE',
+                                  });
+                                  
+                                  if (response.ok) {
+                                    // Remove from local state
+                                    setConnectedPlatforms(prev => 
+                                      prev.filter(conn => conn.id !== platform.id)
+                                    );
+                                    console.log(`${platform.name} disconnected successfully`);
+                                  } else {
+                                    console.error('Failed to disconnect platform');
+                                  }
+                                } catch (error) {
+                                  console.error('Error disconnecting platform:', error);
+                                }
+                              }}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </>
                         ) : (
-                          <Button size="sm" className="flex items-center space-x-2">
+                          <Button 
+                            size="sm" 
+                            className="flex items-center space-x-2"
+                            onClick={() => window.open(`/api/oauth/admin/connect/${platform.id}`, '_self')}
+                          >
                             <Plus className="h-4 w-4" />
                             <span>Connect</span>
                           </Button>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { OnboardingForm } from '@/components/forms/onboarding-form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 interface LinkValidation {
