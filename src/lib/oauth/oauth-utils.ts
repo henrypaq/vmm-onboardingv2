@@ -21,8 +21,6 @@ export async function exchangeCodeForToken(
   code: string,
   redirectUri: string
 ): Promise<OAuthTokenResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  
   switch (platform) {
     case 'meta':
       return await exchangeMetaToken(code, redirectUri);
@@ -144,7 +142,7 @@ async function exchangeTikTokToken(code: string, redirectUri: string): Promise<O
   };
 }
 
-async function exchangeShopifyToken(code: string, redirectUri: string): Promise<OAuthTokenResponse> {
+async function exchangeShopifyToken(code: string, _redirectUri: string): Promise<OAuthTokenResponse> {
   const clientId = process.env.SHOPIFY_CLIENT_ID;
   const clientSecret = process.env.SHOPIFY_CLIENT_SECRET;
   const shopDomain = process.env.SHOPIFY_SHOP_DOMAIN;

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ClientOAuthButton } from '@/components/oauth/client-oauth-button';
-import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
+import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 // Removed direct database import - using API route instead
 
 interface OnboardingFormProps {

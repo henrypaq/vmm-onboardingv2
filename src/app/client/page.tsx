@@ -126,7 +126,7 @@ export default function ClientDashboardPage() {
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No requests yet</h3>
                     <p className="text-gray-600 mb-4">
-                      You haven't submitted any onboarding requests yet.
+                      You haven&apos;t submitted any onboarding requests yet.
                     </p>
                     <Button asChild>
                       <Link href="/client/requests">View Requests</Link>

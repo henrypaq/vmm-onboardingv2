@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeCodeForToken, fetchPlatformUserInfo } from '@/lib/oauth/oauth-utils';
-import { getPlatformDefinition } from '@/lib/platforms/platform-definitions';
 
 // Client OAuth connection endpoints
 // These will be used when clients connect their platform accounts during onboarding

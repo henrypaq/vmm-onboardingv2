@@ -23,7 +23,6 @@ interface PlatformConnection {
 export default function AdminSettingsPage() {
   const platforms = getAllPlatforms();
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Fetch platform connections from API
   const fetchConnections = async () => {
