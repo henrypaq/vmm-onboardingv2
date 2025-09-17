@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib 2/utils';
+import { Button } from '@/components 2/ui/button';
 import { 
   Users, 
   Link as LinkIcon, 

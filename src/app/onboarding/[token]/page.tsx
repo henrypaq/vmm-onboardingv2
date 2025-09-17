@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { EnhancedOnboardingForm } from '@/components/forms/enhanced-onboarding-form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { OnboardingForm } from '@/components/forms/onboarding-form';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 interface LinkValidation {
@@ -24,9 +24,9 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     validateLink();
-  }, [token]);
+  }, [token, validateLink]);
 
-  const validateLink = async () => {
+  const validateLink = useCallback(async () => {
     try {
       const response = await fetch(`/api/links/validate?token=${token}`);
       const data = await response.json();
@@ -41,7 +41,7 @@ export default function OnboardingPage() {
     } finally {
       setIsValidating(false);
     }
-  };
+  }, [token]);
 
   const handleSubmissionComplete = (newRequestId: string) => {
     setRequestId(newRequestId);
@@ -115,7 +115,7 @@ export default function OnboardingPage() {
           </p>
         </div>
         
-        <EnhancedOnboardingForm 
+        <OnboardingForm 
           token={token}
           onSubmissionComplete={handleSubmissionComplete}
         />

@@ -1,6 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
+import { Badge } from '@/components 2/ui/badge';
+import { Button } from '@/components 2/ui/button';
 import { CheckCircle, Clock, AlertCircle, Eye, Download } from 'lucide-react';
 
 export default function RequestsPage() {

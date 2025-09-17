@@ -7,7 +7,7 @@ import { Label } from '@/components 2/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
 import { Checkbox } from '@/components 2/ui/checkbox';
 import { Badge } from '@/components 2/ui/badge';
-import { Users, Search, Video, ShoppingBag, Plus, Minus } from 'lucide-react';
+import { Users, Search, Video, ShoppingBag } from 'lucide-react';
 import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
 
 interface EnhancedLinkGeneratorFormProps {

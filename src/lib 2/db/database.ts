@@ -43,7 +43,7 @@ export interface OnboardingRequest {
   client_name?: string;
   company_name?: string;
   granted_permissions: Record<string, string[]>;
-  platform_connections: Record<string, any>;
+  platform_connections: Record<string, unknown>;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
   submitted_at?: string;
   created_at: string;
@@ -335,7 +335,7 @@ export async function deleteAdminPlatformConnection(id: string): Promise<void> {
 // Utility functions
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('users')
       .select('count')
       .limit(1);

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components 2/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
+import { Checkbox } from '@/components 2/ui/checkbox';
+import { Label } from '@/components 2/ui/label';
 
 interface OnboardingFormProps {
   token: string;

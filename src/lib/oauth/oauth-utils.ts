@@ -1,32 +1,93 @@
-import { createAdminPlatformConnection, updateAdminPlatformConnection, getAdminPlatformConnections } from '@/lib/db/database';
-import { getOnboardingRequestByLinkId, updateOnboardingRequest } from '@/lib/db/database';
+import { createAdminPlatformConnection } from '@/lib 2/db/database';
 
 export interface OAuthTokenResponse {
   access_token: string;
   refresh_token?: string;
   expires_in?: number;
-  scope?: string;
   token_type?: string;
+  scope?: string;
 }
 
-export interface OAuthUserInfo {
+export interface PlatformUserInfo {
   id: string;
+  username?: string;
   name?: string;
   email?: string;
-  username?: string;
+  picture?: string;
 }
 
-// Google OAuth implementation
-export async function exchangeGoogleCodeForToken(code: string, redirectUri: string): Promise<OAuthTokenResponse> {
+export async function exchangeCodeForToken(
+  platform: string,
+  code: string,
+  redirectUri: string
+): Promise<OAuthTokenResponse> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  
+  switch (platform) {
+    case 'meta':
+      return await exchangeMetaToken(code, redirectUri);
+    case 'google':
+      return await exchangeGoogleToken(code, redirectUri);
+    case 'tiktok':
+      return await exchangeTikTokToken(code, redirectUri);
+    case 'shopify':
+      return await exchangeShopifyToken(code, redirectUri);
+    default:
+      throw new Error(`Unsupported platform: ${platform}`);
+  }
+}
+
+async function exchangeMetaToken(code: string, redirectUri: string): Promise<OAuthTokenResponse> {
+  const clientId = process.env.META_APP_ID;
+  const clientSecret = process.env.META_APP_SECRET;
+  
+  if (!clientId || !clientSecret) {
+    throw new Error('Meta OAuth credentials not configured');
+  }
+
+  const response = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      code: code,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Meta token exchange failed: ${error}`);
+  }
+
+  const data = await response.json();
+  return {
+    access_token: data.access_token,
+    expires_in: data.expires_in,
+    token_type: data.token_type,
+  };
+}
+
+async function exchangeGoogleToken(code: string, redirectUri: string): Promise<OAuthTokenResponse> {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  
+  if (!clientId || !clientSecret) {
+    throw new Error('Google OAuth credentials not configured');
+  }
+
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      code: code,
       grant_type: 'authorization_code',
       redirect_uri: redirectUri,
     }),
@@ -34,58 +95,110 @@ export async function exchangeGoogleCodeForToken(code: string, redirectUri: stri
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Google OAuth token exchange failed: ${error}`);
-  }
-
-  return response.json();
-}
-
-export async function getGoogleUserInfo(accessToken: string): Promise<OAuthUserInfo> {
-  const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch Google user info');
+    throw new Error(`Google token exchange failed: ${error}`);
   }
 
   const data = await response.json();
   return {
-    id: data.id,
-    name: data.name,
-    email: data.email,
-    username: data.email,
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_in: data.expires_in,
+    token_type: data.token_type,
+    scope: data.scope,
   };
 }
 
-// Meta OAuth implementation
-export async function exchangeMetaCodeForToken(code: string, redirectUri: string): Promise<OAuthTokenResponse> {
-  const response = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
+async function exchangeTikTokToken(code: string, redirectUri: string): Promise<OAuthTokenResponse> {
+  const clientKey = process.env.TIKTOK_CLIENT_KEY;
+  const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+  
+  if (!clientKey || !clientSecret) {
+    throw new Error('TikTok OAuth credentials not configured');
+  }
+
+  const response = await fetch('https://open-api.tiktok.com/oauth/access_token/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
-      client_id: process.env.META_APP_ID!,
-      client_secret: process.env.META_APP_SECRET!,
-      code,
+      client_key: clientKey,
+      client_secret: clientSecret,
+      code: code,
+      grant_type: 'authorization_code',
       redirect_uri: redirectUri,
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Meta OAuth token exchange failed: ${error}`);
+    throw new Error(`TikTok token exchange failed: ${error}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  return {
+    access_token: data.data.access_token,
+    expires_in: data.data.expires_in,
+    token_type: data.data.token_type,
+    scope: data.data.scope,
+  };
 }
 
-export async function getMetaUserInfo(accessToken: string): Promise<OAuthUserInfo> {
-  const response = await fetch(`https://graph.facebook.com/v18.0/me?access_token=${accessToken}&fields=id,name,email`);
+async function exchangeShopifyToken(code: string, redirectUri: string): Promise<OAuthTokenResponse> {
+  const clientId = process.env.SHOPIFY_CLIENT_ID;
+  const clientSecret = process.env.SHOPIFY_CLIENT_SECRET;
+  const shopDomain = process.env.SHOPIFY_SHOP_DOMAIN;
+  
+  if (!clientId || !clientSecret || !shopDomain) {
+    throw new Error('Shopify OAuth credentials not configured');
+  }
 
+  const response = await fetch(`https://${shopDomain}.myshopify.com/admin/oauth/access_token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code: code,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Shopify token exchange failed: ${error}`);
+  }
+
+  const data = await response.json();
+  return {
+    access_token: data.access_token,
+    expires_in: data.expires_in,
+    scope: data.scope,
+  };
+}
+
+export async function fetchPlatformUserInfo(
+  platform: string,
+  accessToken: string
+): Promise<PlatformUserInfo> {
+  switch (platform) {
+    case 'meta':
+      return await fetchMetaUserInfo(accessToken);
+    case 'google':
+      return await fetchGoogleUserInfo(accessToken);
+    case 'tiktok':
+      return await fetchTikTokUserInfo(accessToken);
+    case 'shopify':
+      return await fetchShopifyUserInfo(accessToken);
+    default:
+      throw new Error(`Unsupported platform: ${platform}`);
+  }
+}
+
+async function fetchMetaUserInfo(accessToken: string): Promise<PlatformUserInfo> {
+  const response = await fetch(`https://graph.facebook.com/v18.0/me?access_token=${accessToken}&fields=id,name,email`);
+  
   if (!response.ok) {
     throw new Error('Failed to fetch Meta user info');
   }
@@ -95,146 +208,94 @@ export async function getMetaUserInfo(accessToken: string): Promise<OAuthUserInf
     id: data.id,
     name: data.name,
     email: data.email,
-    username: data.name,
   };
 }
 
-// Admin OAuth flow - store platform connection
-export async function handleAdminOAuthCallback(
-  platform: string,
-  code: string,
-  redirectUri: string,
-  adminId: string,
-  scopes: string[]
-): Promise<void> {
-  let tokenResponse: OAuthTokenResponse;
-  let userInfo: OAuthUserInfo;
-
-  // Exchange code for token and get user info
-  switch (platform) {
-    case 'google':
-      tokenResponse = await exchangeGoogleCodeForToken(code, redirectUri);
-      userInfo = await getGoogleUserInfo(tokenResponse.access_token);
-      break;
-    case 'meta':
-      tokenResponse = await exchangeMetaCodeForToken(code, redirectUri);
-      userInfo = await getMetaUserInfo(tokenResponse.access_token);
-      break;
-    default:
-      throw new Error(`Unsupported platform: ${platform}`);
-  }
-
-  // Check if connection already exists
-  const existingConnections = await getAdminPlatformConnections(adminId);
-  const existingConnection = existingConnections.find(conn => 
-    conn.platform === platform && conn.platform_user_id === userInfo.id
-  );
-
-  const connectionData = {
-    admin_id: adminId,
-    platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
-    platform_user_id: userInfo.id,
-    platform_username: userInfo.username || userInfo.name,
-    access_token: tokenResponse.access_token, // In production, encrypt this
-    refresh_token: tokenResponse.refresh_token,
-    token_expires_at: tokenResponse.expires_in 
-      ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
-      : undefined,
-    scopes,
-    is_active: true,
-  };
-
-  if (existingConnection) {
-    // Update existing connection
-    await updateAdminPlatformConnection(existingConnection.id, connectionData);
-  } else {
-    // Create new connection
-    await createAdminPlatformConnection(connectionData);
-  }
-}
-
-// Client OAuth flow - store in onboarding request
-export async function handleClientOAuthCallback(
-  platform: string,
-  code: string,
-  redirectUri: string,
-  token: string,
-  scopes: string[]
-): Promise<void> {
-  let tokenResponse: OAuthTokenResponse;
-  let userInfo: OAuthUserInfo;
-
-  // Exchange code for token and get user info
-  switch (platform) {
-    case 'google':
-      tokenResponse = await exchangeGoogleCodeForToken(code, redirectUri);
-      userInfo = await getGoogleUserInfo(tokenResponse.access_token);
-      break;
-    case 'meta':
-      tokenResponse = await exchangeMetaCodeForToken(code, redirectUri);
-      userInfo = await getMetaUserInfo(tokenResponse.access_token);
-      break;
-    default:
-      throw new Error(`Unsupported platform: ${platform}`);
-  }
-
-  // Get the onboarding request for this token
-  const onboardingRequest = await getOnboardingRequestByLinkId(token);
-  if (!onboardingRequest) {
-    throw new Error('Onboarding request not found');
-  }
-
-  // Update the onboarding request with platform connection
-  const platformConnections = onboardingRequest.platform_connections || {};
-  platformConnections[platform] = {
-    platform_user_id: userInfo.id,
-    platform_username: userInfo.username || userInfo.name,
-    access_token: tokenResponse.access_token, // In production, encrypt this
-    refresh_token: tokenResponse.refresh_token,
-    token_expires_at: tokenResponse.expires_in 
-      ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
-      : undefined,
-    scopes,
-    connected_at: new Date().toISOString(),
-  };
-
-  await updateOnboardingRequest(onboardingRequest.id, {
-    platform_connections: platformConnections,
+async function fetchGoogleUserInfo(accessToken: string): Promise<PlatformUserInfo> {
+  const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
   });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch Google user info');
+  }
+
+  const data = await response.json();
+  return {
+    id: data.id,
+    username: data.email,
+    name: data.name,
+    email: data.email,
+    picture: data.picture,
+  };
 }
 
-// Generate OAuth URLs
-export function generateOAuthUrl(
-  platform: string,
-  redirectUri: string,
-  scopes: string[],
-  state: string,
-  additionalParams: Record<string, string> = {}
-): string {
-  const baseParams = {
-    redirect_uri: redirectUri,
-    scope: scopes.join(','),
-    response_type: 'code',
-    state,
-    ...additionalParams,
-  };
+async function fetchTikTokUserInfo(accessToken: string): Promise<PlatformUserInfo> {
+  const response = await fetch('https://open-api.tiktok.com/user/info/', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch TikTok user info');
+  }
 
-  switch (platform) {
-    case 'google':
-      return `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        ...baseParams,
-      })}`;
-    
-    case 'meta':
-      return `https://www.facebook.com/v18.0/dialog/oauth?${new URLSearchParams({
-        client_id: process.env.META_APP_ID!,
-        ...baseParams,
-      })}`;
-    
-    default:
-      throw new Error(`Unsupported platform: ${platform}`);
+  const data = await response.json();
+  return {
+    id: data.data.user.open_id,
+    username: data.data.user.display_name,
+    name: data.data.user.display_name,
+  };
+}
+
+async function fetchShopifyUserInfo(accessToken: string): Promise<PlatformUserInfo> {
+  const shopDomain = process.env.SHOPIFY_SHOP_DOMAIN;
+  const response = await fetch(`https://${shopDomain}.myshopify.com/admin/api/2023-10/shop.json`, {
+    headers: {
+      'X-Shopify-Access-Token': accessToken,
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch Shopify shop info');
+  }
+
+  const data = await response.json();
+  return {
+    id: data.shop.id.toString(),
+    username: data.shop.name,
+    name: data.shop.name,
+    email: data.shop.email,
+  };
+}
+
+export async function storePlatformConnection(
+  adminId: string,
+  platform: string,
+  tokenResponse: OAuthTokenResponse,
+  userInfo: PlatformUserInfo,
+  scopes: string[]
+): Promise<void> {
+  try {
+    await createAdminPlatformConnection({
+      admin_id: adminId,
+      platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
+      platform_user_id: userInfo.id,
+      platform_username: userInfo.username || userInfo.name || userInfo.email,
+      access_token: tokenResponse.access_token, // In production, this should be encrypted
+      refresh_token: tokenResponse.refresh_token,
+      token_expires_at: tokenResponse.expires_in 
+        ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
+        : undefined,
+      scopes: scopes,
+      is_active: true,
+    });
+  } catch (error) {
+    console.error('Failed to store platform connection:', error);
+    throw error;
   }
 }
-
-

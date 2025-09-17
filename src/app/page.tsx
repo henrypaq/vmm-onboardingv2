@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
+import { Button } from '@/components 2/ui/button';
 import { Mountain, Users, User, Settings, Link as LinkIcon, FileText } from 'lucide-react';
 
 export default function HomePage() {

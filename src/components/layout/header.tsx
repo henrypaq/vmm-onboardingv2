@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components 2/ui/button';
+import { Badge } from '@/components 2/ui/badge';
 import { Mountain, User, Bell, Settings } from 'lucide-react';
 
 interface HeaderProps {
