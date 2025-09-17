@@ -44,16 +44,35 @@ export default function TestOAuthPage() {
         </ol>
         
         <div className="mt-4 p-4 bg-blue-50 rounded">
-          <h3 className="font-bold mb-2">Direct Link Test:</h3>
-          <p className="mb-2">Try this direct link:</p>
-          <a 
-            href="/api/oauth/admin/connect/meta" 
-            className="text-blue-600 underline hover:text-blue-800"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Direct Meta OAuth Link
-          </a>
+          <h3 className="font-bold mb-2">Direct Link Tests:</h3>
+          <div className="space-y-2">
+            <div>
+              <a 
+                href="/api/health" 
+                className="text-blue-600 underline hover:text-blue-800 mr-4"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Health Check
+              </a>
+              <a 
+                href="/api/oauth-test" 
+                className="text-blue-600 underline hover:text-blue-800 mr-4"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                OAuth Test
+              </a>
+              <a 
+                href="/api/oauth/admin/connect/meta" 
+                className="text-blue-600 underline hover:text-blue-800"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Meta OAuth
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

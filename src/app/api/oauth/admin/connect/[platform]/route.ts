@@ -8,16 +8,19 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ platform: string }> }
 ) {
-  const { platform } = await params;
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
-  searchParams.get('state'); // Store state for validation if needed
-  const error = searchParams.get('error');
+  try {
+    const { platform } = await params;
+    const { searchParams } = new URL(request.url);
+    const code = searchParams.get('code');
+    searchParams.get('state'); // Store state for validation if needed
+    const error = searchParams.get('error');
 
-  console.log(`OAuth endpoint called for platform: ${platform}`);
-  console.log(`Request URL: ${request.url}`);
-  console.log(`Code parameter: ${code}`);
-  console.log(`Error parameter: ${error}`);
+    console.log(`OAuth endpoint called for platform: ${platform}`);
+    console.log(`Request URL: ${request.url}`);
+    console.log(`Code parameter: ${code}`);
+    console.log(`Error parameter: ${error}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`NEXT_PUBLIC_APP_URL: ${process.env.NEXT_PUBLIC_APP_URL}`);
 
   // Handle OAuth callback
   if (code) {
@@ -61,8 +64,11 @@ export async function GET(
   }
 
   // Initiate OAuth flow
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'production' ? 'https://your-netlify-url.netlify.app' : 'http://localhost:3000');
   const redirectUri = `${baseUrl}/api/oauth/admin/connect/${platform}`;
+  
+  console.log(`Base URL: ${baseUrl}`);
+  console.log(`Redirect URI: ${redirectUri}`);
   
   // Check environment variables and generate OAuth URLs based on platform
   let oauthUrl = '';
@@ -120,6 +126,14 @@ export async function GET(
       error: 'OAuth redirect failed', 
       oauthUrl: oauthUrl,
       redirectUri: redirectUri 
+    }, { status: 500 });
+  }
+  
+  } catch (error) {
+    console.error('OAuth endpoint error:', error);
+    return NextResponse.json({ 
+      error: 'OAuth endpoint failed', 
+      message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
