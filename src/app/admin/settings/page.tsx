@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
-import { Button } from '@/components 2/ui/button';
-import { Input } from '@/components 2/ui/input';
-import { Label } from '@/components 2/ui/label';
-import { Switch } from '@/components 2/ui/switch';
-import { Badge } from '@/components 2/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { Save, Bell, Shield, Globe, Users, Search, Video, ShoppingBag, Plus, Trash2 } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 

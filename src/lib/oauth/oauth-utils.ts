@@ -1,4 +1,4 @@
-import { createAdminPlatformConnection } from '@/lib 2/db/database';
+import { createAdminPlatformConnection } from '@/lib/db/database';
 
 export interface OAuthTokenResponse {
   access_token: string;

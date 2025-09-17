@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminPlatformConnections } from '@/lib 2/db/database';
+import { getAdminPlatformConnections } from '@/lib/db/database';
 
 export async function GET(request: NextRequest) {
   try {

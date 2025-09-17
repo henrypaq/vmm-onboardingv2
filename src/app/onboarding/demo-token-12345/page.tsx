@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
-import { Button } from '@/components 2/ui/button';
-import { Checkbox } from '@/components 2/ui/checkbox';
-import { Badge } from '@/components 2/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { CheckCircle, ArrowRight, ArrowLeft, ExternalLink, Users, Search, Video, ShoppingBag, Shield } from 'lucide-react';
 import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
 

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components 2/ui/card';
-import { Badge } from '@/components 2/ui/badge';
-import { Button } from '@/components 2/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { EnhancedLinkGeneratorForm } from '@/components/forms/enhanced-link-generator-form';
 import { Copy, ExternalLink, Trash2 } from 'lucide-react';
 

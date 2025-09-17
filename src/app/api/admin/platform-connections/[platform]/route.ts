@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteAdminPlatformConnection, getAdminPlatformConnections } from '@/lib 2/db/database';
+import { deleteAdminPlatformConnection, getAdminPlatformConnections } from '@/lib/db/database';
 
 export async function DELETE(
   request: NextRequest,
