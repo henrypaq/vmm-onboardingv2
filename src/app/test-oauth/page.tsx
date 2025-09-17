@@ -35,7 +35,7 @@ export default function TestOAuthPage() {
       <div className="mt-8 p-4 bg-gray-100 rounded">
         <h2 className="font-bold mb-2">Instructions:</h2>
         <ol className="list-decimal list-inside space-y-1">
-          <li>Click "Test Meta OAuth" button</li>
+          <li>Click &quot;Test Meta OAuth&quot; button</li>
           <li>Should redirect to Facebook login page</li>
           <li>After login, should redirect back to admin settings</li>
           <li>Check browser console for any errors</li>

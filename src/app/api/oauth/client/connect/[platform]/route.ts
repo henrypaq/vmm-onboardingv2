@@ -11,7 +11,7 @@ export async function GET(
   const { platform } = await params;
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const _state = searchParams.get('state');
+  searchParams.get('state'); // Store state for validation if needed
   const error = searchParams.get('error');
   const token = searchParams.get('token'); // Onboarding link token
 

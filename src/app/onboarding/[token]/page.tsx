@@ -33,6 +33,7 @@ export default function OnboardingPage() {
         setLinkValidation({ valid: false, error: data.error });
       }
     } catch (error) {
+      console.error('Link validation error:', error);
       setLinkValidation({ valid: false, error: 'Failed to validate link' });
     } finally {
       setIsValidating(false);

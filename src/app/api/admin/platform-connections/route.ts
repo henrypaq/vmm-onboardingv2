@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllAdminAccounts, isAdminAccountValid } from '@/lib/db/database';
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     // TODO: Get admin ID from authentication/session
     // For now, using a mock admin ID - replace with real auth

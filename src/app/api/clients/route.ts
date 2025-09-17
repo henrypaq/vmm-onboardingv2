@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClients, createClient } from '@/lib/db/database';
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     // TODO: Implement proper authentication
     // const session = await requireAuth('admin');
