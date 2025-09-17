@@ -43,7 +43,7 @@ export interface OnboardingRequest {
   client_name?: string;
   company_name?: string;
   granted_permissions: Record<string, string[]>;
-  platform_connections: Record<string, unknown>;
+  platform_connections: Record<string, Record<string, string>>;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
   submitted_at?: string;
   created_at: string;

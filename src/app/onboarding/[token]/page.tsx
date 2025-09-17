@@ -22,10 +22,6 @@ export default function OnboardingPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
 
-  useEffect(() => {
-    validateLink();
-  }, [token, validateLink]);
-
   const validateLink = useCallback(async () => {
     try {
       const response = await fetch(`/api/links/validate?token=${token}`);
@@ -42,6 +38,10 @@ export default function OnboardingPage() {
       setIsValidating(false);
     }
   }, [token]);
+
+  useEffect(() => {
+    validateLink();
+  }, [token, validateLink]);
 
   const handleSubmissionComplete = (newRequestId: string) => {
     setRequestId(newRequestId);

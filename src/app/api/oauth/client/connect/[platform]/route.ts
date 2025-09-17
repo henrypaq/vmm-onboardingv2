@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { handleClientOAuthCallback, generateOAuthUrl } from '@/lib/oauth/oauth-utils';
+import { exchangeCodeForToken, fetchPlatformUserInfo } from '@/lib/oauth/oauth-utils';
 import { getPlatformDefinition } from '@/lib/platforms/platform-definitions';
 
 // Client OAuth connection endpoints
@@ -20,19 +20,15 @@ export async function GET(
   if (code && token) {
     try {
       const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/client/connect/${platform}`;
-      const platformDef = getPlatformDefinition(platform);
       
-      if (!platformDef) {
-        throw new Error('Invalid platform');
-      }
-
-      await handleClientOAuthCallback(
-        platform,
-        code,
-        redirectUri,
-        token,
-        platformDef.oauthScopes
-      );
+      // Exchange code for access token
+      const tokenResponse = await exchangeCodeForToken(platform, code, redirectUri);
+      
+      // Fetch user information from the platform
+      const userInfo = await fetchPlatformUserInfo(platform, tokenResponse.access_token);
+      
+      // TODO: Store client platform connection in onboarding request
+      console.log(`Client OAuth success for ${platform}:`, userInfo);
       
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${token}?connected=${platform}&step=${getNextStep(platform)}`);
     } catch (error) {
@@ -49,20 +45,26 @@ export async function GET(
 
   // Initiate OAuth flow
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/client/connect/${platform}`;
-  const platformDef = getPlatformDefinition(platform);
   
-  if (!platformDef) {
-    return NextResponse.json({ error: 'Invalid platform' }, { status: 400 });
+  // Generate OAuth URLs based on platform
+  let oauthUrl = '';
+  
+  switch (platform) {
+    case 'meta':
+      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_read_engagement,pages_manage_posts,ads_read,pages_show_list&response_type=code&state=client_${Date.now()}&token=${token}`;
+      break;
+    case 'google':
+      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/adwords&response_type=code&state=client_${Date.now()}&token=${token}`;
+      break;
+    case 'tiktok':
+      oauthUrl = `https://www.tiktok.com/auth/authorize/?client_key=${process.env.TIKTOK_CLIENT_KEY}&scope=user.info.basic,video.list&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=client_${Date.now()}&token=${token}`;
+      break;
+    case 'shopify':
+      oauthUrl = `https://${process.env.SHOPIFY_SHOP_DOMAIN}.myshopify.com/admin/oauth/authorize?client_id=${process.env.SHOPIFY_CLIENT_ID}&scope=read_orders,read_products,read_customers&redirect_uri=${encodeURIComponent(redirectUri)}&state=client_${Date.now()}&token=${token}`;
+      break;
+    default:
+      return NextResponse.json({ error: 'Invalid platform' }, { status: 400 });
   }
-
-  const stateParam = `client_${Date.now()}`;
-  const oauthUrl = generateOAuthUrl(
-    platform,
-    redirectUri,
-    platformDef.oauthScopes,
-    stateParam,
-    { token: token || '' }
-  );
 
   return NextResponse.redirect(oauthUrl);
 }

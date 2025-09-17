@@ -41,7 +41,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
               email: data.request.client_email || '',
               company: data.request.company_name || '',
             });
-            setSelectedPermissions(Object.values(data.request.granted_permissions || {}).flat());
+            setSelectedPermissions(Object.values(data.request.granted_permissions || {}).flat() as string[]);
             setConnectedPlatforms(Object.keys(data.request.platform_connections || {}));
           }
         }

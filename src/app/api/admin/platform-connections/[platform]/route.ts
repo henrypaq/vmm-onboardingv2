@@ -3,10 +3,10 @@ import { deleteAdminPlatformConnection, getAdminPlatformConnections } from '@/li
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
-    const platform = params.platform;
+    const { platform } = await params;
     
     // TODO: Get admin ID from authentication/session
     // For now, using a mock admin ID - replace with real auth

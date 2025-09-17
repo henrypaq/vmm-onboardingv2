@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Mountain, User, Bell, Settings } from 'lucide-react';
+import { Mountain, User, Bell } from 'lucide-react';
 
 interface HeaderProps {
   user?: {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOnboardingRequestByLinkId } from '@/lib/db/database';
+import { getOnboardingLinkByToken, getOnboardingRequests } from '@/lib/db/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,16 +13,20 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    const request = await getOnboardingRequestByLinkId(token);
+    // First get the link by token
+    const link = await getOnboardingLinkByToken(token);
     
-    if (!request) {
+    if (!link) {
       return NextResponse.json(
-        { error: 'Onboarding request not found' },
+        { error: 'Onboarding link not found' },
         { status: 404 }
       );
     }
     
-    return NextResponse.json({ request });
+    // Then get requests for this link
+    const requests = await getOnboardingRequests(link.id);
+    
+    return NextResponse.json({ requests });
   } catch (error) {
     console.error('Error fetching onboarding request:', error);
     return NextResponse.json(

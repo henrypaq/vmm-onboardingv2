@@ -19,7 +19,7 @@ export async function getServerSession(): Promise<AuthSession | null> {
   return null;
 }
 
-export async function signIn(email: string, password: string): Promise<AuthSession | null> {
+export async function signIn(_email: string, _password: string): Promise<AuthSession | null> {
   // TODO: Implement with Supabase auth
   return null;
 }
@@ -28,7 +28,7 @@ export async function signOut(): Promise<void> {
   // TODO: Implement with Supabase auth
 }
 
-export async function requireAuth(role?: 'admin' | 'client'): Promise<AuthSession> {
+export async function requireAuth(_role?: 'admin' | 'client'): Promise<AuthSession> {
   // TODO: Implement with Supabase auth
   throw new Error('Authentication not implemented');
 }
