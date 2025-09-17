@@ -14,6 +14,11 @@ export async function GET(
   const _state = searchParams.get('state');
   const error = searchParams.get('error');
 
+  console.log(`OAuth endpoint called for platform: ${platform}`);
+  console.log(`Request URL: ${request.url}`);
+  console.log(`Code parameter: ${code}`);
+  console.log(`Error parameter: ${error}`);
+
   // Handle OAuth callback
   if (code) {
     try {
@@ -57,20 +62,42 @@ export async function GET(
   // Initiate OAuth flow
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/admin/connect/${platform}`;
   
-  // Generate OAuth URLs based on platform
+  // Check environment variables and generate OAuth URLs based on platform
   let oauthUrl = '';
+  
+  console.log(`Environment variables check for ${platform}:`);
+  console.log(`META_APP_ID: ${process.env.META_APP_ID ? 'SET' : 'NOT SET'}`);
+  console.log(`GOOGLE_CLIENT_ID: ${process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET'}`);
+  console.log(`TIKTOK_CLIENT_KEY: ${process.env.TIKTOK_CLIENT_KEY ? 'SET' : 'NOT SET'}`);
+  console.log(`SHOPIFY_CLIENT_ID: ${process.env.SHOPIFY_CLIENT_ID ? 'SET' : 'NOT SET'}`);
   
   switch (platform) {
     case 'meta':
+      if (!process.env.META_APP_ID) {
+        console.error('META_APP_ID environment variable is not set');
+        return NextResponse.json({ error: 'Meta OAuth not configured - META_APP_ID missing' }, { status: 500 });
+      }
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_read_engagement,pages_manage_posts,ads_read,pages_show_list&response_type=code&state=admin_${Date.now()}`;
       break;
     case 'google':
+      if (!process.env.GOOGLE_CLIENT_ID) {
+        console.error('GOOGLE_CLIENT_ID environment variable is not set');
+        return NextResponse.json({ error: 'Google OAuth not configured - GOOGLE_CLIENT_ID missing' }, { status: 500 });
+      }
       oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/adwords&response_type=code&state=admin_${Date.now()}`;
       break;
     case 'tiktok':
+      if (!process.env.TIKTOK_CLIENT_KEY) {
+        console.error('TIKTOK_CLIENT_KEY environment variable is not set');
+        return NextResponse.json({ error: 'TikTok OAuth not configured - TIKTOK_CLIENT_KEY missing' }, { status: 500 });
+      }
       oauthUrl = `https://www.tiktok.com/auth/authorize/?client_key=${process.env.TIKTOK_CLIENT_KEY}&scope=user.info.basic,video.list&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=admin_${Date.now()}`;
       break;
     case 'shopify':
+      if (!process.env.SHOPIFY_CLIENT_ID || !process.env.SHOPIFY_SHOP_DOMAIN) {
+        console.error('SHOPIFY_CLIENT_ID or SHOPIFY_SHOP_DOMAIN environment variable is not set');
+        return NextResponse.json({ error: 'Shopify OAuth not configured - missing credentials' }, { status: 500 });
+      }
       oauthUrl = `https://${process.env.SHOPIFY_SHOP_DOMAIN}.myshopify.com/admin/oauth/authorize?client_id=${process.env.SHOPIFY_CLIENT_ID}&scope=read_orders,read_products,read_customers&redirect_uri=${encodeURIComponent(redirectUri)}&state=admin_${Date.now()}`;
       break;
     default:
