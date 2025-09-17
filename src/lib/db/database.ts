@@ -332,6 +332,114 @@ export async function deleteAdminPlatformConnection(id: string): Promise<void> {
   }
 }
 
+// Admin Account functions (new table)
+export interface AdminAccount {
+  id: string;
+  admin_id: string;
+  provider: 'google' | 'meta' | 'tiktok' | 'shopify';
+  access_token: string;
+  refresh_token?: string;
+  expires_at?: string;
+  scope: string[];
+  provider_user_id?: string;
+  provider_email?: string;
+  provider_name?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getAdminAccount(adminId: string, provider: string): Promise<AdminAccount | null> {
+  const { data, error } = await supabaseAdmin
+    .from('admin_accounts')
+    .select('*')
+    .eq('admin_id', adminId)
+    .eq('provider', provider)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // No rows returned
+      return null;
+    }
+    console.error('Error fetching admin account:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function getAllAdminAccounts(adminId: string): Promise<AdminAccount[]> {
+  const { data, error } = await supabaseAdmin
+    .from('admin_accounts')
+    .select('*')
+    .eq('admin_id', adminId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching admin accounts:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+export async function createOrUpdateAdminAccount(account: Omit<AdminAccount, 'id' | 'created_at' | 'updated_at'>): Promise<AdminAccount> {
+  // Use upsert to either insert or update
+  const { data, error } = await supabaseAdmin
+    .from('admin_accounts')
+    .upsert([{
+      ...account,
+      updated_at: new Date().toISOString()
+    }], {
+      onConflict: 'admin_id,provider'
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating/updating admin account:', error);
+    throw new Error('Failed to save admin account');
+  }
+
+  return data;
+}
+
+export async function deleteAdminAccount(adminId: string, provider: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('admin_accounts')
+    .delete()
+    .eq('admin_id', adminId)
+    .eq('provider', provider);
+
+  if (error) {
+    console.error('Error deleting admin account:', error);
+    throw new Error('Failed to delete admin account');
+  }
+}
+
+export async function isAdminAccountValid(adminId: string, provider: string): Promise<boolean> {
+  const account = await getAdminAccount(adminId, provider);
+  
+  if (!account) {
+    return false;
+  }
+
+  // Check if token is expired
+  if (account.expires_at) {
+    const expiresAt = new Date(account.expires_at);
+    const now = new Date();
+    
+    // Add 5 minute buffer before expiration
+    const bufferTime = new Date(now.getTime() + 5 * 60 * 1000);
+    
+    if (expiresAt <= bufferTime) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Utility functions
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {

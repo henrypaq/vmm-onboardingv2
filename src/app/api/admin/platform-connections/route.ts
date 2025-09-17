@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminPlatformConnections } from '@/lib/db/database';
+import { getAllAdminAccounts, isAdminAccountValid } from '@/lib/db/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,18 +7,25 @@ export async function GET(request: NextRequest) {
     // For now, using a mock admin ID - replace with real auth
     const mockAdminId = '00000000-0000-0000-0000-000000000001';
     
-    const connections = await getAdminPlatformConnections(mockAdminId);
+    const accounts = await getAllAdminAccounts(mockAdminId);
     
     // Transform the data for the frontend
-    const transformedConnections = connections.map(conn => ({
-      id: conn.platform,
-      name: getPlatformDisplayName(conn.platform),
-      username: conn.platform_username || 'Connected',
-      status: conn.is_active ? 'connected' : 'inactive',
-      platform: conn.platform,
-      scopes: conn.scopes,
-      connectedAt: conn.created_at
-    }));
+    const transformedConnections = await Promise.all(
+      accounts.map(async (account) => {
+        const isValid = await isAdminAccountValid(mockAdminId, account.provider);
+        return {
+          id: account.provider,
+          name: getPlatformDisplayName(account.provider),
+          username: account.provider_name || account.provider_email || 'Connected',
+          status: isValid ? 'connected' : 'inactive',
+          platform: account.provider,
+          scopes: account.scope,
+          connectedAt: account.created_at,
+          expiresAt: account.expires_at,
+          isValid: isValid
+        };
+      })
+    );
     
     return NextResponse.json({ connections: transformedConnections });
   } catch (error: unknown) {

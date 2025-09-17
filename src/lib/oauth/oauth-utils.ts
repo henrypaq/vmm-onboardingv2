@@ -1,4 +1,4 @@
-import { createAdminPlatformConnection } from '@/lib/db/database';
+import { createOrUpdateAdminAccount, AdminAccount } from '@/lib/db/database';
 
 export interface OAuthTokenResponse {
   access_token: string;
@@ -279,21 +279,25 @@ export async function storePlatformConnection(
   tokenResponse: OAuthTokenResponse,
   userInfo: PlatformUserInfo,
   scopes: string[]
-): Promise<void> {
+): Promise<AdminAccount> {
   try {
-    await createAdminPlatformConnection({
+    const expiresAt = tokenResponse.expires_in 
+      ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
+      : undefined;
+
+    const accountData: Omit<AdminAccount, 'id' | 'created_at' | 'updated_at'> = {
       admin_id: adminId,
-      platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
-      platform_user_id: userInfo.id,
-      platform_username: userInfo.username || userInfo.name || userInfo.email,
-      access_token: tokenResponse.access_token, // In production, this should be encrypted
+      provider: platform as 'google' | 'meta' | 'tiktok' | 'shopify',
+      access_token: tokenResponse.access_token,
       refresh_token: tokenResponse.refresh_token,
-      token_expires_at: tokenResponse.expires_in 
-        ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
-        : undefined,
-      scopes: scopes,
-      is_active: true,
-    });
+      expires_at: expiresAt,
+      scope: scopes,
+      provider_user_id: userInfo.id,
+      provider_email: userInfo.email,
+      provider_name: userInfo.name || userInfo.username,
+    };
+
+    return await createOrUpdateAdminAccount(accountData);
   } catch (error) {
     console.error('Failed to store platform connection:', error);
     throw error;
