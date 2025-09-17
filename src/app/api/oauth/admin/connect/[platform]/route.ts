@@ -11,7 +11,7 @@ export async function GET(
   const platform = params.platform;
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const state = searchParams.get('state');
+  // const state = searchParams.get('state');
   const error = searchParams.get('error');
 
   // Handle OAuth callback

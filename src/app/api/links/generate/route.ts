@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateOnboardingLink } from '@/lib/links/link-generator';
 import { createOnboardingLink } from '@/lib/db/database';
-import { requireAuth } from '@/lib/auth/auth';
+// import { requireAuth } from '@/lib/auth/auth';
 
 export async function POST(request: NextRequest) {
   try {

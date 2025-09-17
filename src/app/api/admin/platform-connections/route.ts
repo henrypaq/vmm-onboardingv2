@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }));
     
     return NextResponse.json({ connections: transformedConnections });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching admin platform connections:', error);
     return NextResponse.json(
       { error: 'Failed to fetch platform connections' },
