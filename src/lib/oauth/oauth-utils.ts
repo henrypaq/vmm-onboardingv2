@@ -43,7 +43,7 @@ async function exchangeMetaToken(code: string, redirectUri: string): Promise<OAu
     throw new Error('Meta OAuth credentials not configured');
   }
 
-  const response = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
+  const response = await fetch('https://graph.facebook.com/v17.0/oauth/access_token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',

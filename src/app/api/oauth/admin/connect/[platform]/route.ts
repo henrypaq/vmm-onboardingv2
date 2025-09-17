@@ -25,7 +25,8 @@ export async function GET(
       console.log(`OAuth callback received for ${platform} with code: ${code}`);
       
       // Get the redirect URI that was used for this OAuth flow
-      const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/admin/connect/${platform}`;
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const redirectUri = `${baseUrl}/api/oauth/admin/connect/${platform}`;
       
       // Exchange code for access token
       const tokenResponse = await exchangeCodeForToken(platform, code, redirectUri);
@@ -60,7 +61,8 @@ export async function GET(
   }
 
   // Initiate OAuth flow
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/admin/connect/${platform}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const redirectUri = `${baseUrl}/api/oauth/admin/connect/${platform}`;
   
   // Check environment variables and generate OAuth URLs based on platform
   let oauthUrl = '';
@@ -77,7 +79,7 @@ export async function GET(
         console.error('META_APP_ID environment variable is not set');
         return NextResponse.json({ error: 'Meta OAuth not configured - META_APP_ID missing' }, { status: 500 });
       }
-      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_read_engagement,pages_manage_posts,ads_read,pages_show_list&response_type=code&state=admin_${Date.now()}`;
+      oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_read_engagement,pages_manage_posts,ads_read,pages_show_list&response_type=code&state=admin_${Date.now()}`;
       break;
     case 'google':
       if (!process.env.GOOGLE_CLIENT_ID) {
@@ -105,7 +107,21 @@ export async function GET(
   }
 
   console.log(`Redirecting to OAuth URL for ${platform}:`, oauthUrl);
-  return NextResponse.redirect(oauthUrl);
+  
+  // For debugging, also log the redirect URI being used
+  console.log(`Using redirect URI: ${redirectUri}`);
+  console.log(`Base URL: ${baseUrl}`);
+  
+  try {
+    return NextResponse.redirect(oauthUrl);
+  } catch (error) {
+    console.error('Error redirecting to OAuth URL:', error);
+    return NextResponse.json({ 
+      error: 'OAuth redirect failed', 
+      oauthUrl: oauthUrl,
+      redirectUri: redirectUri 
+    }, { status: 500 });
+  }
 }
 
 function getScopesForPlatform(platform: string): string[] {
