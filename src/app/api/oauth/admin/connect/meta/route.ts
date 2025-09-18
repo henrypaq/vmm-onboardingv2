@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrUpdateAdminAccount } from '@/lib/db/database';
 
+interface MetaTokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  token_type?: string;
+  scope?: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -79,7 +87,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function exchangeCodeForToken(code: string) {
+async function exchangeCodeForToken(code: string): Promise<MetaTokenResponse> {
   const clientId = process.env.NEXT_PUBLIC_META_APP_ID;
   const clientSecret = process.env.META_APP_SECRET;
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/oauth/admin/connect/meta`;
@@ -117,6 +125,7 @@ async function exchangeCodeForToken(code: string) {
 
   return {
     access_token: data.access_token,
+    refresh_token: data.refresh_token || undefined,
     expires_in: data.expires_in,
     token_type: data.token_type,
     scope: data.scope,
