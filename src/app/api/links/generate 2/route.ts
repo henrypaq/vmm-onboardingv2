@@ -25,12 +25,11 @@ export async function POST(request: NextRequest) {
 
     // Save to database
     const savedLink = await createOnboardingLink({
-      admin_id: 'placeholder-admin-id', // TODO: Use actual admin ID from session
+      clientId,
       token: generatedLink.token,
-      platforms: [], // TODO: Get from request or default
-      requested_permissions: {}, // TODO: Get from request or default
-      expires_at: generatedLink.expiresAt.toISOString(),
-      status: 'pending' as const,
+      expiresAt: generatedLink.expiresAt,
+      isUsed: false,
+      createdBy: 'placeholder-admin-id', // TODO: Use actual admin ID from session
     });
 
     return NextResponse.json({
