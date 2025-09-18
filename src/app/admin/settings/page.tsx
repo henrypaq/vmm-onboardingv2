@@ -194,8 +194,14 @@ export default function AdminSettingsPage() {
                             onClick={() => {
                               console.log(`Connecting to ${platform.name}...`);
                               console.log(`Platform ID: ${platform.id}`);
-                              console.log(`OAuth URL: /api/oauth/admin/connect/${platform.id}`);
-                              window.location.href = `/api/oauth/admin/connect/${platform.id}`;
+                              
+                              // Use dedicated Meta route for better OAuth handling
+                              const oauthUrl = platform.id === 'meta' 
+                                ? `/api/oauth/admin/connect/meta`
+                                : `/api/oauth/admin/connect/${platform.id}`;
+                              
+                              console.log(`OAuth URL: ${oauthUrl}`);
+                              window.location.href = oauthUrl;
                             }}
                           >
                             <Plus className="h-4 w-4" />

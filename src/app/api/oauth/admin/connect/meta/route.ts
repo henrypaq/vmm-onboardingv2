@@ -16,24 +16,37 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
     const state = searchParams.get('state');
 
-    console.log('Meta OAuth callback received');
+    console.log('Meta OAuth route called');
     console.log('Code:', code ? 'Present' : 'Missing');
     console.log('Error:', error);
     console.log('State:', state);
+
+    // If no code, this is the initial OAuth request - redirect to Facebook
+    if (!code) {
+      console.log('Initiating Meta OAuth flow');
+      
+      // Check environment variables
+      if (!process.env.NEXT_PUBLIC_META_APP_ID) {
+        console.error('NEXT_PUBLIC_META_APP_ID environment variable is not set');
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_not_configured&platform=meta&message=Meta OAuth not configured - NEXT_PUBLIC_META_APP_ID missing`
+        );
+      }
+
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const redirectUri = `${baseUrl}/api/oauth/admin/connect/meta`;
+      
+      const oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_show_list,ads_management&response_type=code&state=admin_${Date.now()}`;
+      
+      console.log('Redirecting to Meta OAuth:', oauthUrl);
+      return NextResponse.redirect(oauthUrl);
+    }
 
     // Handle OAuth errors
     if (error) {
       console.error('Meta OAuth error:', error);
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_denied&platform=meta&message=User denied access`
-      );
-    }
-
-    // Check for authorization code
-    if (!code) {
-      console.error('No authorization code received from Meta');
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_failed&platform=meta&message=No authorization code received`
       );
     }
 
