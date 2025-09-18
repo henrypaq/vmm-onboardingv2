@@ -64,7 +64,14 @@ export default function AdminSettingsPage() {
     } else if (urlParams.get('error')) {
       const error = urlParams.get('error');
       const platform = urlParams.get('platform');
+      const message = urlParams.get('message');
       console.error(`OAuth error for ${platform}: ${error}`);
+      
+      if (error === 'oauth_not_configured') {
+        alert(`OAuth Configuration Error for ${platform}: ${message || 'OAuth not configured'}`);
+      } else {
+        alert(`OAuth error for ${platform}: ${error}`);
+      }
       
       // Clean up URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);

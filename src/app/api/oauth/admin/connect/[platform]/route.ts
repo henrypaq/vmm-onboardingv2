@@ -83,14 +83,14 @@ export async function GET(
     case 'meta':
       if (!process.env.META_APP_ID) {
         console.error('META_APP_ID environment variable is not set');
-        return NextResponse.json({ error: 'Meta OAuth not configured - META_APP_ID missing' }, { status: 500 });
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_not_configured&platform=meta&message=Meta OAuth not configured - META_APP_ID missing`);
       }
       oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_read_engagement,pages_manage_posts,ads_read,pages_show_list&response_type=code&state=admin_${Date.now()}`;
       break;
     case 'google':
       if (!process.env.GOOGLE_CLIENT_ID) {
         console.error('GOOGLE_CLIENT_ID environment variable is not set');
-        return NextResponse.json({ error: 'Google OAuth not configured - GOOGLE_CLIENT_ID missing' }, { status: 500 });
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_not_configured&platform=google&message=Google OAuth not configured - GOOGLE_CLIENT_ID missing`);
       }
       oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/adwords&response_type=code&state=admin_${Date.now()}`;
       break;
