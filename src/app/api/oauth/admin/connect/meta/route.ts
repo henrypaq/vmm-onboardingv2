@@ -29,11 +29,11 @@ export async function GET(request: NextRequest) {
       if (!process.env.NEXT_PUBLIC_META_APP_ID) {
         console.error('NEXT_PUBLIC_META_APP_ID environment variable is not set');
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_not_configured&platform=meta&message=Meta OAuth not configured - NEXT_PUBLIC_META_APP_ID missing`
+          `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_not_configured&platform=meta&message=Meta OAuth not configured - NEXT_PUBLIC_META_APP_ID missing`
         );
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app';
       const redirectUri = `${baseUrl}/api/oauth/admin/connect/meta`;
       
       const oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_show_list,ads_management&response_type=code&state=admin_${Date.now()}`;
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Meta OAuth error:', error);
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_denied&platform=meta&message=User denied access`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_denied&platform=meta&message=User denied access`
       );
     }
 
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     if (!process.env.NEXT_PUBLIC_META_APP_ID || !process.env.META_APP_SECRET) {
       console.error('Meta OAuth credentials not configured');
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_not_configured&platform=meta&message=Meta OAuth credentials not configured`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_not_configured&platform=meta&message=Meta OAuth credentials not configured`
       );
     }
 
@@ -89,13 +89,13 @@ export async function GET(request: NextRequest) {
 
     // Redirect back to admin settings with success
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?connected=meta&success=true&username=${encodeURIComponent(userInfo.name || 'Connected')}`
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?connected=meta&success=true&username=${encodeURIComponent(userInfo.name || 'Connected')}`
     );
 
   } catch (error) {
     console.error('Meta OAuth callback error:', error);
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_failed&platform=meta&message=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_failed&platform=meta&message=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
     );
   }
 }
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
 async function exchangeCodeForToken(code: string): Promise<MetaTokenResponse> {
   const clientId = process.env.NEXT_PUBLIC_META_APP_ID;
   const clientSecret = process.env.META_APP_SECRET;
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/oauth/admin/connect/meta`;
+  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/api/oauth/admin/connect/meta`;
 
   if (!clientId || !clientSecret) {
     throw new Error('Meta OAuth credentials not configured');
