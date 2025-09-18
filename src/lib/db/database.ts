@@ -26,11 +26,14 @@ export interface Client {
 export interface OnboardingLink {
   id: string;
   admin_id: string;
+  client_id?: string;
   token: string;
   platforms: string[];
   requested_permissions: Record<string, string[]>;
   expires_at: string;
   status: 'pending' | 'in_progress' | 'completed' | 'expired';
+  is_used?: boolean;
+  created_by?: string;
   created_at: string;
   updated_at: string;
 }
