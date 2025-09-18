@@ -44,6 +44,11 @@ export default function AdminSettingsPage() {
     }
   };
 
+  // Check if a platform is connected
+  const isPlatformConnected = (platformId: string) => {
+    return connectedPlatforms.some(p => p.id === platformId);
+  };
+
   useEffect(() => {
     fetchConnections();
 
@@ -126,7 +131,7 @@ export default function AdminSettingsPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {platforms.map((platform) => {
-                const isConnected = connectedPlatforms.some(p => p.id === platform.id);
+                const isConnected = isPlatformConnected(platform.id);
                 return (
                   <div key={platform.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">

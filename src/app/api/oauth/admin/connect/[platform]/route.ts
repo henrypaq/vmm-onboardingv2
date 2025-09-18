@@ -74,18 +74,19 @@ export async function GET(
   let oauthUrl = '';
   
   console.log(`Environment variables check for ${platform}:`);
-  console.log(`META_APP_ID: ${process.env.META_APP_ID ? 'SET' : 'NOT SET'}`);
+  console.log(`NEXT_PUBLIC_META_APP_ID: ${process.env.NEXT_PUBLIC_META_APP_ID ? 'SET' : 'NOT SET'}`);
+  console.log(`META_APP_SECRET: ${process.env.META_APP_SECRET ? 'SET' : 'NOT SET'}`);
   console.log(`GOOGLE_CLIENT_ID: ${process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET'}`);
   console.log(`TIKTOK_CLIENT_KEY: ${process.env.TIKTOK_CLIENT_KEY ? 'SET' : 'NOT SET'}`);
   console.log(`SHOPIFY_CLIENT_ID: ${process.env.SHOPIFY_CLIENT_ID ? 'SET' : 'NOT SET'}`);
   
   switch (platform) {
     case 'meta':
-      if (!process.env.META_APP_ID) {
-        console.error('META_APP_ID environment variable is not set');
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_not_configured&platform=meta&message=Meta OAuth not configured - META_APP_ID missing`);
+      if (!process.env.NEXT_PUBLIC_META_APP_ID) {
+        console.error('NEXT_PUBLIC_META_APP_ID environment variable is not set');
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_not_configured&platform=meta&message=Meta OAuth not configured - NEXT_PUBLIC_META_APP_ID missing`);
       }
-      oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_read_engagement,pages_manage_posts,ads_read,pages_show_list&response_type=code&state=admin_${Date.now()}`;
+      oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_show_list,ads_management&response_type=code&state=admin_${Date.now()}`;
       break;
     case 'google':
       if (!process.env.GOOGLE_CLIENT_ID) {
