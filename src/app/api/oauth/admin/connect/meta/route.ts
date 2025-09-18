@@ -36,6 +36,11 @@ export async function GET(request: NextRequest) {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app';
       const redirectUri = `${baseUrl}/api/oauth/admin/connect/meta`;
       
+      console.log('Environment check:');
+      console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+      console.log('baseUrl:', baseUrl);
+      console.log('redirectUri:', redirectUri);
+      
       const oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_show_list,ads_management&response_type=code&state=admin_${Date.now()}`;
       
       console.log('Redirecting to Meta OAuth:', oauthUrl);
