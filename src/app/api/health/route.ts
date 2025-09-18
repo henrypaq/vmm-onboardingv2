@@ -14,3 +14,4 @@ export async function GET(request: NextRequest) {
     appUrl: process.env.NEXT_PUBLIC_APP_URL
   });
 }
+

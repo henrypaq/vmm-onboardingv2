@@ -15,3 +15,4 @@ export async function GET(request: NextRequest) {
     googleClientId: process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET'
   });
 }
+

@@ -26,6 +26,11 @@ export async function GET(request: NextRequest) {
       console.log('Initiating Meta OAuth flow');
       
       // Check environment variables
+      console.log('Environment check:');
+      console.log('NEXT_PUBLIC_META_APP_ID:', process.env.NEXT_PUBLIC_META_APP_ID ? 'SET' : 'NOT SET');
+      console.log('META_APP_SECRET:', process.env.META_APP_SECRET ? 'SET' : 'NOT SET');
+      console.log('All META env vars:', Object.keys(process.env).filter(key => key.includes('META')));
+      
       if (!process.env.NEXT_PUBLIC_META_APP_ID) {
         console.error('NEXT_PUBLIC_META_APP_ID environment variable is not set');
         return NextResponse.redirect(
