@@ -300,7 +300,7 @@ export default function DemoOnboardingPage() {
                         2 more steps needed to finish granting everything
                       </h3>
                       <p className="text-gray-600">
-                        First, to grant access to your Shopify Store '{shopifyData.storeId}', follow these simple instructions:
+                        First, to grant access to your Shopify Store &apos;{shopifyData.storeId}&apos;, follow these simple instructions:
                       </p>
                     </div>
 
@@ -310,20 +310,20 @@ export default function DemoOnboardingPage() {
                           <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                             1
                           </div>
-                          <span className="font-medium text-gray-900">Assign your Shopify Store '{shopifyData.storeId}'</span>
+                          <span className="font-medium text-gray-900">Assign your Shopify Store &apos;{shopifyData.storeId}&apos;</span>
                         </div>
                         <div className="flex items-center space-x-3 mb-3">
                           <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm">
                             2
                           </div>
-                          <span className="font-medium text-gray-600">Assign your WordPress Site 'https://www.growth-consultant.com'</span>
+                          <span className="font-medium text-gray-600">Assign your WordPress Site &apos;https://www.growth-consultant.com&apos;</span>
                         </div>
                       </div>
 
                       <div className="space-y-4">
                         <div>
                           <p className="text-sm font-medium text-gray-900 mb-3">
-                            1. Open your store's Users and permissions settings:
+                            1. Open your store&apos;s Users and permissions settings:
                           </p>
                           <Button 
                             onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
@@ -351,7 +351,7 @@ export default function DemoOnboardingPage() {
                             />
                             <div className="mt-2 flex items-center text-sm text-gray-500">
                               <Info className="h-4 w-4 mr-1" />
-                              <span>Note: if no code is required enter 'none'</span>
+                              <span>Note: if no code is required enter &apos;none&apos;</span>
                             </div>
                           </div>
                         </div>
