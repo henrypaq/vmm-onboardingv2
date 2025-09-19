@@ -8,11 +8,18 @@ export async function POST(request: NextRequest) {
     // TODO: Implement proper authentication
     // const session = await requireAuth('admin');
     
-    const { clientId, expiresInDays } = await request.json();
+    const { clientId, expiresInDays, platforms, requestedScopes } = await request.json();
     
     if (!clientId) {
       return NextResponse.json(
         { error: 'Client ID is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!platforms || platforms.length === 0) {
+      return NextResponse.json(
+        { error: 'At least one platform must be selected' },
         { status: 400 }
       );
     }
@@ -27,11 +34,14 @@ export async function POST(request: NextRequest) {
     // Save to database
     const savedLink = await createOnboardingLink({
       admin_id: '00000000-0000-0000-0000-000000000001', // TODO: Use actual admin ID from session
+      client_id: clientId,
       token: generatedLink.token,
-      platforms: [], // TODO: Get from request
-      requested_permissions: {}, // TODO: Get from request
+      platforms: platforms,
+      requested_permissions: requestedScopes || {},
       expires_at: generatedLink.expiresAt.toISOString(),
       status: 'pending',
+      is_used: false,
+      created_by: '00000000-0000-0000-0000-000000000001', // TODO: Use actual admin ID from session
     });
 
     return NextResponse.json({

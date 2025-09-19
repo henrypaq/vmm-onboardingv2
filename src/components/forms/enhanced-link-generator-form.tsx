@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Users, Search, Video, ShoppingBag } from 'lucide-react';
 import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
+import { scopes, getScopesForProvider, getScopeDescription } from '@/lib/scopes';
 
 interface EnhancedLinkGeneratorFormProps {
   onLinkGenerated: (link: { url: string; token: string; platforms: string[]; permissions: Record<string, string[]> }) => void;
@@ -18,7 +19,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
   const [clientId, setClientId] = useState('');
   const [expiresInDays, setExpiresInDays] = useState(7);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-  const [selectedPermissions, setSelectedPermissions] = useState<Record<string, string[]>>({});
+  const [selectedScopes, setSelectedScopes] = useState<Record<string, string[]>>({});
   const [isGenerating, setIsGenerating] = useState(false);
 
   const platforms = getAllPlatforms();
@@ -46,33 +47,31 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
   const handlePlatformToggle = (platformId: string, checked: boolean) => {
     if (checked) {
       setSelectedPlatforms(prev => [...prev, platformId]);
-      // Initialize permissions for this platform
-      const platform = getPlatformDefinition(platformId);
-      if (platform) {
-        const requiredPermissions = platform.permissions
-          .filter(p => p.required)
-          .map(p => p.id);
-        setSelectedPermissions(prev => ({
+      // Initialize with basic scopes for this platform
+      const availableScopes = getScopesForProvider(platformId as keyof typeof scopes);
+      if (availableScopes.length > 0) {
+        // Select the first scope by default (usually the basic one)
+        setSelectedScopes(prev => ({
           ...prev,
-          [platformId]: requiredPermissions
+          [platformId]: [availableScopes[0]]
         }));
       }
     } else {
       setSelectedPlatforms(prev => prev.filter(id => id !== platformId));
-      setSelectedPermissions(prev => {
-        const newPermissions = { ...prev };
-        delete newPermissions[platformId];
-        return newPermissions;
+      setSelectedScopes(prev => {
+        const newScopes = { ...prev };
+        delete newScopes[platformId];
+        return newScopes;
       });
     }
   };
 
-  const handlePermissionToggle = (platformId: string, permissionId: string, checked: boolean) => {
-    setSelectedPermissions(prev => ({
+  const handleScopeToggle = (platformId: string, scope: string, checked: boolean) => {
+    setSelectedScopes(prev => ({
       ...prev,
       [platformId]: checked
-        ? [...(prev[platformId] || []), permissionId]
-        : (prev[platformId] || []).filter(id => id !== permissionId)
+        ? [...(prev[platformId] || []), scope]
+        : (prev[platformId] || []).filter(s => s !== scope)
     }));
   };
 
@@ -90,7 +89,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
           clientId,
           expiresInDays,
           platforms: selectedPlatforms,
-          requestedPermissions: selectedPermissions,
+          requestedScopes: selectedScopes,
         }),
       });
 
@@ -103,14 +102,14 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
         url: data.url, 
         token: data.link.token,
         platforms: selectedPlatforms,
-        permissions: selectedPermissions
+        permissions: selectedScopes
       });
       
       // Reset form
       setClientId('');
       setExpiresInDays(7);
       setSelectedPlatforms([]);
-      setSelectedPermissions({});
+      setSelectedScopes({});
     } catch (error) {
       console.error('Error generating link:', error);
       // TODO: Show error toast
@@ -176,39 +175,35 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                       <div>
                         <h3 className="font-medium">{platform.name}</h3>
                         <p className="text-sm text-gray-500">
-                          {platform.permissions.length} permissions available
+                          {getScopesForProvider(platform.id as keyof typeof scopes).length} scopes available
                         </p>
                       </div>
                     </div>
                     
                     {isSelected && (
                       <div className="ml-8 space-y-2">
-                        <p className="text-sm font-medium text-gray-700">Select Permissions:</p>
-                        {platform.permissions.map((permission) => {
-                          const isPermissionSelected = selectedPermissions[platform.id]?.includes(permission.id) || false;
+                        <p className="text-sm font-medium text-gray-700">Select OAuth Scopes:</p>
+                        {getScopesForProvider(platform.id as keyof typeof scopes).map((scope) => {
+                          const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
                           return (
-                            <div key={permission.id} className="flex items-start space-x-2">
+                            <div key={scope} className="flex items-start space-x-2">
                               <Checkbox
-                                id={`permission-${platform.id}-${permission.id}`}
-                                checked={isPermissionSelected}
+                                id={`scope-${platform.id}-${scope}`}
+                                checked={isScopeSelected}
                                 onCheckedChange={(checked) => 
-                                  handlePermissionToggle(platform.id, permission.id, checked as boolean)
+                                  handleScopeToggle(platform.id, scope, checked as boolean)
                                 }
-                                disabled={permission.required}
                               />
                               <div className="flex-1">
                                 <label 
-                                  htmlFor={`permission-${platform.id}-${permission.id}`}
+                                  htmlFor={`scope-${platform.id}-${scope}`}
                                   className="text-sm font-medium cursor-pointer"
                                 >
-                                  {permission.name}
-                                  {permission.required && (
-                                    <Badge variant="secondary" className="ml-2 text-xs">
-                                      Required
-                                    </Badge>
-                                  )}
+                                  {scope}
                                 </label>
-                                <p className="text-xs text-gray-500">{permission.description}</p>
+                                <p className="text-xs text-gray-500">
+                                  {getScopeDescription(platform.id as keyof typeof scopes, scope)}
+                                </p>
                               </div>
                             </div>
                           );
@@ -230,8 +225,8 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                   <span className="font-medium">Platforms:</span> {selectedPlatforms.length} selected
                 </p>
                 <p className="text-sm">
-                  <span className="font-medium">Total Permissions:</span> {
-                    Object.values(selectedPermissions).reduce((total, perms) => total + perms.length, 0)
+                  <span className="font-medium">Total Scopes:</span> {
+                    Object.values(selectedScopes).reduce((total, scopes) => total + scopes.length, 0)
                   } requested
                 </p>
                 <p className="text-sm">

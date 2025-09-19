@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, ArrowRight, ArrowLeft, ExternalLink, Users, Search, Video, ShoppingBag, Shield, Info } from 'lucide-react';
 import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
+import { scopes, getScopeDescription } from '@/lib/scopes';
 
 const platforms = getAllPlatforms();
 
@@ -40,6 +41,39 @@ export default function DemoOnboardingPage() {
     collaboratorCode: ''
   });
   const [shopifyStep, setShopifyStep] = useState(1); // 1 = store ID, 2 = permissions
+  const [linkData, setLinkData] = useState<{
+    platforms: string[];
+    requestedScopes: Record<string, string[]>;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch link data on component mount
+  useEffect(() => {
+    const fetchLinkData = async () => {
+      try {
+        // For demo purposes, we'll use a mock token
+        // In production, this would come from the URL params
+        const token = 'demo-token-12345';
+        
+        // Mock data for demo - in production, fetch from API
+        const mockLinkData = {
+          platforms: ['google', 'meta'],
+          requestedScopes: {
+            google: ['openid email profile'],
+            meta: ['pages_show_list']
+          }
+        };
+        
+        setLinkData(mockLinkData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching link data:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchLinkData();
+  }, []);
 
   const handlePermissionChange = (platformId: string, permissionId: string, checked: boolean) => {
     setSelectedPermissions(prev => ({
@@ -51,26 +85,46 @@ export default function DemoOnboardingPage() {
   };
 
   const handleConnectPlatform = (platformId: string) => {
+    // Get the scopes for this platform from the link data
+    const platformScopes = linkData?.requestedScopes[platformId] || [];
+    
+    if (platformScopes.length === 0) {
+      console.error('No scopes found for platform:', platformId);
+      return;
+    }
+
+    // Build OAuth URL with the stored scopes
+    let oauthUrl = '';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app';
+    
+    if (platformId === 'google') {
+      const scopesParam = platformScopes.join(' ');
+      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${baseUrl}/api/oauth/client/connect/google`)}&scope=${encodeURIComponent(scopesParam)}&response_type=code&state=client_${Date.now()}`;
+    } else if (platformId === 'meta') {
+      const scopesParam = platformScopes.join(',');
+      oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${baseUrl}/api/oauth/client/connect/meta`)}&scope=${encodeURIComponent(scopesParam)}&response_type=code&state=client_${Date.now()}`;
+    }
+    
+    if (oauthUrl) {
+      // Redirect to OAuth provider
+      window.location.href = oauthUrl;
+    } else {
+      // For other platforms or if no OAuth URL, just mark as connected
     setConnectedPlatforms(prev => ({
       ...prev,
       [platformId]: true
     }));
     
-    // Auto-select required permissions when connecting
-    const platform = getPlatformDefinition(platformId);
-    if (platform) {
-      const requiredPermissions = platform.permissions
-        .filter(p => p.required)
-        .map(p => p.id);
+      // Auto-select the scopes that were requested for this platform
       setSelectedPermissions(prev => ({
         ...prev,
-        [platformId]: requiredPermissions
+        [platformId]: platformScopes
       }));
     }
   };
 
   const handleNext = () => {
-    if (currentStep < allPlatforms.length - 1) {
+    if (currentStep < requestedPlatforms.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
       handleSubmit();
@@ -93,7 +147,7 @@ export default function DemoOnboardingPage() {
     setIsCompleted(true);
   };
 
-  const currentPlatform = allPlatforms[currentStep];
+  const currentPlatform = requestedPlatforms[currentStep];
   const isConnected = connectedPlatforms[currentPlatform.id];
   const hasRequiredPermissions = currentPlatform.permissions
     .filter(p => p.required)
@@ -145,6 +199,22 @@ export default function DemoOnboardingPage() {
     );
   }
 
+  // Filter platforms to only show those requested in the link
+  const requestedPlatforms = linkData ? 
+    allPlatforms.filter(platform => linkData.platforms.includes(platform.id)) : 
+    allPlatforms;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading onboarding link...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header with Logo */}
@@ -165,7 +235,7 @@ export default function DemoOnboardingPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            {allPlatforms.map((platform, index) => (
+            {requestedPlatforms.map((platform, index) => (
               <div key={platform.id} className="flex items-center">
                 <div className="flex flex-col items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
@@ -422,39 +492,33 @@ export default function DemoOnboardingPage() {
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-900">Grant Access Permissions</h4>
                   <p className="text-sm text-gray-600 mb-4">
-                    Select the permissions you want to grant for this integration
+                    The following permissions will be requested for this integration
                   </p>
                   
                   <div className="space-y-3">
-                    {currentPlatform.permissions.map((permission) => {
-                      const isSelected = selectedPermissions[currentPlatform.id]?.includes(permission.id) || false;
+                    {linkData?.requestedScopes[currentPlatform.id]?.map((scope) => {
+                      const isSelected = selectedPermissions[currentPlatform.id]?.includes(scope) || false;
                       return (
-                        <div key={permission.id} className="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div key={scope} className="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                           <Checkbox
-                            id={permission.id}
+                            id={scope}
                             checked={isSelected}
                             onCheckedChange={(checked) => 
-                              handlePermissionChange(currentPlatform.id, permission.id, checked as boolean)
+                              handlePermissionChange(currentPlatform.id, scope, checked as boolean)
                             }
-                            disabled={permission.required}
                             className="mt-1"
                           />
                           <div className="flex-1">
                             <div className="flex items-center space-x-2">
                               <label 
-                                htmlFor={permission.id}
+                                htmlFor={scope}
                                 className="font-medium text-gray-900 cursor-pointer"
                               >
-                                {permission.name}
+                                {scope}
                               </label>
-                              {permission.required && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Required
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-sm text-gray-600 mt-1">
-                              {permission.description}
+                              {getScopeDescription(currentPlatform.id as keyof typeof scopes, scope)}
                             </p>
                           </div>
                         </div>
