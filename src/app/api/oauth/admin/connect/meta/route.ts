@@ -76,7 +76,22 @@ export async function GET(request: NextRequest) {
     const mockAdminId = '00000000-0000-0000-0000-000000000001';
 
     // Store the platform connection in the database
-    await createOrUpdateAdminAccount({
+    console.log('Storing Meta connection in database...');
+    console.log('Account data:', {
+      admin_id: mockAdminId,
+      provider: 'meta',
+      access_token: tokenResponse.access_token ? 'Present' : 'Missing',
+      refresh_token: tokenResponse.refresh_token ? 'Present' : 'Missing',
+      expires_at: tokenResponse.expires_in 
+        ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
+        : undefined,
+      scope: ['pages_show_list', 'ads_management'],
+      provider_user_id: userInfo.id,
+      provider_email: userInfo.email,
+      provider_name: userInfo.name,
+    });
+
+    const savedAccount = await createOrUpdateAdminAccount({
       admin_id: mockAdminId,
       provider: 'meta',
       access_token: tokenResponse.access_token,
@@ -90,7 +105,7 @@ export async function GET(request: NextRequest) {
       provider_name: userInfo.name,
     });
 
-    console.log('Meta connection stored successfully');
+    console.log('Meta connection stored successfully:', savedAccount);
 
     // Redirect back to admin settings with success
     return NextResponse.redirect(
