@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrUpdateAdminAccount } from '@/lib/db/database';
 
+// Consistent redirect URI construction
+function getGoogleRedirectUri(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app';
+  return `${baseUrl}/api/oauth/admin/connect/google`;
+}
+
 interface GoogleTokenResponse {
   access_token: string;
   refresh_token?: string;
@@ -25,9 +31,10 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
 
     console.log('Google OAuth route called');
-    console.log('Code:', code ? 'Present' : 'Missing');
+    console.log('Code:', code ? `Present: ${code.substring(0, 10)}...` : 'Missing');
     console.log('Error:', error);
     console.log('State:', state);
+    console.log('Full URL:', request.url);
 
     // If no code, this is the initial OAuth request - redirect to Google
     if (!code) {
@@ -46,15 +53,16 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app';
-      const redirectUri = `${baseUrl}/api/oauth/admin/connect/google`;
+      const redirectUri = getGoogleRedirectUri();
       
       console.log('Environment check:');
       console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
-      console.log('baseUrl:', baseUrl);
       console.log('redirectUri:', redirectUri);
       
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20email%20profile&response_type=code&state=admin_${Date.now()}`;
+      const state = `admin_${Date.now()}`;
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20email%20profile&response_type=code&state=${state}`;
+      
+      console.log('Generated state:', state);
       
       console.log('🔗 Google OAuth: Redirecting to Google with basic scopes');
       console.log('🔗 Google OAuth: Scopes: openid, email, profile');
@@ -67,6 +75,22 @@ export async function GET(request: NextRequest) {
       console.error('Google OAuth error:', error);
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_denied&platform=google&message=User denied access`
+      );
+    }
+
+    // Check if we have a code (this is a callback)
+    if (!code) {
+      console.error('Google OAuth callback missing code parameter');
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_failed&platform=google&message=No authorization code received`
+      );
+    }
+
+    // Validate state parameter (basic validation)
+    if (!state || !state.startsWith('admin_')) {
+      console.error('Google OAuth invalid state parameter:', state);
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_failed&platform=google&message=Invalid state parameter`
       );
     }
 
@@ -152,24 +176,34 @@ export async function GET(request: NextRequest) {
 async function exchangeCodeForToken(code: string): Promise<GoogleTokenResponse> {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/api/oauth/admin/connect/google`;
+  const redirectUri = getGoogleRedirectUri();
 
   if (!clientId || !clientSecret) {
     throw new Error('Google OAuth credentials not configured');
   }
+
+  console.log('Google token exchange parameters:');
+  console.log('client_id:', clientId);
+  console.log('client_secret:', clientSecret ? 'Present' : 'Missing');
+  console.log('redirect_uri:', redirectUri);
+  console.log('code:', code ? `${code.substring(0, 10)}...` : 'Missing');
+
+  const tokenParams = {
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uri: redirectUri,
+    code: code,
+    grant_type: 'authorization_code',
+  };
+
+  console.log('Google token exchange request body:', tokenParams);
 
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
-      code: code,
-      grant_type: 'authorization_code',
-    }),
+    body: new URLSearchParams(tokenParams),
   });
 
   if (!response.ok) {
