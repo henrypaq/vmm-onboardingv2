@@ -12,7 +12,7 @@ import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform
 import { scopes, getScopesForProvider, getScopeDescription } from '@/lib/scopes';
 
 interface EnhancedLinkGeneratorFormProps {
-  onLinkGenerated: (link: { url: string; token: string; platforms: string[]; permissions: Record<string, string[]> }) => void;
+  onLinkGenerated: (link: { url: string; token: string; platforms: string[]; requestedScopes: Record<string, string[]> }) => void;
 }
 
 export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGeneratorFormProps) {
@@ -102,7 +102,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
         url: data.url, 
         token: data.link.token,
         platforms: selectedPlatforms,
-        permissions: selectedScopes
+        requestedScopes: selectedScopes
       });
       
       // Reset form
