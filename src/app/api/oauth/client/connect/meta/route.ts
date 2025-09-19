@@ -22,12 +22,13 @@ interface MetaUserInfo {
 }
 
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const token = searchParams.get('token'); // Onboarding link token
+  
   try {
-    const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
     const error = searchParams.get('error');
     const state = searchParams.get('state');
-    const token = searchParams.get('token'); // Onboarding link token
 
     console.log('Client Meta OAuth route called');
     console.log('Code:', code ? `Present: ${code.substring(0, 10)}...` : 'Missing');

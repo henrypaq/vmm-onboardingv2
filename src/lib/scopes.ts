@@ -58,7 +58,7 @@ export function getScopesForProvider(provider: keyof typeof scopes): string[] {
 
 // Helper function to get only the scopes available for testing
 export function getAvailableScopesForProvider(provider: keyof typeof scopes): string[] {
-  return availableScopes[provider] || [];
+  return [...(availableScopes[provider] || [])];
 }
 
 // Helper function to get description for a specific scope
