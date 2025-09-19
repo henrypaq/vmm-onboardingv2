@@ -4,13 +4,21 @@
 export const scopes = {
   google: {
     "openid email profile": "Basic profile access (name, email, profile picture)",
-    "https://www.googleapis.com/auth/analytics.readonly": "Read Google Analytics data",
-    "https://www.googleapis.com/auth/adwords": "Manage Google Ads campaigns"
+    "https://www.googleapis.com/auth/adwords": "Google Ads Account - Manage ad campaigns and billing",
+    "https://www.googleapis.com/auth/analytics.readonly": "Google Analytics Account - Read website and app analytics data",
+    "https://www.googleapis.com/auth/business.manage": "Google Business Profile Location - Manage business listings and reviews",
+    "https://www.googleapis.com/auth/tagmanager.readonly": "Google Tag Manager - Read tag configuration and data",
+    "https://www.googleapis.com/auth/webmasters.readonly": "Google Search Console - Read search performance and sitemap data",
+    "https://www.googleapis.com/auth/content": "Google Merchant Center - Manage product listings and shopping campaigns"
   },
   meta: {
     "pages_show_list": "View list of your Facebook Pages",
     "pages_read_engagement": "Read Page content and engagement data",
-    "ads_management": "Manage Facebook and Instagram ads"
+    "ads_management": "Ad Account - Manage Facebook and Instagram ad campaigns",
+    "pages_manage_posts": "Pages - Create and manage posts on your Pages",
+    "catalog_management": "Catalogs - Manage product catalogs for shopping ads",
+    "business_management": "Datasets - Access business data and insights",
+    "instagram_basic": "Instagram Accounts - Access Instagram account information"
   },
   tiktok: {
     "user.info.basic": "Access basic user information",

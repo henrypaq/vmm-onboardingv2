@@ -223,6 +223,18 @@ export async function updateOnboardingLink(id: string, updates: Partial<Onboardi
   return data;
 }
 
+export async function deleteOnboardingLink(linkId: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('onboarding_links')
+    .delete()
+    .eq('id', linkId);
+
+  if (error) {
+    console.error('Error deleting onboarding link:', error);
+    throw new Error('Failed to delete onboarding link');
+  }
+}
+
 // Onboarding Request functions
 export async function getOnboardingRequests(linkId?: string): Promise<OnboardingRequest[]> {
   let query = supabaseAdmin
