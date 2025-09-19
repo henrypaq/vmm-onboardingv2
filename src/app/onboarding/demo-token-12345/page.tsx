@@ -147,12 +147,6 @@ export default function DemoOnboardingPage() {
     setIsCompleted(true);
   };
 
-  const currentPlatform = requestedPlatforms[currentStep];
-  const isConnected = connectedPlatforms[currentPlatform.id];
-  const hasRequiredPermissions = currentPlatform.permissions
-    .filter(p => p.required)
-    .every(p => selectedPermissions[currentPlatform.id]?.includes(p.id));
-
   const getPlatformIcon = (platformId: string) => {
     switch (platformId) {
       case 'meta': return <Users className="h-8 w-8" />;
@@ -203,6 +197,12 @@ export default function DemoOnboardingPage() {
   const requestedPlatforms = linkData ? 
     allPlatforms.filter(platform => linkData.platforms.includes(platform.id)) : 
     allPlatforms;
+
+  const currentPlatform = requestedPlatforms[currentStep];
+  const isConnected = connectedPlatforms[currentPlatform.id];
+  const hasRequiredPermissions = currentPlatform.permissions
+    .filter(p => p.required)
+    .every(p => selectedPermissions[currentPlatform.id]?.includes(p.id));
 
   if (isLoading) {
     return (
