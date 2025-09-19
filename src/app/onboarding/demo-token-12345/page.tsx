@@ -57,10 +57,11 @@ export default function DemoOnboardingPage() {
         
         // Mock data for demo - in production, fetch from API
         const mockLinkData = {
-          platforms: ['google', 'meta'],
+          platforms: ['google', 'meta', 'shopify'],
           requestedScopes: {
             google: ['openid email profile'],
-            meta: ['pages_show_list']
+            meta: ['pages_show_list'],
+            shopify: ['store_access']
           }
         };
         
