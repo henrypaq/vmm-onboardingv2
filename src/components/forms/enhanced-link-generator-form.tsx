@@ -55,6 +55,12 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
           ...prev,
           [platformId]: [availableScopes[0]]
         }));
+      } else {
+        // If no scopes are available for this platform, show a warning
+        console.warn(`No available scopes for platform: ${platformId}`);
+        alert(`Warning: ${platformId} has no available scopes for testing. This platform will be skipped.`);
+        // Don't add the platform if it has no scopes
+        return;
       }
     } else {
       setSelectedPlatforms(prev => prev.filter(id => id !== platformId));
@@ -87,6 +93,14 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
     if (selectedPlatforms.length === 0) {
       alert('Please select at least one platform');
       return;
+    }
+    
+    // Validate that each selected platform has at least one scope
+    for (const platform of selectedPlatforms) {
+      if (!selectedScopes[platform] || selectedScopes[platform].length === 0) {
+        alert(`Please select at least one scope for ${platform}`);
+        return;
+      }
     }
     
     console.log('Generating link with data:', {
@@ -188,12 +202,16 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {platforms.map((platform) => {
                 const isSelected = selectedPlatforms.includes(platform.id);
+                const availableScopesCount = getAvailableScopesForProvider(platform.id as keyof typeof scopes).length;
+                const isAvailable = availableScopesCount > 0;
+                
                 return (
-                  <div key={platform.id} className="border rounded-lg p-4">
+                  <div key={platform.id} className={`border rounded-lg p-4 ${!isAvailable ? 'opacity-50 bg-gray-50' : ''}`}>
                     <div className="flex items-center space-x-3 mb-3">
                       <Checkbox
                         id={`platform-${platform.id}`}
                         checked={isSelected}
+                        disabled={!isAvailable}
                         onCheckedChange={(checked) => handlePlatformToggle(platform.id, checked as boolean)}
                       />
                       <div className={`p-2 rounded-lg ${getPlatformColor(platform.id)} text-white`}>
@@ -202,8 +220,14 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                       <div>
                         <h3 className="font-medium">{platform.name}</h3>
                         <p className="text-sm text-gray-500">
-                          {getAvailableScopesForProvider(platform.id as keyof typeof scopes).length} scopes available for testing
+                          {isAvailable 
+                            ? `${availableScopesCount} scopes available for testing`
+                            : 'No scopes available for testing'
+                          }
                         </p>
+                        {!isAvailable && (
+                          <p className="text-xs text-orange-600 mt-1">Coming Soon</p>
+                        )}
                       </div>
                     </div>
                     
