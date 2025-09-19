@@ -54,9 +54,11 @@ export async function GET(request: NextRequest) {
       console.log('baseUrl:', baseUrl);
       console.log('redirectUri:', redirectUri);
       
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/adwords&response_type=code&state=admin_${Date.now()}`;
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20email%20profile&response_type=code&state=admin_${Date.now()}`;
       
-      console.log('Redirecting to Google OAuth:', oauthUrl);
+      console.log('🔗 Google OAuth: Redirecting to Google with basic scopes');
+      console.log('🔗 Google OAuth: Scopes: openid, email, profile');
+      console.log('🔗 Google OAuth: URL:', oauthUrl);
       return NextResponse.redirect(oauthUrl);
     }
 
@@ -78,11 +80,17 @@ export async function GET(request: NextRequest) {
 
     // Exchange code for access token
     const tokenResponse = await exchangeCodeForToken(code);
-    console.log('Token exchange successful');
+    console.log('✅ Google OAuth: Token exchange successful');
+    console.log('✅ Google OAuth: Access token received:', tokenResponse.access_token ? 'Present' : 'Missing');
+    console.log('✅ Google OAuth: Token type:', tokenResponse.token_type);
+    console.log('✅ Google OAuth: Expires in:', tokenResponse.expires_in, 'seconds');
 
     // Fetch user information from Google
     const userInfo = await fetchGoogleUserInfo(tokenResponse.access_token);
-    console.log('User info fetched:', userInfo);
+    console.log('✅ Google OAuth: User info fetched successfully');
+    console.log('✅ Google OAuth: User ID:', userInfo.id);
+    console.log('✅ Google OAuth: User email:', userInfo.email);
+    console.log('✅ Google OAuth: User name:', userInfo.name);
 
     // TODO: Get real admin ID from authentication/session
     // For now, using a mock admin ID - replace with real auth
@@ -98,7 +106,7 @@ export async function GET(request: NextRequest) {
       expires_at: tokenResponse.expires_in 
         ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
         : undefined,
-      scope: ['https://www.googleapis.com/auth/analytics.readonly', 'https://www.googleapis.com/auth/adwords'],
+      scope: ['openid', 'email', 'profile'],
       provider_user_id: userInfo.id,
       provider_email: userInfo.email,
       provider_name: userInfo.name,
@@ -112,13 +120,16 @@ export async function GET(request: NextRequest) {
       expires_at: tokenResponse.expires_in 
         ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
         : undefined,
-      scope: ['https://www.googleapis.com/auth/analytics.readonly', 'https://www.googleapis.com/auth/adwords'],
+      scope: ['openid', 'email', 'profile'],
       provider_user_id: userInfo.id,
       provider_email: userInfo.email,
       provider_name: userInfo.name,
     });
 
-    console.log('Google connection stored successfully:', savedAccount);
+    console.log('✅ Google OAuth: Connection stored successfully in database');
+    console.log('✅ Google OAuth: Database record ID:', savedAccount?.id || 'Unknown');
+    console.log('✅ Google OAuth: Provider:', savedAccount?.provider || 'Unknown');
+    console.log('✅ Google OAuth: Complete OAuth flow successful!');
 
     // Redirect back to admin settings with success
     return NextResponse.redirect(
