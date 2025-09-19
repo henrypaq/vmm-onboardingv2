@@ -150,7 +150,12 @@ export default function DemoOnboardingPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">VAST</h1>
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="text-2xl font-bold text-gray-900 hover:text-purple-600 transition-colors duration-200 cursor-pointer"
+            >
+              VAST
+            </button>
           </div>
         </div>
       </div>

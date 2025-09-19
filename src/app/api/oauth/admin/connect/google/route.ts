@@ -34,6 +34,11 @@ export async function GET(request: NextRequest) {
       console.log('Initiating Google OAuth flow');
       
       // Check environment variables
+      console.log('Google OAuth environment check:');
+      console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
+      console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
+      console.log('All env vars:', Object.keys(process.env).filter(key => key.includes('GOOGLE')));
+      
       if (!process.env.GOOGLE_CLIENT_ID) {
         console.error('GOOGLE_CLIENT_ID environment variable is not set');
         return NextResponse.redirect(
