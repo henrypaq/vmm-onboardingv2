@@ -184,9 +184,10 @@ async function exchangeCodeForToken(code: string): Promise<GoogleTokenResponse> 
 
   console.log('Google token exchange parameters:');
   console.log('client_id:', clientId);
-  console.log('client_secret:', clientSecret ? 'Present' : 'Missing');
+  console.log('client_secret:', clientSecret ? `Present: ${clientSecret.substring(0, 8)}...` : 'Missing');
   console.log('redirect_uri:', redirectUri);
   console.log('code:', code ? `${code.substring(0, 10)}...` : 'Missing');
+  console.log('All Google env vars:', Object.keys(process.env).filter(key => key.includes('GOOGLE')));
 
   const tokenParams = {
     client_id: clientId,
