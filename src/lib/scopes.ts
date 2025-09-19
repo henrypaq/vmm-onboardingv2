@@ -30,9 +30,35 @@ export const scopes = {
   }
 } as const;
 
+// Define which scopes are available for testing
+export const availableScopes = {
+  google: [
+    "openid email profile"
+    // Other Google scopes disabled for testing
+  ],
+  meta: [
+    "pages_show_list",
+    "pages_read_engagement", 
+    "ads_management",
+    "pages_manage_posts"
+    // Catalogs, Datasets, Instagram disabled for testing
+  ],
+  tiktok: [
+    // TikTok disabled for now
+  ],
+  shopify: [
+    "store_access"
+  ]
+} as const;
+
 // Helper function to get all available scopes for a provider
 export function getScopesForProvider(provider: keyof typeof scopes): string[] {
   return Object.keys(scopes[provider]);
+}
+
+// Helper function to get only the scopes available for testing
+export function getAvailableScopesForProvider(provider: keyof typeof scopes): string[] {
+  return availableScopes[provider] || [];
 }
 
 // Helper function to get description for a specific scope

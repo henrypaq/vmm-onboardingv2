@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Users, Search, Video, ShoppingBag } from 'lucide-react';
 import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
-import { scopes, getScopesForProvider, getScopeDescription } from '@/lib/scopes';
+import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider } from '@/lib/scopes';
 
 interface EnhancedLinkGeneratorFormProps {
   onLinkGenerated: (link: { url: string; token: string; platforms: string[]; requestedScopes: Record<string, string[]> }) => void;
@@ -47,10 +47,10 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
   const handlePlatformToggle = (platformId: string, checked: boolean) => {
     if (checked) {
       setSelectedPlatforms(prev => [...prev, platformId]);
-      // Initialize with basic scopes for this platform
-      const availableScopes = getScopesForProvider(platformId as keyof typeof scopes);
+      // Initialize with available scopes for this platform (only those enabled for testing)
+      const availableScopes = getAvailableScopesForProvider(platformId as keyof typeof scopes);
       if (availableScopes.length > 0) {
-        // Select the first scope by default (usually the basic one)
+        // Select the first available scope by default
         setSelectedScopes(prev => ({
           ...prev,
           [platformId]: [availableScopes[0]]
@@ -175,7 +175,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                       <div>
                         <h3 className="font-medium">{platform.name}</h3>
                         <p className="text-sm text-gray-500">
-                          {getScopesForProvider(platform.id as keyof typeof scopes).length} scopes available
+                          {getAvailableScopesForProvider(platform.id as keyof typeof scopes).length} scopes available for testing
                         </p>
                       </div>
                     </div>
@@ -185,21 +185,26 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                         <p className="text-sm font-medium text-gray-700">Select OAuth Scopes:</p>
                         {getScopesForProvider(platform.id as keyof typeof scopes).map((scope) => {
                           const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
+                          const isScopeAvailable = getAvailableScopesForProvider(platform.id as keyof typeof scopes).includes(scope);
                           return (
-                            <div key={scope} className="flex items-start space-x-2">
+                            <div key={scope} className={`flex items-start space-x-2 ${!isScopeAvailable ? 'opacity-50' : ''}`}>
                               <Checkbox
                                 id={`scope-${platform.id}-${scope}`}
                                 checked={isScopeSelected}
+                                disabled={!isScopeAvailable}
                                 onCheckedChange={(checked) => 
-                                  handleScopeToggle(platform.id, scope, checked as boolean)
+                                  isScopeAvailable ? handleScopeToggle(platform.id, scope, checked as boolean) : undefined
                                 }
                               />
                               <div className="flex-1">
                                 <label 
                                   htmlFor={`scope-${platform.id}-${scope}`}
-                                  className="text-sm font-medium cursor-pointer"
+                                  className={`text-sm font-medium ${isScopeAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                                 >
                                   {scope}
+                                  {!isScopeAvailable && (
+                                    <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
+                                  )}
                                 </label>
                                 <p className="text-xs text-gray-500">
                                   {getScopeDescription(platform.id as keyof typeof scopes, scope)}

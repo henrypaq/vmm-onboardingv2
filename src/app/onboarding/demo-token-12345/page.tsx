@@ -93,28 +93,32 @@ export default function DemoOnboardingPage() {
       return;
     }
 
-    // Build OAuth URL with the stored scopes
+    // Build OAuth URL with the stored scopes and token
     let oauthUrl = '';
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app';
+    const token = 'demo-token-12345'; // TODO: Get from URL params in production
     
     if (platformId === 'google') {
       const scopesParam = platformScopes.join(' ');
-      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${baseUrl}/api/oauth/client/connect/google`)}&scope=${encodeURIComponent(scopesParam)}&response_type=code&state=client_${Date.now()}`;
+      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${baseUrl}/api/oauth/client/connect/google`)}&scope=${encodeURIComponent(scopesParam)}&response_type=code&state=client_${token}_${Date.now()}&token=${token}`;
     } else if (platformId === 'meta') {
       const scopesParam = platformScopes.join(',');
-      oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${baseUrl}/api/oauth/client/connect/meta`)}&scope=${encodeURIComponent(scopesParam)}&response_type=code&state=client_${Date.now()}`;
+      oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${baseUrl}/api/oauth/client/connect/meta`)}&scope=${encodeURIComponent(scopesParam)}&response_type=code&state=client_${token}_${Date.now()}&token=${token}`;
     }
     
     if (oauthUrl) {
+      console.log('Redirecting to OAuth provider:', platformId);
+      console.log('Scopes:', platformScopes);
+      console.log('Token:', token);
       // Redirect to OAuth provider
       window.location.href = oauthUrl;
     } else {
       // For other platforms or if no OAuth URL, just mark as connected
-    setConnectedPlatforms(prev => ({
-      ...prev,
-      [platformId]: true
-    }));
-    
+      setConnectedPlatforms(prev => ({
+        ...prev,
+        [platformId]: true
+      }));
+      
       // Auto-select the scopes that were requested for this platform
       setSelectedPermissions(prev => ({
         ...prev,
