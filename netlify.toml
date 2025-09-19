@@ -1,24 +1,21 @@
 [build]
-  command = "npm run build"
+  command = "./build.sh"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
+  NPM_FLAGS = "--production=false"
   NEXT_TELEMETRY_DISABLED = "1"
+  CI = "false"
+  NODE_OPTIONS = "--max-old-space-size=4096"
 
 [build.processing]
-  skip_processing = false
+  skip_processing = true
 
-[build.processing.css]
-  bundle = true
-  minify = true
-
-[build.processing.js]
-  bundle = true
-  minify = true
-
-[build.processing.html]
-  pretty_urls = true
+[build.lifecycle]
+  onBuild = "echo 'Starting build process'"
+  onSuccess = "echo 'Build completed successfully'"
+  onError = "echo 'Build failed'"
 
 [[redirects]]
   from = "/*"
