@@ -99,6 +99,11 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Meta OAuth callback error:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_failed&platform=meta&message=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
     );
@@ -129,8 +134,15 @@ async function exchangeCodeForToken(code: string): Promise<MetaTokenResponse> {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Meta token exchange failed:', errorText);
-    throw new Error(`Meta token exchange failed: ${errorText}`);
+    console.error('Meta token exchange failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      errorText: errorText,
+      url: 'https://graph.facebook.com/v17.0/oauth/access_token',
+      clientId: clientId,
+      redirectUri: redirectUri
+    });
+    throw new Error(`Meta token exchange failed (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();

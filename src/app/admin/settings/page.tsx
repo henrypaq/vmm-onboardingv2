@@ -195,9 +195,11 @@ export default function AdminSettingsPage() {
                               console.log(`Connecting to ${platform.name}...`);
                               console.log(`Platform ID: ${platform.id}`);
                               
-                              // Use dedicated Meta route for better OAuth handling
+                              // Use dedicated routes for better OAuth handling
                               const oauthUrl = platform.id === 'meta' 
                                 ? `/api/oauth/admin/connect/meta`
+                                : platform.id === 'google'
+                                ? `/api/oauth/admin/connect/google`
                                 : `/api/oauth/admin/connect/${platform.id}`;
                               
                               console.log(`OAuth URL: ${oauthUrl}`);
