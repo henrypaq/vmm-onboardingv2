@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createOrUpdateAdminAccount } from '@/lib/db/database';
+import { createAdminPlatformConnection, AdminPlatformConnection } from '@/lib/db/database';
 
 // Consistent redirect URI construction
 function getGoogleRedirectUri(): string {
@@ -124,35 +124,35 @@ export async function GET(request: NextRequest) {
     console.log('Storing Google connection in database...');
     console.log('Account data:', {
       admin_id: mockAdminId,
-      provider: 'google',
+      platform: 'google',
+      platform_user_id: userInfo.id,
+      platform_username: userInfo.name,
       access_token: tokenResponse.access_token ? 'Present' : 'Missing',
       refresh_token: tokenResponse.refresh_token ? 'Present' : 'Missing',
-      expires_at: tokenResponse.expires_in 
+      token_expires_at: tokenResponse.expires_in 
         ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
         : undefined,
-      scope: ['openid', 'email', 'profile'],
-      provider_user_id: userInfo.id,
-      provider_email: userInfo.email,
-      provider_name: userInfo.name,
+      scopes: ['openid', 'email', 'profile'],
+      is_active: true,
     });
 
-    const savedAccount = await createOrUpdateAdminAccount({
+    const savedAccount = await createAdminPlatformConnection({
       admin_id: mockAdminId,
-      provider: 'google',
+      platform: 'google',
+      platform_user_id: userInfo.id,
+      platform_username: userInfo.name,
       access_token: tokenResponse.access_token,
       refresh_token: tokenResponse.refresh_token,
-      expires_at: tokenResponse.expires_in 
+      token_expires_at: tokenResponse.expires_in 
         ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
         : undefined,
-      scope: ['openid', 'email', 'profile'],
-      provider_user_id: userInfo.id,
-      provider_email: userInfo.email,
-      provider_name: userInfo.name,
+      scopes: ['openid', 'email', 'profile'],
+      is_active: true,
     });
 
     console.log('✅ Google OAuth: Connection stored successfully in database');
     console.log('✅ Google OAuth: Database record ID:', savedAccount?.id || 'Unknown');
-    console.log('✅ Google OAuth: Provider:', savedAccount?.provider || 'Unknown');
+    console.log('✅ Google OAuth: Platform:', savedAccount?.platform || 'Unknown');
     console.log('✅ Google OAuth: Complete OAuth flow successful!');
 
     // Redirect back to admin settings with success

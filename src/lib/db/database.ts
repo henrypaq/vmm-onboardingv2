@@ -335,6 +335,19 @@ export async function deleteAdminPlatformConnection(id: string): Promise<void> {
   }
 }
 
+export async function deleteAdminPlatformConnectionByAdminAndPlatform(adminId: string, platform: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('admin_platform_connections')
+    .update({ is_active: false })
+    .eq('admin_id', adminId)
+    .eq('platform', platform);
+
+  if (error) {
+    console.error('Error deleting admin platform connection:', error);
+    throw new Error('Failed to delete platform connection');
+  }
+}
+
 // Admin Account functions (new table)
 export interface AdminAccount {
   id: string;

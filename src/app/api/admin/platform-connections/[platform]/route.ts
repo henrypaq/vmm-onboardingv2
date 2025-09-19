@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteAdminAccount } from '@/lib/db/database';
+import { deleteAdminPlatformConnectionByAdminAndPlatform } from '@/lib/db/database';
 
 export async function DELETE(
   request: NextRequest,
@@ -13,7 +13,7 @@ export async function DELETE(
     const mockAdminId = '00000000-0000-0000-0000-000000000001';
 
     // Delete the platform connection
-    await deleteAdminAccount(mockAdminId, platform);
+    await deleteAdminPlatformConnectionByAdminAndPlatform(mockAdminId, platform);
 
     return NextResponse.json({
       success: true,

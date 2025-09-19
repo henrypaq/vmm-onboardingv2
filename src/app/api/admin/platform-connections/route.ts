@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllAdminAccounts } from '@/lib/db/database';
+import { getAdminPlatformConnections } from '@/lib/db/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,16 +8,16 @@ export async function GET(request: NextRequest) {
     const mockAdminId = '00000000-0000-0000-0000-000000000001';
 
     // Fetch admin platform connections from database
-    const connections = await getAllAdminAccounts(mockAdminId);
+    const connections = await getAdminPlatformConnections(mockAdminId);
 
     // Transform the data to match the expected format
     const formattedConnections = connections.map(conn => ({
-      id: conn.provider,
-      name: getPlatformDisplayName(conn.provider),
-      username: conn.provider_name || conn.provider_email || 'Connected',
+      id: conn.platform,
+      name: getPlatformDisplayName(conn.platform),
+      username: conn.platform_username || 'Connected',
       status: 'connected',
-      platform: conn.provider,
-      scopes: conn.scope || [],
+      platform: conn.platform,
+      scopes: conn.scopes || [],
       connectedAt: conn.created_at,
     }));
 

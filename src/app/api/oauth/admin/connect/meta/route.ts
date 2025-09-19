@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createOrUpdateAdminAccount } from '@/lib/db/database';
+import { createAdminPlatformConnection, AdminPlatformConnection } from '@/lib/db/database';
 
 // Consistent redirect URI construction
 function getMetaRedirectUri(): string {
@@ -103,30 +103,30 @@ export async function GET(request: NextRequest) {
     console.log('Storing Meta connection in database...');
     console.log('Account data:', {
       admin_id: mockAdminId,
-      provider: 'meta',
+      platform: 'meta',
+      platform_user_id: userInfo.id,
+      platform_username: userInfo.name,
       access_token: tokenResponse.access_token ? 'Present' : 'Missing',
       refresh_token: tokenResponse.refresh_token ? 'Present' : 'Missing',
-      expires_at: tokenResponse.expires_in 
+      token_expires_at: tokenResponse.expires_in 
         ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
         : undefined,
-      scope: ['pages_show_list', 'ads_management'],
-      provider_user_id: userInfo.id,
-      provider_email: userInfo.email,
-      provider_name: userInfo.name,
+      scopes: ['pages_show_list', 'ads_management'],
+      is_active: true,
     });
 
-    const savedAccount = await createOrUpdateAdminAccount({
+    const savedAccount = await createAdminPlatformConnection({
       admin_id: mockAdminId,
-      provider: 'meta',
+      platform: 'meta',
+      platform_user_id: userInfo.id,
+      platform_username: userInfo.name,
       access_token: tokenResponse.access_token,
       refresh_token: tokenResponse.refresh_token,
-      expires_at: tokenResponse.expires_in 
+      token_expires_at: tokenResponse.expires_in 
         ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
         : undefined,
-      scope: ['pages_show_list', 'ads_management'],
-      provider_user_id: userInfo.id,
-      provider_email: userInfo.email,
-      provider_name: userInfo.name,
+      scopes: ['pages_show_list', 'ads_management'],
+      is_active: true,
     });
 
     console.log('Meta connection stored successfully:', savedAccount);
