@@ -77,6 +77,25 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!clientId.trim()) {
+      alert('Please enter a Client ID');
+      return;
+    }
+    
+    if (selectedPlatforms.length === 0) {
+      alert('Please select at least one platform');
+      return;
+    }
+    
+    console.log('Generating link with data:', {
+      clientId,
+      expiresInDays,
+      platforms: selectedPlatforms,
+      requestedScopes: selectedScopes
+    });
+    
     setIsGenerating(true);
 
     try {
@@ -93,11 +112,17 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
         }),
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to generate link');
+        const errorData = await response.text();
+        console.error('API Error:', errorData);
+        throw new Error(`Failed to generate link: ${response.status} ${errorData}`);
       }
 
       const data = await response.json();
+      console.log('Generated link data:', data);
+      
       onLinkGenerated({ 
         url: data.url, 
         token: data.link.token,
@@ -110,9 +135,11 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
       setExpiresInDays(7);
       setSelectedPlatforms([]);
       setSelectedScopes({});
+      
+      alert('Link generated successfully!');
     } catch (error) {
       console.error('Error generating link:', error);
-      // TODO: Show error toast
+      alert(`Error generating link: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGenerating(false);
     }
