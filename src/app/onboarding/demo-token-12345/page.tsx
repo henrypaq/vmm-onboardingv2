@@ -39,6 +39,7 @@ export default function DemoOnboardingPage() {
     storeId: '',
     collaboratorCode: ''
   });
+  const [shopifyStep, setShopifyStep] = useState(1); // 1 = store ID, 2 = permissions
 
   const handlePermissionChange = (platformId: string, permissionId: string, checked: boolean) => {
     setSelectedPermissions(prev => ({
@@ -219,87 +220,162 @@ export default function DemoOnboardingPage() {
           <CardContent className="p-8">
             {currentPlatform.id === 'shopify' ? (
               <div>
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Shopify Store Connection
-                  </h3>
-                  <p className="text-gray-600">
-                    Enter your Shopify store details to connect your account
-                  </p>
-                </div>
-
-                <div className="space-y-6">
+                {shopifyStep === 1 ? (
+                  // Step 1: Store ID Entry
                   <div>
-                    <label htmlFor="shopify-store-id" className="block text-sm font-medium text-gray-700 mb-2">
-                      Shopify Store ID
-                    </label>
-                    <div className="flex items-center">
-                      <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                        https://
-                      </span>
-                      <input
-                        type="text"
-                        id="shopify-store-id"
-                        value={shopifyData.storeId}
-                        onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
-                        placeholder="your-store-id"
-                        className="flex-1 min-w-0 block w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:ring-purple-500 focus:border-purple-500"
-                      />
-                      <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                        .myshopify.com
-                      </span>
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        Shopify Store Connection
+                      </h3>
+                      <p className="text-gray-600">
+                        Enter your Shopify store ID to get started
+                      </p>
                     </div>
-                    <div className="mt-2 flex items-center text-sm text-gray-500">
-                      <Info className="h-4 w-4 mr-1" />
-                      <a href="#" className="text-purple-600 hover:text-purple-500">
-                        How to find your store ID
-                      </a>
-                    </div>
-                  </div>
 
-                  <div>
-                    <label htmlFor="collaborator-code" className="block text-sm font-medium text-gray-700 mb-2">
-                      Collaborator Code
-                    </label>
-                    <input
-                      type="text"
-                      id="collaborator-code"
-                      value={shopifyData.collaboratorCode}
-                      onChange={(e) => setShopifyData(prev => ({ ...prev, collaboratorCode: e.target.value }))}
-                      placeholder="Enter your collaborator code"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-purple-500 focus:border-purple-500"
-                    />
-                    <div className="mt-2">
-                      <a 
-                        href="https://help.shopify.com/en/manual/your-account/access-tokens" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-sm text-purple-600 hover:text-purple-500"
+                    <div className="space-y-6">
+                      <div>
+                        <label htmlFor="shopify-store-id" className="block text-sm font-medium text-gray-700 mb-2">
+                          Shopify Store ID
+                        </label>
+                        <div className="flex items-center">
+                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                            https://
+                          </span>
+                          <input
+                            type="text"
+                            id="shopify-store-id"
+                            value={shopifyData.storeId}
+                            onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
+                            placeholder="your-store-id"
+                            className="flex-1 min-w-0 block w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:ring-purple-500 focus:border-purple-500"
+                          />
+                          <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                            .myshopify.com
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center text-sm text-gray-500">
+                          <Info className="h-4 w-4 mr-1" />
+                          <a href="#" className="text-purple-600 hover:text-purple-500">
+                            How to find your store ID
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <Shield className="h-5 w-5 text-green-600" />
+                          <span className="text-sm font-medium text-gray-900">Secure Connection</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Your store credentials are encrypted and stored securely. You can revoke access at any time.
+                        </p>
+                      </div>
+
+                      <Button 
+                        onClick={() => setShopifyStep(2)}
+                        disabled={!shopifyData.storeId}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Get your collaborator code →
-                      </a>
+                        <ShoppingBag className="h-5 w-5" />
+                        <span>Continue</span>
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <Shield className="h-5 w-5 text-green-600" />
-                      <span className="text-sm font-medium text-gray-900">Secure Connection</span>
+                ) : (
+                  // Step 2: Permissions Setup
+                  <div>
+                    <div className="text-center mb-6">
+                      <div className="flex items-center justify-center mb-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            1
+                          </div>
+                          <div className="w-16 h-0.5 bg-purple-600"></div>
+                          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                            2
+                          </div>
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        2 more steps needed to finish granting everything
+                      </h3>
+                      <p className="text-gray-600">
+                        First, to grant access to your Shopify Store '{shopifyData.storeId}', follow these simple instructions:
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-600">
-                      Your store credentials are encrypted and stored securely. You can revoke access at any time.
-                    </p>
-                  </div>
 
-                  <Button 
-                    onClick={() => handleConnectPlatform('shopify')}
-                    disabled={!shopifyData.storeId || !shopifyData.collaboratorCode}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ShoppingBag className="h-5 w-5" />
-                    <span>Continue</span>
-                  </Button>
-                </div>
+                    <div className="space-y-6">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            1
+                          </div>
+                          <span className="font-medium text-gray-900">Assign your Shopify Store '{shopifyData.storeId}'</span>
+                        </div>
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                            2
+                          </div>
+                          <span className="font-medium text-gray-600">Assign your WordPress Site 'https://www.growth-consultant.com'</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-3">
+                            1. Open your store's Users and permissions settings:
+                          </p>
+                          <Button 
+                            onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium"
+                          >
+                            OPEN SHOPIFY
+                          </Button>
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-3">
+                            2. Enter your Collaborator Request Code
+                          </p>
+                          <div>
+                            <label htmlFor="collaborator-code" className="block text-sm font-medium text-gray-700 mb-2">
+                              Collaborator Request Code
+                            </label>
+                            <input
+                              type="text"
+                              id="collaborator-code"
+                              value={shopifyData.collaboratorCode}
+                              onChange={(e) => setShopifyData(prev => ({ ...prev, collaboratorCode: e.target.value }))}
+                              placeholder="Enter your collaborator code"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-purple-500 focus:border-purple-500"
+                            />
+                            <div className="mt-2 flex items-center text-sm text-gray-500">
+                              <Info className="h-4 w-4 mr-1" />
+                              <span>Note: if no code is required enter 'none'</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-3">
+                        <Button 
+                          onClick={() => setShopifyStep(1)}
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          Back
+                        </Button>
+                        <Button 
+                          onClick={() => handleConnectPlatform('shopify')}
+                          disabled={!shopifyData.collaboratorCode}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Complete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : !isConnected ? (
               <div className="text-center">
