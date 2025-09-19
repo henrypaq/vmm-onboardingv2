@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Save, Bell, Shield, Globe, Users, Search, Video, ShoppingBag, Plus, Trash2 } from 'lucide-react';
+import { Save, Bell, Shield, Globe, Users, Search, Video, Plus, Trash2 } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 
 interface PlatformConnection {
@@ -88,7 +88,6 @@ export default function AdminSettingsPage() {
       case 'meta': return <Users className="h-5 w-5" />;
       case 'google': return <Search className="h-5 w-5" />;
       case 'tiktok': return <Video className="h-5 w-5" />;
-      case 'shopify': return <ShoppingBag className="h-5 w-5" />;
       default: return <Globe className="h-5 w-5" />;
     }
   };
@@ -98,7 +97,6 @@ export default function AdminSettingsPage() {
       case 'meta': return 'bg-blue-600';
       case 'google': return 'bg-red-600';
       case 'tiktok': return 'bg-black';
-      case 'shopify': return 'bg-green-600';
       default: return 'bg-gray-600';
     }
   };
