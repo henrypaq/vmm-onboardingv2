@@ -16,7 +16,7 @@ interface EnhancedLinkGeneratorFormProps {
 }
 
 export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGeneratorFormProps) {
-  const [clientId, setClientId] = useState('');
+  const [linkName, setLinkName] = useState('');
   const [expiresInDays, setExpiresInDays] = useState(7);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [selectedScopes, setSelectedScopes] = useState<Record<string, string[]>>({});
@@ -85,8 +85,8 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
     e.preventDefault();
     
     // Validation
-    if (!clientId.trim()) {
-      alert('Please enter a Client ID');
+    if (!linkName.trim()) {
+      alert('Please enter a Link Name');
       return;
     }
     
@@ -104,7 +104,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
     }
     
     console.log('Generating link with data:', {
-      clientId,
+      linkName,
       expiresInDays,
       platforms: selectedPlatforms,
       requestedScopes: selectedScopes
@@ -119,7 +119,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          clientId,
+          linkName,
           expiresInDays,
           platforms: selectedPlatforms,
           requestedScopes: selectedScopes,
@@ -144,11 +144,11 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
         requestedScopes: selectedScopes
       });
       
-      // Reset form
-      setClientId('');
-      setExpiresInDays(7);
-      setSelectedPlatforms([]);
-      setSelectedScopes({});
+          // Reset form
+          setLinkName('');
+          setExpiresInDays(7);
+          setSelectedPlatforms([]);
+          setSelectedScopes({});
       
       alert('Link generated successfully!');
     } catch (error) {
@@ -172,14 +172,17 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="clientId">Client ID</Label>
+              <Label htmlFor="linkName">Link Name</Label>
               <Input
-                id="clientId"
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                placeholder="Enter client ID"
+                id="linkName"
+                value={linkName}
+                onChange={(e) => setLinkName(e.target.value)}
+                placeholder="Enter link name (e.g., 'Client Onboarding - Q1 2024')"
                 required
               />
+              <p className="text-sm text-gray-500 mt-1">
+                A descriptive name to identify this onboarding link
+              </p>
             </div>
             
             <div>

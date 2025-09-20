@@ -14,12 +14,12 @@ export async function POST(request: NextRequest) {
     const requestBody = await request.json();
     console.log('📝 Request body:', requestBody);
     
-    const { clientId, expiresInDays, platforms, requestedScopes } = requestBody;
+    const { linkName, expiresInDays, platforms, requestedScopes } = requestBody;
     
-    if (!clientId) {
-      console.log('❌ Client ID missing');
+    if (!linkName) {
+      console.log('❌ Link name missing');
       return NextResponse.json(
-        { error: 'Client ID is required' },
+        { error: 'Link name is required' },
         { status: 400 }
       );
     }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Validation passed, generating link...');
     console.log('📊 Input data:', {
-      clientId,
+      linkName,
       expiresInDays,
       platforms,
       requestedScopes
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     // Generate the link
     const generatedLink = generateOnboardingLink({
-      clientId,
+      clientId: linkName, // Use link name as client ID for now
       expiresInDays,
       createdBy: 'placeholder-admin-id', // TODO: Use actual admin ID from session
     });
@@ -76,7 +76,8 @@ export async function POST(request: NextRequest) {
     
     const linkData = {
       admin_id: '00000000-0000-0000-0000-000000000001', // TODO: Use actual admin ID from session
-      // client_id: undefined, // Temporarily commented out until database schema is updated
+      link_name: linkName, // Descriptive name for the onboarding link
+      // client_id is intentionally omitted - onboarding links are public and don't require pre-existing clients
       token: generatedLink.token,
       platforms: platforms,
       requested_permissions: requestedScopes || {},

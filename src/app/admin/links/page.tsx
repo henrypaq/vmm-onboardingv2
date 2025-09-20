@@ -10,7 +10,8 @@ import { Copy, ExternalLink, Trash2, RefreshCw } from 'lucide-react';
 interface OnboardingLink {
   id: string;
   admin_id: string;
-  client_id: string;
+  client_id?: string;
+  link_name?: string;
   token: string;
   platforms: string[];
   requested_permissions: Record<string, string[]>;
@@ -155,7 +156,9 @@ export default function LinksPage() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-4">
                         <div>
-                          <h3 className="font-medium">Client: {link.client_id}</h3>
+                          <h3 className="font-medium">
+                            {link.link_name || 'Unnamed Link'}
+                          </h3>
                           <p className="text-sm text-gray-500">Token: {link.token}</p>
                           <p className="text-xs text-gray-400">
                             Created: {new Date(link.created_at).toLocaleDateString()}
@@ -163,6 +166,11 @@ export default function LinksPage() {
                           <p className="text-xs text-gray-400">
                             Platforms: {link.platforms.join(', ')}
                           </p>
+                          {link.client_id && (
+                            <p className="text-xs text-gray-400">
+                              Client: {link.client_id}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

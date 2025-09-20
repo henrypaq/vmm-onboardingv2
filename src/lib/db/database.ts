@@ -27,6 +27,7 @@ export interface OnboardingLink {
   id: string;
   admin_id: string;
   client_id?: string;
+  link_name?: string; // Descriptive name for the onboarding link
   token: string;
   platforms: string[];
   requested_permissions: Record<string, string[]>;
