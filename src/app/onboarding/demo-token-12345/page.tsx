@@ -137,6 +137,11 @@ export default function DemoOnboardingPage() {
     
     setIsSubmitting(false);
     setIsCompleted(true);
+    
+    // Auto-redirect to home page after 3 seconds
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 3000);
   };
 
   const getPlatformIcon = (platformId: string) => {
@@ -176,8 +181,13 @@ export default function DemoOnboardingPage() {
             <p className="text-sm text-gray-600 mb-4">
               You will receive an email confirmation once your request has been reviewed by our team.
             </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                🚀 Redirecting to home page automatically in 3 seconds...
+              </p>
+            </div>
             <Button onClick={() => window.location.href = '/'} className="w-full">
-              Return to Home
+              Return to Home Now
             </Button>
           </CardContent>
         </Card>
