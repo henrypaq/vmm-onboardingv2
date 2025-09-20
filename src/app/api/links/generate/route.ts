@@ -83,7 +83,6 @@ export async function POST(request: NextRequest) {
       requested_permissions: requestedScopes || {},
       expires_at: generatedLink.expiresAt.toISOString(),
       status: 'pending' as const,
-      is_used: false,
     };
     
     console.log('📝 Database payload:', linkData);

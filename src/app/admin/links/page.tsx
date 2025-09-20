@@ -17,7 +17,6 @@ interface OnboardingLink {
   requested_permissions: Record<string, string[]>;
   expires_at: string;
   status: string;
-  is_used: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -88,16 +87,18 @@ export default function LinksPage() {
     // TODO: Show toast notification
   };
 
-  const getStatusVariant = (isUsed: boolean, expiresAt: string) => {
-    if (isUsed) return 'secondary';
-    if (new Date(expiresAt) < new Date()) return 'destructive';
-    return 'default';
+  const getStatusVariant = (status: string, expiresAt: string) => {
+    if (status === 'completed') return 'secondary';
+    if (status === 'expired' || new Date(expiresAt) < new Date()) return 'destructive';
+    if (status === 'in_progress') return 'default';
+    return 'default'; // pending
   };
 
-  const getStatusText = (isUsed: boolean, expiresAt: string) => {
-    if (isUsed) return 'Used';
-    if (new Date(expiresAt) < new Date()) return 'Expired';
-    return 'Active';
+  const getStatusText = (status: string, expiresAt: string) => {
+    if (status === 'completed') return 'Completed';
+    if (status === 'expired' || new Date(expiresAt) < new Date()) return 'Expired';
+    if (status === 'in_progress') return 'In Progress';
+    return 'Active'; // pending
   };
 
   const getOnboardingUrl = (token: string) => {
@@ -175,8 +176,8 @@ export default function LinksPage() {
                     </div>
                     
                     <div className="flex items-center space-x-4">
-                      <Badge variant={getStatusVariant(link.is_used, link.expires_at)}>
-                        {getStatusText(link.is_used, link.expires_at)}
+                      <Badge variant={getStatusVariant(link.status, link.expires_at)}>
+                        {getStatusText(link.status, link.expires_at)}
                       </Badge>
                       <div className="text-right text-sm text-gray-500">
                         <p>Expires: {new Date(link.expires_at).toLocaleDateString()}</p>
