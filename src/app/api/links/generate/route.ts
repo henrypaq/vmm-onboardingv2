@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     console.log('💾 Saving to database...');
     const linkData = {
       admin_id: '00000000-0000-0000-0000-000000000001', // TODO: Use actual admin ID from session
-      client_id: null, // Store as null for now, will reference clients table later
+      client_id: undefined, // Store as undefined for now, will reference clients table later
       token: generatedLink.token,
       platforms: platforms,
       requested_permissions: requestedScopes || {},
