@@ -55,12 +55,13 @@ export default function DemoOnboardingPage() {
         // In production, this would come from the URL params
         const token = 'demo-token-12345';
         
-        // Mock data for demo - in production, fetch from API
+        // Mock data for demo - includes all platforms (Meta, Google, TikTok, Shopify)
         const mockLinkData = {
-          platforms: ['google', 'meta', 'shopify'],
+          platforms: ['google', 'meta', 'tiktok', 'shopify'],
           requestedScopes: {
             google: ['openid email profile'],
-            meta: ['pages_show_list'],
+            meta: ['pages_show_list', 'pages_read_engagement'],
+            tiktok: ['user.info.basic', 'video.publish'],
             shopify: ['store_access']
           }
         };
@@ -86,6 +87,9 @@ export default function DemoOnboardingPage() {
   };
 
   const handleConnectPlatform = (platformId: string) => {
+    // DEMO MODE: Just simulate connection without actual OAuth
+    console.log('DEMO MODE: Simulating connection to', platformId);
+    
     // Get the scopes for this platform from the link data
     const platformScopes = linkData?.requestedScopes[platformId] || [];
     
@@ -94,38 +98,21 @@ export default function DemoOnboardingPage() {
       return;
     }
 
-    // Build OAuth URL with the stored scopes and token
-    let oauthUrl = '';
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app';
-    const token = 'demo-token-12345'; // TODO: Get from URL params in production
+    // Simulate connection delay
+    setTimeout(() => {
+    setConnectedPlatforms(prev => ({
+      ...prev,
+      [platformId]: true
+    }));
     
-    if (platformId === 'google') {
-      const scopesParam = platformScopes.join(' ');
-      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${baseUrl}/api/oauth/client/connect/google`)}&scope=${encodeURIComponent(scopesParam)}&response_type=code&state=client_${token}_${Date.now()}&token=${token}`;
-    } else if (platformId === 'meta') {
-      const scopesParam = platformScopes.join(',');
-      oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${baseUrl}/api/oauth/client/connect/meta`)}&scope=${encodeURIComponent(scopesParam)}&response_type=code&state=client_${token}_${Date.now()}&token=${token}`;
-    }
-    
-    if (oauthUrl) {
-      console.log('Redirecting to OAuth provider:', platformId);
-      console.log('Scopes:', platformScopes);
-      console.log('Token:', token);
-      // Redirect to OAuth provider
-      window.location.href = oauthUrl;
-    } else {
-      // For other platforms or if no OAuth URL, just mark as connected
-      setConnectedPlatforms(prev => ({
-        ...prev,
-        [platformId]: true
-      }));
-      
       // Auto-select the scopes that were requested for this platform
       setSelectedPermissions(prev => ({
         ...prev,
         [platformId]: platformScopes
       }));
-    }
+      
+      console.log('DEMO MODE: Connected to', platformId, 'with scopes:', platformScopes);
+    }, 1000);
   };
 
   const handleNext = () => {
