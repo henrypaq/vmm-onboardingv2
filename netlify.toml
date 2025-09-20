@@ -1,21 +1,14 @@
 [build]
-  command = "./build.sh"
+  command = "npm ci && npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
-  NPM_FLAGS = "--production=false"
   NEXT_TELEMETRY_DISABLED = "1"
-  CI = "false"
   NODE_OPTIONS = "--max-old-space-size=4096"
 
 [build.processing]
-  skip_processing = true
-
-[build.lifecycle]
-  onBuild = "echo 'Starting build process'"
-  onSuccess = "echo 'Build completed successfully'"
-  onError = "echo 'Build failed'"
+  skip_processing = false
 
 [[redirects]]
   from = "/*"
