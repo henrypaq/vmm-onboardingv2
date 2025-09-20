@@ -284,9 +284,68 @@ CREATE TRIGGER IF NOT EXISTS update_client_platform_connections_updated_at BEFOR
 -- ON CONFLICT (id) DO NOTHING;
 
 -- =====================================================
+-- 11. UTILITY FUNCTIONS
+-- =====================================================
+
+-- Function to check if a token is valid and not expired
+CREATE OR REPLACE FUNCTION is_token_valid(token_uuid text)
+RETURNS boolean AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM onboarding_links 
+    WHERE token = token_uuid 
+    AND status = 'pending' 
+    AND expires_at > now()
+  );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get admin platform connections
+CREATE OR REPLACE FUNCTION get_admin_platform_connections(admin_uuid uuid)
+RETURNS TABLE (
+  platform text,
+  platform_user_id text,
+  platform_username text,
+  scopes text[],
+  is_active boolean,
+  created_at timestamptz
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    apc.platform,
+    apc.platform_user_id,
+    apc.platform_username,
+    apc.scopes,
+    apc.is_active,
+    apc.created_at
+  FROM admin_platform_connections apc
+  WHERE apc.admin_id = admin_uuid
+  AND apc.is_active = true
+  ORDER BY apc.created_at DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =====================================================
+-- COMPLETION MESSAGE
+-- =====================================================
+
+-- This will show a success message when the script completes
+DO $$
+BEGIN
+  RAISE NOTICE '✅ Database setup completed successfully!';
+  RAISE NOTICE '📊 Created 6 tables with proper relationships';
+  RAISE NOTICE '🔒 Row Level Security policies applied';
+  RAISE NOTICE '⚡ Performance indexes created';
+  RAISE NOTICE '🔄 Auto-update triggers configured';
+  RAISE NOTICE '🚀 Ready for OAuth flows and link generation!';
+  RAISE NOTICE '📝 Using admin_platform_connections table for OAuth storage';
+END $$;
+
+-- =====================================================
 -- SETUP COMPLETE!
 -- =====================================================
--- All tables, indexes, policies, and triggers have been created.
+-- All tables, indexes, policies, triggers, and utility functions have been created.
 -- Your Supabase database is now ready for the VMM onboarding platform!
 
 -- To verify the setup, you can run these queries:
