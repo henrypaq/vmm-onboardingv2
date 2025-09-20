@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateOnboardingLink } from '@/lib/links/link-generator';
 import { createOnboardingLink } from '@/lib/db/database';
+import { supabaseAdmin } from '@/lib/supabase/server';
 // import { requireAuth } from '@/lib/auth/auth';
 
 export async function POST(request: NextRequest) {
@@ -54,6 +55,25 @@ export async function POST(request: NextRequest) {
 
     // Save to database
     console.log('💾 Saving to database...');
+    
+    // Test database connection first
+    console.log('🔍 Testing database connection...');
+    try {
+      const { data: testData, error: testError } = await supabaseAdmin
+        .from('onboarding_links')
+        .select('count')
+        .limit(1);
+      
+      if (testError) {
+        console.error('❌ Database connection test failed:', testError);
+        throw new Error(`Database connection failed: ${testError.message}`);
+      }
+      console.log('✅ Database connection test passed');
+    } catch (dbError) {
+      console.error('❌ Database connection error:', dbError);
+      throw new Error(`Database connection failed: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`);
+    }
+    
     const linkData = {
       admin_id: '00000000-0000-0000-0000-000000000001', // TODO: Use actual admin ID from session
       client_id: undefined, // Store as undefined for now, will reference clients table later

@@ -178,6 +178,9 @@ export async function getOnboardingLinks(adminId: string): Promise<OnboardingLin
 }
 
 export async function createOnboardingLink(link: Omit<OnboardingLink, 'id' | 'created_at' | 'updated_at'>): Promise<OnboardingLink> {
+  console.log('🔍 Database: Attempting to create onboarding link');
+  console.log('🔍 Database: Link data:', JSON.stringify(link, null, 2));
+  
   const { data, error } = await supabaseAdmin
     .from('onboarding_links')
     .insert([link])
@@ -185,10 +188,17 @@ export async function createOnboardingLink(link: Omit<OnboardingLink, 'id' | 'cr
     .single();
 
   if (error) {
-    console.error('Error creating onboarding link:', error);
-    throw new Error('Failed to create onboarding link');
+    console.error('❌ Database: Error creating onboarding link:', error);
+    console.error('❌ Database: Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
+    throw new Error(`Failed to create onboarding link: ${error.message}`);
   }
 
+  console.log('✅ Database: Onboarding link created successfully:', data);
   return data;
 }
 
