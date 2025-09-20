@@ -38,6 +38,9 @@ export async function GET(request: NextRequest) {
       valid: true,
       adminId: link.admin_id,
       expiresAt: link.expires_at,
+      platforms: link.platforms,
+      requested_permissions: link.requested_permissions,
+      link_name: link.link_name,
     });
   } catch (error) {
     console.error('Link validation error:', error);
