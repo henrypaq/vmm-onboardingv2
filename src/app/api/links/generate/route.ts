@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     // Test database connection first
     console.log('🔍 Testing database connection...');
     try {
-      const { data: testData, error: testError } = await supabaseAdmin
+      const { error: testError } = await supabaseAdmin
         .from('onboarding_links')
         .select('count')
         .limit(1);

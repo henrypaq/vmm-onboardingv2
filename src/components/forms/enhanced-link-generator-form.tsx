@@ -6,9 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { Users, Search, Video, ShoppingBag } from 'lucide-react';
-import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
+import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider } from '@/lib/scopes';
 
 interface EnhancedLinkGeneratorFormProps {

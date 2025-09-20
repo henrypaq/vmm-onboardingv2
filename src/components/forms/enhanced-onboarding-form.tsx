@@ -7,9 +7,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ClientOAuthButton } from '@/components/oauth/client-oauth-button';
-import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
-import { scopes, getScopeDescription } from '@/lib/scopes';
+import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
+import { getScopeDescription, scopes } from '@/lib/scopes';
 import { ArrowRight, ArrowLeft, ExternalLink } from 'lucide-react';
 
 interface OnboardingFormProps {
@@ -290,7 +289,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
             <CardHeader>
               <CardTitle>Review Permissions</CardTitle>
               <CardDescription>
-                Review and customize the permissions being requested. You can uncheck any permissions you don't want to grant.
+                Review and customize the permissions being requested. You can uncheck any permissions you don&apos;t want to grant.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -312,7 +311,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                       </div>
                       <div className="space-y-2">
                         {requestedScopes.map((scope) => {
-                          const description = getScopeDescription(scope);
+                          const descriptionText = getScopeDescription(platform.id as keyof typeof scopes, scope);
                           const isSelected = selectedPermissions[platform.id]?.includes(scope) || false;
                           return (
                             <div key={scope} className="flex items-start space-x-3 p-3 border rounded-lg">
@@ -331,12 +330,12 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                                     !connectedPlatforms.includes(platform.id) ? 'text-gray-400' : ''
                                   }`}
                                 >
-                                  {description.name}
+                                  {scope}
                                 </Label>
                                 <p className={`text-sm ${
                                   !connectedPlatforms.includes(platform.id) ? 'text-gray-400' : 'text-gray-500'
                                 }`}>
-                                  {description.description}
+                                  {descriptionText}
                                 </p>
                               </div>
                             </div>

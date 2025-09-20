@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOnboardingLinks, deleteOnboardingLink } from '@/lib/db/database';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Get real admin ID from authentication/session
     // For now, using a mock admin ID - replace with real auth
