@@ -202,9 +202,11 @@ export default function DemoOnboardingPage() {
 
   const currentPlatform = requestedPlatforms[currentStep];
   const isConnected = connectedPlatforms[currentPlatform.id];
-  const hasRequiredPermissions = currentPlatform.permissions
-    .filter(p => p.required)
-    .every(p => selectedPermissions[currentPlatform.id]?.includes(p.id));
+  
+  // In demo mode, check if we have the requested scopes selected
+  const requestedScopes = linkData?.requestedScopes[currentPlatform.id] || [];
+  const hasRequiredPermissions = requestedScopes.length === 0 || 
+    requestedScopes.every(scope => selectedPermissions[currentPlatform.id]?.includes(scope));
 
   if (isLoading) {
     return (
