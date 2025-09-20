@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS onboarding_links (
   expires_at timestamptz NOT NULL,
   status text NOT NULL CHECK (status IN ('pending', 'in_progress', 'completed', 'expired')) DEFAULT 'pending',
   is_used boolean DEFAULT false,
-  created_by text,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );

@@ -84,7 +84,6 @@ export async function POST(request: NextRequest) {
       expires_at: generatedLink.expiresAt.toISOString(),
       status: 'pending' as const,
       is_used: false,
-      created_by: '00000000-0000-0000-0000-000000000001', // TODO: Use actual admin ID from session
     };
     
     console.log('📝 Database payload:', linkData);

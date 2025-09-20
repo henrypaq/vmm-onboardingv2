@@ -18,7 +18,6 @@ interface OnboardingLink {
   expires_at: string;
   status: string;
   is_used: boolean;
-  created_by: string;
   created_at: string;
   updated_at: string;
 }

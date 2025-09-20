@@ -34,7 +34,6 @@ export interface OnboardingLink {
   expires_at: string;
   status: 'pending' | 'in_progress' | 'completed' | 'expired';
   is_used?: boolean;
-  created_by?: string;
   created_at: string;
   updated_at: string;
 }
