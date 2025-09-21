@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { OnboardingForm } from '@/components/forms/onboarding-form';
+import { EnhancedOnboardingForm } from '@/components/forms/enhanced-onboarding-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -22,11 +22,7 @@ export default function OnboardingPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
 
-  useEffect(() => {
-    validateLink();
-  }, [token]);
-
-  const validateLink = async () => {
+  const validateLink = useCallback(async () => {
     try {
       const response = await fetch(`/api/links/validate?token=${token}`);
       const data = await response.json();
@@ -37,11 +33,16 @@ export default function OnboardingPage() {
         setLinkValidation({ valid: false, error: data.error });
       }
     } catch (error) {
+      console.error('Link validation error:', error);
       setLinkValidation({ valid: false, error: 'Failed to validate link' });
     } finally {
       setIsValidating(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    validateLink();
+  }, [token, validateLink]);
 
   const handleSubmissionComplete = (newRequestId: string) => {
     setRequestId(newRequestId);
@@ -104,22 +105,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to Onboarding
-          </h1>
-          <p className="text-gray-600">
-            Please complete the form below to request access to our platform.
-          </p>
-        </div>
-        
-        <OnboardingForm 
-          token={token}
-          onSubmissionComplete={handleSubmissionComplete}
-        />
-      </div>
-    </div>
+    <EnhancedOnboardingForm 
+      token={token}
+      onSubmissionComplete={handleSubmissionComplete}
+    />
   );
 }

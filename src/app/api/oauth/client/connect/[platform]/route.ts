@@ -1,25 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { exchangeCodeForToken, fetchPlatformUserInfo } from '@/lib/oauth/oauth-utils';
 
 // Client OAuth connection endpoints
 // These will be used when clients connect their platform accounts during onboarding
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
-  const platform = params.platform;
+  const { platform } = await params;
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const state = searchParams.get('state');
+  searchParams.get('state'); // Store state for validation if needed
   const error = searchParams.get('error');
   const token = searchParams.get('token'); // Onboarding link token
 
   // Handle OAuth callback
   if (code && token) {
     try {
-      // TODO: Exchange code for access token
+      const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/client/connect/${platform}`;
+      
+      // Exchange code for access token
+      const tokenResponse = await exchangeCodeForToken(platform, code, redirectUri);
+      
+      // Fetch user information from the platform
+      const userInfo = await fetchPlatformUserInfo(platform, tokenResponse.access_token);
+      
       // TODO: Store client platform connection in onboarding request
-      // TODO: Redirect back to onboarding flow with success
+      console.log(`Client OAuth success for ${platform}:`, userInfo);
       
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${token}?connected=${platform}&step=${getNextStep(platform)}`);
     } catch (error) {
@@ -37,7 +45,7 @@ export async function GET(
   // Initiate OAuth flow
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/client/connect/${platform}`;
   
-  // TODO: Generate OAuth URLs based on platform
+  // Generate OAuth URLs based on platform
   let oauthUrl = '';
   
   switch (platform) {

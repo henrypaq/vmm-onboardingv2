@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClients, createClient } from '@/lib/db/database';
-import { requireAuth } from '@/lib/auth/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // TODO: Implement proper authentication
     // const session = await requireAuth('admin');
     
-    const clients = await getClients();
+    // Temporary: Use a default admin ID for testing
+    // In production, this should come from the authenticated session
+    const adminId = '00000000-0000-0000-0000-000000000001';
+    const clients = await getClients(adminId);
     
     return NextResponse.json({ clients });
   } catch (error) {

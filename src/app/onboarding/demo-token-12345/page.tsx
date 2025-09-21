@@ -1,14 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, ArrowRight, ArrowLeft, ExternalLink, Users, Search, Video, ShoppingBag, Shield } from 'lucide-react';
+import { CheckCircle, ArrowRight, ArrowLeft, ExternalLink, Users, Search, Video, ShoppingBag, Shield, Info } from 'lucide-react';
 import { getAllPlatforms, getPlatformDefinition } from '@/lib/platforms/platform-definitions';
+import { scopes, getScopeDescription } from '@/lib/scopes';
 
 const platforms = getAllPlatforms();
+
+// Add Shopify as a special case
+const allPlatforms = [...platforms, {
+  id: 'shopify',
+  name: 'Shopify',
+  icon: 'ShoppingBag',
+  color: 'bg-green-600',
+  permissions: [
+    {
+      id: 'store_access',
+      name: 'Store Access',
+      description: 'Access to your Shopify store data',
+      required: true,
+      category: 'E-commerce',
+    }
+  ],
+  oauthScopes: [],
+  isSpecial: true
+}];
 
 export default function DemoOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -16,6 +36,46 @@ export default function DemoOnboardingPage() {
   const [connectedPlatforms, setConnectedPlatforms] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [shopifyData, setShopifyData] = useState({
+    storeId: '',
+    collaboratorCode: ''
+  });
+  const [shopifyStep, setShopifyStep] = useState(1); // 1 = store ID, 2 = permissions
+  const [linkData, setLinkData] = useState<{
+    platforms: string[];
+    requestedScopes: Record<string, string[]>;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch link data on component mount
+  useEffect(() => {
+    const fetchLinkData = async () => {
+      try {
+        // For demo purposes, we'll use a mock token
+        // In production, this would come from the URL params
+        const token = 'demo-token-12345';
+        
+        // Mock data for demo - includes all platforms (Meta, Google, TikTok, Shopify)
+        const mockLinkData = {
+          platforms: ['google', 'meta', 'tiktok', 'shopify'],
+          requestedScopes: {
+            google: ['openid email profile'],
+            meta: ['pages_show_list', 'pages_read_engagement'],
+            tiktok: ['user.info.basic', 'video.publish'],
+            shopify: ['store_access']
+          }
+        };
+        
+        setLinkData(mockLinkData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching link data:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchLinkData();
+  }, []);
 
   const handlePermissionChange = (platformId: string, permissionId: string, checked: boolean) => {
     setSelectedPermissions(prev => ({
@@ -27,26 +87,36 @@ export default function DemoOnboardingPage() {
   };
 
   const handleConnectPlatform = (platformId: string) => {
+    // DEMO MODE: Just simulate connection without actual OAuth
+    console.log('DEMO MODE: Simulating connection to', platformId);
+    
+    // Get the scopes for this platform from the link data
+    const platformScopes = linkData?.requestedScopes[platformId] || [];
+    
+    if (platformScopes.length === 0) {
+      console.error('No scopes found for platform:', platformId);
+      return;
+    }
+
+    // Simulate connection delay
+    setTimeout(() => {
     setConnectedPlatforms(prev => ({
       ...prev,
       [platformId]: true
     }));
     
-    // Auto-select required permissions when connecting
-    const platform = getPlatformDefinition(platformId);
-    if (platform) {
-      const requiredPermissions = platform.permissions
-        .filter(p => p.required)
-        .map(p => p.id);
+      // Auto-select the scopes that were requested for this platform
       setSelectedPermissions(prev => ({
         ...prev,
-        [platformId]: requiredPermissions
+        [platformId]: platformScopes
       }));
-    }
+      
+      console.log('DEMO MODE: Connected to', platformId, 'with scopes:', platformScopes);
+    }, 1000);
   };
 
   const handleNext = () => {
-    if (currentStep < platforms.length - 1) {
+    if (currentStep < requestedPlatforms.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
       handleSubmit();
@@ -67,13 +137,12 @@ export default function DemoOnboardingPage() {
     
     setIsSubmitting(false);
     setIsCompleted(true);
+    
+    // Auto-redirect to home page after 3 seconds
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 3000);
   };
-
-  const currentPlatform = platforms[currentStep];
-  const isConnected = connectedPlatforms[currentPlatform.id];
-  const hasRequiredPermissions = currentPlatform.permissions
-    .filter(p => p.required)
-    .every(p => selectedPermissions[currentPlatform.id]?.includes(p.id));
 
   const getPlatformIcon = (platformId: string) => {
     switch (platformId) {
@@ -112,11 +181,40 @@ export default function DemoOnboardingPage() {
             <p className="text-sm text-gray-600 mb-4">
               You will receive an email confirmation once your request has been reviewed by our team.
             </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                🚀 Redirecting to home page automatically in 3 seconds...
+              </p>
+            </div>
             <Button onClick={() => window.location.href = '/'} className="w-full">
-              Return to Home
+              Return to Home Now
             </Button>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  // Filter platforms to only show those requested in the link
+  const requestedPlatforms = linkData ? 
+    allPlatforms.filter(platform => linkData.platforms.includes(platform.id)) : 
+    allPlatforms;
+
+  const currentPlatform = requestedPlatforms[currentStep];
+  const isConnected = connectedPlatforms[currentPlatform.id];
+  
+  // In demo mode, check if we have the requested scopes selected
+  const requestedScopes = linkData?.requestedScopes[currentPlatform.id] || [];
+  const hasRequiredPermissions = requestedScopes.length === 0 || 
+    requestedScopes.every(scope => selectedPermissions[currentPlatform.id]?.includes(scope));
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading onboarding link...</p>
+        </div>
       </div>
     );
   }
@@ -127,7 +225,12 @@ export default function DemoOnboardingPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">VAST</h1>
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="text-2xl font-bold text-gray-900 hover:text-purple-600 transition-colors duration-200 cursor-pointer"
+            >
+              VAST
+            </button>
           </div>
         </div>
       </div>
@@ -136,7 +239,7 @@ export default function DemoOnboardingPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            {platforms.map((platform, index) => (
+            {requestedPlatforms.map((platform, index) => (
               <div key={platform.id} className="flex items-center">
                 <div className="flex flex-col items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
@@ -162,7 +265,7 @@ export default function DemoOnboardingPage() {
                     {platform.name}
                   </span>
                 </div>
-                {index < platforms.length - 1 && (
+                {index < allPlatforms.length - 1 && (
                   <div className={`w-16 h-0.5 mx-4 ${
                     index < currentStep ? 'bg-green-600' : 'bg-gray-300'
                   }`} />
@@ -189,7 +292,166 @@ export default function DemoOnboardingPage() {
 
         <Card className="max-w-2xl mx-auto">
           <CardContent className="p-8">
-            {!isConnected ? (
+            {currentPlatform.id === 'shopify' ? (
+              <div>
+                {shopifyStep === 1 ? (
+                  // Step 1: Store ID Entry
+                  <div>
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        Shopify Store Connection
+                      </h3>
+                      <p className="text-gray-600">
+                        Enter your Shopify store ID to get started
+                      </p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div>
+                        <label htmlFor="shopify-store-id" className="block text-sm font-medium text-gray-700 mb-2">
+                          Shopify Store ID
+                        </label>
+                        <div className="flex items-center">
+                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                            https://
+                          </span>
+                          <input
+                            type="text"
+                            id="shopify-store-id"
+                            value={shopifyData.storeId}
+                            onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
+                            placeholder="your-store-id"
+                            className="flex-1 min-w-0 block w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:ring-purple-500 focus:border-purple-500"
+                          />
+                          <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                            .myshopify.com
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center text-sm text-gray-500">
+                          <Info className="h-4 w-4 mr-1" />
+                          <a href="#" className="text-purple-600 hover:text-purple-500">
+                            How to find your store ID
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <Shield className="h-5 w-5 text-green-600" />
+                          <span className="text-sm font-medium text-gray-900">Secure Connection</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Your store credentials are encrypted and stored securely. You can revoke access at any time.
+                        </p>
+                      </div>
+
+                      <Button 
+                        onClick={() => setShopifyStep(2)}
+                        disabled={!shopifyData.storeId}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ShoppingBag className="h-5 w-5" />
+                        <span>Continue</span>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // Step 2: Permissions Setup
+                  <div>
+                    <div className="text-center mb-6">
+                      <div className="flex items-center justify-center mb-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            1
+                          </div>
+                          <div className="w-16 h-0.5 bg-purple-600"></div>
+                          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                            2
+                          </div>
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        2 more steps needed to finish granting everything
+                      </h3>
+                      <p className="text-gray-600">
+                        First, to grant access to your Shopify Store &apos;{shopifyData.storeId}&apos;, follow these simple instructions:
+                      </p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            1
+                          </div>
+                          <span className="font-medium text-gray-900">Assign your Shopify Store &apos;{shopifyData.storeId}&apos;</span>
+                        </div>
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                            2
+                          </div>
+                          <span className="font-medium text-gray-600">Assign your WordPress Site &apos;https://www.growth-consultant.com&apos;</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-3">
+                            1. Open your store&apos;s Users and permissions settings:
+                          </p>
+                          <Button 
+                            onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium"
+                          >
+                            OPEN SHOPIFY
+                          </Button>
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-3">
+                            2. Enter your Collaborator Request Code
+                          </p>
+                          <div>
+                            <label htmlFor="collaborator-code" className="block text-sm font-medium text-gray-700 mb-2">
+                              Collaborator Request Code
+                            </label>
+                            <input
+                              type="text"
+                              id="collaborator-code"
+                              value={shopifyData.collaboratorCode}
+                              onChange={(e) => setShopifyData(prev => ({ ...prev, collaboratorCode: e.target.value }))}
+                              placeholder="Enter your collaborator code"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-purple-500 focus:border-purple-500"
+                            />
+                            <div className="mt-2 flex items-center text-sm text-gray-500">
+                              <Info className="h-4 w-4 mr-1" />
+                              <span>Note: if no code is required enter &apos;none&apos;</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-3">
+                        <Button 
+                          onClick={() => setShopifyStep(1)}
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          Back
+                        </Button>
+                        <Button 
+                          onClick={() => handleConnectPlatform('shopify')}
+                          disabled={!shopifyData.collaboratorCode}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Complete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : !isConnected ? (
               <div className="text-center">
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -234,39 +496,33 @@ export default function DemoOnboardingPage() {
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-900">Grant Access Permissions</h4>
                   <p className="text-sm text-gray-600 mb-4">
-                    Select the permissions you want to grant for this integration
+                    The following permissions will be requested for this integration
                   </p>
                   
                   <div className="space-y-3">
-                    {currentPlatform.permissions.map((permission) => {
-                      const isSelected = selectedPermissions[currentPlatform.id]?.includes(permission.id) || false;
+                    {linkData?.requestedScopes[currentPlatform.id]?.map((scope) => {
+                      const isSelected = selectedPermissions[currentPlatform.id]?.includes(scope) || false;
                       return (
-                        <div key={permission.id} className="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div key={scope} className="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                           <Checkbox
-                            id={permission.id}
+                            id={scope}
                             checked={isSelected}
                             onCheckedChange={(checked) => 
-                              handlePermissionChange(currentPlatform.id, permission.id, checked as boolean)
+                              handlePermissionChange(currentPlatform.id, scope, checked as boolean)
                             }
-                            disabled={permission.required}
                             className="mt-1"
                           />
                           <div className="flex-1">
                             <div className="flex items-center space-x-2">
                               <label 
-                                htmlFor={permission.id}
+                                htmlFor={scope}
                                 className="font-medium text-gray-900 cursor-pointer"
                               >
-                                {permission.name}
+                                {scope}
                               </label>
-                              {permission.required && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Required
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-sm text-gray-600 mt-1">
-                              {permission.description}
+                              {getScopeDescription(currentPlatform.id as keyof typeof scopes, scope)}
                             </p>
                           </div>
                         </div>

@@ -1,0 +1,19 @@
+# Ignore dependencies and build artifacts
+node_modules/
+.next/
+dist/
+build/
+
+# Ignore Git + system files
+.git/
+.DS_Store
+.vscode/
+
+# Ignore lockfiles (optional, up to you)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Don’t ignore .env.local (important for Cursor context)
+# If you have a base .env for secrets, you can ignore just that
+.env

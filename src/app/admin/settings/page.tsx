@@ -1,27 +1,93 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Save, Bell, Shield, Globe, Users, Search, Video, ShoppingBag, Plus, Trash2 } from 'lucide-react';
+import { Save, Bell, Shield, Globe, Users, Search, Video, Plus, Trash2 } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
+
+interface PlatformConnection {
+  id: string;
+  name: string;
+  username: string;
+  status: string;
+  platform: string;
+  scopes: string[];
+  connectedAt: string;
+}
 
 export default function AdminSettingsPage() {
   const platforms = getAllPlatforms();
-  
-  // Mock connected platforms - replace with real data from API
-  const connectedPlatforms = [
-    { id: 'meta', name: 'Meta (Facebook)', username: 'admin@company.com', status: 'connected' },
-    { id: 'google', name: 'Google', username: 'admin@company.com', status: 'connected' },
-  ];
+  const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch platform connections from API
+  const fetchConnections = async () => {
+    try {
+      const response = await fetch('/api/admin/platform-connections');
+      if (response.ok) {
+        const data = await response.json();
+        setConnectedPlatforms(data.connections || []);
+      } else {
+        console.error('Failed to fetch platform connections:', response.status);
+        setConnectedPlatforms([]);
+      }
+    } catch (error) {
+      console.error('Error fetching platform connections:', error);
+      setConnectedPlatforms([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if a platform is connected
+  const isPlatformConnected = (platformId: string) => {
+    return connectedPlatforms.some(p => p.id === platformId);
+  };
+
+  useEffect(() => {
+    fetchConnections();
+
+    // Check for OAuth callback success and refresh connections
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('connected') && urlParams.get('success')) {
+      const platform = urlParams.get('connected');
+      const username = urlParams.get('username');
+      console.log(`OAuth success for ${platform} as ${username}`);
+      
+      // Refresh connections after successful OAuth
+      setTimeout(() => {
+        fetchConnections();
+      }, 1000);
+      
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('error')) {
+      const error = urlParams.get('error');
+      const platform = urlParams.get('platform');
+      const message = urlParams.get('message');
+      console.error(`OAuth error for ${platform}: ${error}`);
+      
+      if (error === 'oauth_not_configured') {
+        alert(`OAuth Configuration Error for ${platform}: ${message || 'OAuth not configured'}`);
+      } else {
+        alert(`OAuth error for ${platform}: ${error}`);
+      }
+      
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const getPlatformIcon = (platformId: string) => {
     switch (platformId) {
       case 'meta': return <Users className="h-5 w-5" />;
       case 'google': return <Search className="h-5 w-5" />;
       case 'tiktok': return <Video className="h-5 w-5" />;
-      case 'shopify': return <ShoppingBag className="h-5 w-5" />;
       default: return <Globe className="h-5 w-5" />;
     }
   };
@@ -31,7 +97,6 @@ export default function AdminSettingsPage() {
       case 'meta': return 'bg-blue-600';
       case 'google': return 'bg-red-600';
       case 'tiktok': return 'bg-black';
-      case 'shopify': return 'bg-green-600';
       default: return 'bg-gray-600';
     }
   };
@@ -56,9 +121,15 @@ export default function AdminSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">Loading platform connections...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {platforms.map((platform) => {
-                const isConnected = connectedPlatforms.some(p => p.id === platform.id);
+                const isConnected = isPlatformConnected(platform.id);
                 return (
                   <div key={platform.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -81,12 +152,58 @@ export default function AdminSettingsPage() {
                             <Badge variant="default" className="bg-green-100 text-green-800">
                               Connected
                             </Badge>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  console.log(`Disconnecting ${platform.name}...`);
+                                  const response = await fetch(`/api/admin/platform-connections/${platform.id}`, {
+                                    method: 'DELETE',
+                                  });
+                                  
+                                  if (response.ok) {
+                                    const result = await response.json();
+                                    console.log(`${platform.name} disconnected successfully:`, result);
+                                    // Remove from local state
+                                    setConnectedPlatforms(prev => 
+                                      prev.filter(conn => conn.id !== platform.id)
+                                    );
+                                    // Show success message
+                                    alert(`${platform.name} disconnected successfully!`);
+                                  } else {
+                                    const errorData = await response.json();
+                                    console.error('Failed to disconnect platform:', errorData);
+                                    alert(`Failed to disconnect ${platform.name}: ${errorData.error || 'Unknown error'}`);
+                                  }
+                                } catch (error) {
+                                  console.error('Error disconnecting platform:', error);
+                                  alert(`Error disconnecting ${platform.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                                }
+                              }}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </>
                         ) : (
-                          <Button size="sm" className="flex items-center space-x-2">
+                          <Button 
+                            size="sm" 
+                            className="flex items-center space-x-2"
+                            onClick={() => {
+                              console.log(`Connecting to ${platform.name}...`);
+                              console.log(`Platform ID: ${platform.id}`);
+                              
+                              // Use dedicated routes for better OAuth handling
+                              const oauthUrl = platform.id === 'meta' 
+                                ? `/api/oauth/admin/connect/meta`
+                                : platform.id === 'google'
+                                ? `/api/oauth/admin/connect/google`
+                                : `/api/oauth/admin/connect/${platform.id}`;
+                              
+                              console.log(`OAuth URL: ${oauthUrl}`);
+                              window.location.href = oauthUrl;
+                            }}
+                          >
                             <Plus className="h-4 w-4" />
                             <span>Connect</span>
                           </Button>
@@ -111,7 +228,8 @@ export default function AdminSettingsPage() {
                   </div>
                 );
               })}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
         {/* General Settings */}

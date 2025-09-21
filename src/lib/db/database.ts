@@ -26,6 +26,8 @@ export interface Client {
 export interface OnboardingLink {
   id: string;
   admin_id: string;
+  client_id?: string;
+  link_name?: string; // Descriptive name for the onboarding link
   token: string;
   platforms: string[];
   requested_permissions: Record<string, string[]>;
@@ -43,7 +45,7 @@ export interface OnboardingRequest {
   client_name?: string;
   company_name?: string;
   granted_permissions: Record<string, string[]>;
-  platform_connections: Record<string, any>;
+  platform_connections: Record<string, Record<string, string>>;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
   submitted_at?: string;
   created_at: string;
@@ -175,6 +177,9 @@ export async function getOnboardingLinks(adminId: string): Promise<OnboardingLin
 }
 
 export async function createOnboardingLink(link: Omit<OnboardingLink, 'id' | 'created_at' | 'updated_at'>): Promise<OnboardingLink> {
+  console.log('🔍 Database: Attempting to create onboarding link');
+  console.log('🔍 Database: Link data:', JSON.stringify(link, null, 2));
+  
   const { data, error } = await supabaseAdmin
     .from('onboarding_links')
     .insert([link])
@@ -182,10 +187,17 @@ export async function createOnboardingLink(link: Omit<OnboardingLink, 'id' | 'cr
     .single();
 
   if (error) {
-    console.error('Error creating onboarding link:', error);
-    throw new Error('Failed to create onboarding link');
+    console.error('❌ Database: Error creating onboarding link:', error);
+    console.error('❌ Database: Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
+    throw new Error(`Failed to create onboarding link: ${error.message}`);
   }
 
+  console.log('✅ Database: Onboarding link created successfully:', data);
   return data;
 }
 
@@ -218,6 +230,18 @@ export async function updateOnboardingLink(id: string, updates: Partial<Onboardi
   }
 
   return data;
+}
+
+export async function deleteOnboardingLink(linkId: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('onboarding_links')
+    .delete()
+    .eq('id', linkId);
+
+  if (error) {
+    console.error('Error deleting onboarding link:', error);
+    throw new Error('Failed to delete onboarding link');
+  }
 }
 
 // Onboarding Request functions
@@ -332,10 +356,131 @@ export async function deleteAdminPlatformConnection(id: string): Promise<void> {
   }
 }
 
+export async function deleteAdminPlatformConnectionByAdminAndPlatform(adminId: string, platform: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('admin_platform_connections')
+    .update({ is_active: false })
+    .eq('admin_id', adminId)
+    .eq('platform', platform);
+
+  if (error) {
+    console.error('Error deleting admin platform connection:', error);
+    throw new Error('Failed to delete platform connection');
+  }
+}
+
+// Admin Account functions (new table)
+export interface AdminAccount {
+  id: string;
+  admin_id: string;
+  provider: 'google' | 'meta' | 'tiktok' | 'shopify';
+  access_token: string;
+  refresh_token?: string;
+  expires_at?: string;
+  scope: string[];
+  provider_user_id?: string;
+  provider_email?: string;
+  provider_name?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getAdminAccount(adminId: string, provider: string): Promise<AdminAccount | null> {
+  const { data, error } = await supabaseAdmin
+    .from('admin_accounts')
+    .select('*')
+    .eq('admin_id', adminId)
+    .eq('provider', provider)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // No rows returned
+      return null;
+    }
+    console.error('Error fetching admin account:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function getAllAdminAccounts(adminId: string): Promise<AdminAccount[]> {
+  const { data, error } = await supabaseAdmin
+    .from('admin_accounts')
+    .select('*')
+    .eq('admin_id', adminId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching admin accounts:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+export async function createOrUpdateAdminAccount(account: Omit<AdminAccount, 'id' | 'created_at' | 'updated_at'>): Promise<AdminAccount> {
+  // Use upsert to either insert or update
+  const { data, error } = await supabaseAdmin
+    .from('admin_accounts')
+    .upsert([{
+      ...account,
+      updated_at: new Date().toISOString()
+    }], {
+      onConflict: 'admin_id,provider'
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating/updating admin account:', error);
+    throw new Error('Failed to save admin account');
+  }
+
+  return data;
+}
+
+export async function deleteAdminAccount(adminId: string, provider: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('admin_accounts')
+    .delete()
+    .eq('admin_id', adminId)
+    .eq('provider', provider);
+
+  if (error) {
+    console.error('Error deleting admin account:', error);
+    throw new Error('Failed to delete admin account');
+  }
+}
+
+export async function isAdminAccountValid(adminId: string, provider: string): Promise<boolean> {
+  const account = await getAdminAccount(adminId, provider);
+  
+  if (!account) {
+    return false;
+  }
+
+  // Check if token is expired
+  if (account.expires_at) {
+    const expiresAt = new Date(account.expires_at);
+    const now = new Date();
+    
+    // Add 5 minute buffer before expiration
+    const bufferTime = new Date(now.getTime() + 5 * 60 * 1000);
+    
+    if (expiresAt <= bufferTime) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Utility functions
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('users')
       .select('count')
       .limit(1);

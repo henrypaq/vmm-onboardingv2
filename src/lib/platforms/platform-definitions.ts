@@ -58,7 +58,7 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
     name: 'Google',
     icon: 'Search',
     color: 'bg-red-600',
-    oauthScopes: ['analytics_read', 'ads_read', 'search_console', 'youtube_read'],
+    oauthScopes: ['https://www.googleapis.com/auth/analytics.readonly', 'https://www.googleapis.com/auth/adwords'],
     permissions: [
       {
         id: 'analytics_read',
@@ -124,43 +124,6 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
         description: 'View advertising campaign performance',
         required: false,
         category: 'Advertising',
-      },
-    ],
-  },
-  shopify: {
-    id: 'shopify',
-    name: 'Shopify',
-    icon: 'ShoppingBag',
-    color: 'bg-green-600',
-    oauthScopes: ['orders_read', 'products_read', 'analytics_read', 'customers_read'],
-    permissions: [
-      {
-        id: 'orders_read',
-        name: 'Read Orders',
-        description: 'Access order information and customer data',
-        required: true,
-        category: 'E-commerce',
-      },
-      {
-        id: 'products_read',
-        name: 'Read Products',
-        description: 'View product catalog and inventory data',
-        required: true,
-        category: 'E-commerce',
-      },
-      {
-        id: 'analytics_read',
-        name: 'Store Analytics',
-        description: 'Access sales and performance analytics',
-        required: false,
-        category: 'Analytics',
-      },
-      {
-        id: 'customers_read',
-        name: 'Customer Data',
-        description: 'Read customer information and purchase history',
-        required: false,
-        category: 'E-commerce',
       },
     ],
   },
