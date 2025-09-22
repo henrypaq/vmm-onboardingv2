@@ -50,7 +50,7 @@ export default function LinksPage() {
     fetchLinks();
   }, []);
 
-  const handleLinkGenerated = (link: { url: string; token: string; platforms: string[]; requestedScopes: Record<string, string[]> }) => {
+  const handleLinkGenerated = () => {
     // Refresh the links list to include the newly generated link
     fetchLinks();
   };
@@ -82,9 +82,37 @@ export default function LinksPage() {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // TODO: Show toast notification
+  const copyToClipboard = async (text: string, event?: React.MouseEvent) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Show success feedback
+      const button = event?.currentTarget as HTMLElement;
+      if (button) {
+        const originalContent = button.innerHTML;
+        button.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+        button.classList.add('text-green-600');
+        setTimeout(() => {
+          button.innerHTML = originalContent;
+          button.classList.remove('text-green-600');
+        }, 2000);
+      }
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert('Link copied to clipboard!');
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed: ', fallbackErr);
+        alert('Failed to copy link. Please copy manually: ' + text);
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   const getStatusVariant = (status: string, expiresAt: string) => {
@@ -155,22 +183,52 @@ export default function LinksPage() {
                   <div key={link.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
                       <div className="flex items-center space-x-4">
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-medium">
                             {link.link_name || 'Unnamed Link'}
                           </h3>
-                          <p className="text-sm text-gray-500">Token: {link.token}</p>
-                          <p className="text-xs text-gray-400">
-                            Created: {new Date(link.created_at).toLocaleDateString()}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            Platforms: {link.platforms.join(', ')}
-                          </p>
-                          {link.client_id && (
-                            <p className="text-xs text-gray-400">
-                              Client: {link.client_id}
+                          <div className="mt-2 p-2 bg-gray-50 rounded border">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-xs text-gray-500">Onboarding URL:</p>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => copyToClipboard(getOnboardingUrl(link.token), e)}
+                                className="h-6 px-2 text-xs"
+                              >
+                                <Copy className="h-3 w-3 mr-1" />
+                                Copy
+                              </Button>
+                            </div>
+                            <p 
+                              className="text-sm font-mono text-gray-700 break-all cursor-text select-all"
+                              onClick={(e) => {
+                                const range = document.createRange();
+                                range.selectNodeContents(e.currentTarget);
+                                const selection = window.getSelection();
+                                selection?.removeAllRanges();
+                                selection?.addRange(range);
+                              }}
+                            >
+                              {getOnboardingUrl(link.token)}
                             </p>
-                          )}
+                          </div>
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs text-gray-400">
+                              Token: {link.token}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Created: {new Date(link.created_at).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Platforms: {link.platforms.join(', ')}
+                            </p>
+                            {link.client_id && (
+                              <p className="text-xs text-gray-400">
+                                Client: {link.client_id}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -186,7 +244,7 @@ export default function LinksPage() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => copyToClipboard(getOnboardingUrl(link.token))}
+                          onClick={(e) => copyToClipboard(getOnboardingUrl(link.token), e)}
                           title="Copy link"
                         >
                           <Copy className="h-4 w-4" />
