@@ -243,6 +243,29 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   const hasRequiredPermissions = requestedScopes.length === 0 || 
     requestedScopes.every(scope => selectedPermissions[currentPlatform?.id || '']?.includes(scope));
 
+  // For the final step, check if ALL platforms are connected and have required permissions
+  const allPlatformsConnected = requestedPlatforms.every(platform => connectedPlatforms[platform.id]);
+  const allPlatformsHavePermissions = requestedPlatforms.every(platform => {
+    const platformScopes = linkData?.requestedScopes[platform.id] || [];
+    return platformScopes.length === 0 || 
+      platformScopes.every(scope => selectedPermissions[platform.id]?.includes(scope));
+  });
+  const isFinalStepComplete = allPlatformsConnected && allPlatformsHavePermissions;
+
+  // Debug logging for final step
+  if (currentStep === getTotalSteps() - 1) {
+    console.log('[Onboarding] Final step debug:', {
+      currentStep,
+      totalSteps: getTotalSteps(),
+      allPlatformsConnected,
+      allPlatformsHavePermissions,
+      isFinalStepComplete,
+      connectedPlatforms,
+      selectedPermissions,
+      requestedPlatforms: requestedPlatforms.map(p => ({ id: p.id, scopes: linkData?.requestedScopes[p.id] || [] }))
+    });
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -586,7 +609,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
             {currentStep === getTotalSteps() - 1 ? (
               <Button 
                 onClick={handleSubmit}
-                disabled={!hasRequiredPermissions}
+                disabled={!isFinalStepComplete}
                 className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span>Complete Access Grant</span>
