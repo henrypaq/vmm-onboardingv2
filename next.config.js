@@ -21,6 +21,10 @@ const nextConfig = {
   trailingSlash: false,
   generateEtags: false,
   poweredByHeader: false,
+  // Disable image optimization for Netlify compatibility
+  images: {
+    unoptimized: true,
+  },
 };
 
 module.exports = nextConfig;
