@@ -129,7 +129,7 @@ export default function HomePage() {
                     Simulate a client clicking on an onboarding invitation
                   </p>
                 </div>
-                <Link href="/onboarding/demo-token-12345">
+                <Link href="/">
                   <Button className="bg-blue-600 hover:bg-blue-700">
                     Start Demo Flow
                   </Button>

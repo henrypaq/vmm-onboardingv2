@@ -92,6 +92,7 @@ export async function GET(
     token: onboardingToken,
     ts: Date.now()
   };
+  console.log('[ClientOAuth] State (outgoing)', stateObject);
   const state = JSON.stringify(stateObject);
   
   // Generate OAuth URLs based on platform
