@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateOnboardingLink } from '@/lib/links/link-generator';
 import { createOnboardingLink } from '@/lib/db/database';
-import { supabaseAdmin } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/server';
 // import { requireAuth } from '@/lib/auth/auth';
 
 export async function POST(request: NextRequest) {
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     // Test database connection first
     console.log('🔍 Testing database connection...');
     try {
+      const supabaseAdmin = getSupabaseAdmin();
       const { error: testError } = await supabaseAdmin
         .from('onboarding_links')
         .select('count')

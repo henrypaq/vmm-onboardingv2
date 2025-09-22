@@ -53,8 +53,8 @@ export async function GET(
       
       // TODO: Store client platform connection in onboarding request
       console.log(`[ClientOAuth] Success for ${platform}`, {
-        userPreview: (userInfo as any)?.id ?? (userInfo as any)?.sub ?? 'unknown',
-        receivedKeys: userInfo ? Object.keys(userInfo as any) : []
+        userPreview: (userInfo as Record<string, unknown> | undefined)?.id ?? 'unknown',
+        receivedKeys: userInfo && typeof userInfo === 'object' ? Object.keys(userInfo) : []
       });
       
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${flowToken}?connected=${platform}&success=true&step=${getNextStep(platform)}`);
