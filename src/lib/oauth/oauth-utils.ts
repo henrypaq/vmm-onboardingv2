@@ -36,7 +36,7 @@ export async function exchangeCodeForToken(
 }
 
 async function exchangeMetaToken(code: string, redirectUri: string): Promise<OAuthTokenResponse> {
-  const clientId = process.env.META_APP_ID;
+  const clientId = process.env.NEXT_PUBLIC_META_APP_ID;
   const clientSecret = process.env.META_APP_SECRET;
   
   if (!clientId || !clientSecret) {
