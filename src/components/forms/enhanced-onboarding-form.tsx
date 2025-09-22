@@ -69,6 +69,11 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         const linkResponse = await fetch(`/api/links/validate?token=${token}`);
         if (linkResponse.ok) {
           const linkData = await linkResponse.json();
+          console.log('[Onboarding] Loaded link data', {
+            token,
+            platforms: linkData.platforms,
+            requested_permissions: linkData.requested_permissions
+          });
           setLinkData({
             platforms: linkData.platforms || [],
             requestedScopes: linkData.requested_permissions || {}
@@ -84,6 +89,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         const success = urlParams.get('success');
         const error = urlParams.get('error');
         const step = urlParams.get('step');
+        console.log('[Onboarding] URL params', { connected, success, error, step });
         
         if (connected && success === 'true') {
           // Mark platform as connected
@@ -96,6 +102,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           if (step) {
             const nextStep = parseInt(step, 10);
             if (!isNaN(nextStep) && nextStep > 0) {
+              console.log('[Onboarding] Advancing to step', nextStep);
               setCurrentStep(nextStep);
             }
           }
@@ -161,6 +168,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
 
   const handleConnectPlatform = (platformId: string) => {
     // Redirect to OAuth flow
+    console.log('[Onboarding] Initiating OAuth for', { platformId, token });
     window.location.href = `/api/oauth/client/connect/${platformId}?token=${token}`;
   };
 

@@ -25,6 +25,7 @@ export default function LinksPage() {
   const [links, setLinks] = useState<OnboardingLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   // Fetch links from API
   const fetchLinks = async () => {
@@ -82,7 +83,7 @@ export default function LinksPage() {
     }
   };
 
-  const copyToClipboard = async (text: string, event: React.MouseEvent) => {
+  const copyToClipboard = async (text: string, event: React.MouseEvent, token?: string) => {
     try {
       await navigator.clipboard.writeText(text);
       // Show success feedback
@@ -90,6 +91,10 @@ export default function LinksPage() {
       const originalContent = button.innerHTML;
       button.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
       button.classList.add('text-green-600');
+      if (token) {
+        setCopiedToken(token);
+        setTimeout(() => setCopiedToken(null), 1500);
+      }
       setTimeout(() => {
         button.innerHTML = originalContent;
         button.classList.remove('text-green-600');
@@ -188,15 +193,20 @@ export default function LinksPage() {
                           <div className="mt-2 p-2 bg-gray-50 rounded border">
                             <div className="flex items-center justify-between mb-1">
                               <p className="text-xs text-gray-500">Onboarding URL:</p>
-                              <Button
+                              <div className="flex items-center gap-2">
+                                <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={(e) => copyToClipboard(getOnboardingUrl(link.token), e)}
+                                onClick={(e) => copyToClipboard(getOnboardingUrl(link.token), e, link.token)}
                                 className="h-6 px-2 text-xs"
                               >
                                 <Copy className="h-3 w-3 mr-1" />
                                 Copy
-                              </Button>
+                                </Button>
+                                {copiedToken === link.token && (
+                                  <span className="text-xs text-green-700">Copied!</span>
+                                )}
+                              </div>
                             </div>
                             <p 
                               className="text-sm font-mono text-gray-700 break-all cursor-text select-all"
@@ -239,14 +249,19 @@ export default function LinksPage() {
                         <p>Expires: {new Date(link.expires_at).toLocaleDateString()}</p>
                       </div>
                       <div className="flex space-x-2">
-                        <Button
+                        <div className="relative">
+                          <Button
                           variant="outline"
                           size="icon"
-                          onClick={(e) => copyToClipboard(getOnboardingUrl(link.token), e)}
+                          onClick={(e) => copyToClipboard(getOnboardingUrl(link.token), e, link.token)}
                           title="Copy link"
                         >
                           <Copy className="h-4 w-4" />
-                        </Button>
+                          </Button>
+                          {copiedToken === link.token && (
+                            <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5">Copied!</span>
+                          )}
+                        </div>
                         <Button
                           variant="outline"
                           size="icon"
