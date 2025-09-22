@@ -133,6 +133,27 @@ export async function getClient(id: string): Promise<Client | null> {
   return data;
 }
 
+export async function getClientByEmail(adminId: string, email: string): Promise<Client | null> {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from('clients')
+    .select('*')
+    .eq('admin_id', adminId)
+    .eq('email', email)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // No rows found
+      return null;
+    }
+    console.error('Error fetching client by email:', error);
+    return null;
+  }
+
+  return data;
+}
+
 export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'updated_at'>): Promise<Client> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin

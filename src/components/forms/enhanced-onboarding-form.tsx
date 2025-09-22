@@ -589,7 +589,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                 disabled={!hasRequiredPermissions}
                 className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span>Submit Request</span>
+                <span>Complete Access Grant</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
