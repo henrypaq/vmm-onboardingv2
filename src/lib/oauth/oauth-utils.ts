@@ -97,6 +97,10 @@ async function exchangeGoogleToken(code: string, redirectUri: string): Promise<O
   }
 
   const data = await response.json();
+  // Log scopes returned by Google for diagnostics
+  if (data.scope) {
+    console.log('[GoogleOAuth] token scopes returned:', data.scope);
+  }
   return {
     access_token: data.access_token,
     refresh_token: data.refresh_token,

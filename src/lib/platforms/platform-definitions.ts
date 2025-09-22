@@ -58,7 +58,8 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
     name: 'Google',
     icon: 'Search',
     color: 'bg-red-600',
-    oauthScopes: ['https://www.googleapis.com/auth/analytics.readonly', 'https://www.googleapis.com/auth/adwords'],
+    // Minimal safe scopes for now; expand after Google verification
+    oauthScopes: ['openid', 'email', 'profile'],
     permissions: [
       {
         id: 'analytics_read',

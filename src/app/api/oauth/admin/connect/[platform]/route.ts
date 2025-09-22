@@ -93,7 +93,9 @@ export async function GET(
         console.error('GOOGLE_CLIENT_ID environment variable is not set');
         return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/settings?error=oauth_not_configured&platform=google&message=Google OAuth not configured - GOOGLE_CLIENT_ID missing`);
       }
-      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/adwords&response_type=code&state=admin_${Date.now()}`;
+      const adminGoogleScopes = ['openid', 'email', 'profile'];
+      console.log('[AdminOAuth][google] Requested scopes', adminGoogleScopes);
+      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(adminGoogleScopes.join(' '))}&response_type=code&state=admin_${Date.now()}`;
       break;
     case 'tiktok':
       if (!process.env.TIKTOK_CLIENT_KEY) {
@@ -144,7 +146,7 @@ function getScopesForPlatform(platform: string): string[] {
     case 'meta':
       return ['pages_read_engagement', 'pages_manage_posts', 'ads_read', 'pages_show_list'];
     case 'google':
-      return ['https://www.googleapis.com/auth/analytics.readonly', 'https://www.googleapis.com/auth/adwords'];
+      return ['openid', 'email', 'profile'];
     case 'tiktok':
       return ['user.info.basic', 'video.list'];
     case 'shopify':
