@@ -150,6 +150,7 @@ export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'u
 }
 
 export async function updateClient(id: string, updates: Partial<Client>): Promise<Client> {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('clients')
     .update(updates)
@@ -167,6 +168,7 @@ export async function updateClient(id: string, updates: Partial<Client>): Promis
 
 // Onboarding Link functions
 export async function getOnboardingLinks(adminId: string): Promise<OnboardingLink[]> {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('onboarding_links')
     .select('*')
@@ -185,6 +187,7 @@ export async function createOnboardingLink(link: Omit<OnboardingLink, 'id' | 'cr
   console.log('🔍 Database: Attempting to create onboarding link');
   console.log('🔍 Database: Link data:', JSON.stringify(link, null, 2));
   
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('onboarding_links')
     .insert([link])
@@ -207,6 +210,7 @@ export async function createOnboardingLink(link: Omit<OnboardingLink, 'id' | 'cr
 }
 
 export async function getOnboardingLinkByToken(token: string): Promise<OnboardingLink | null> {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('onboarding_links')
     .select('*')
@@ -222,6 +226,7 @@ export async function getOnboardingLinkByToken(token: string): Promise<Onboardin
 }
 
 export async function updateOnboardingLink(id: string, updates: Partial<OnboardingLink>): Promise<OnboardingLink> {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('onboarding_links')
     .update(updates)
@@ -340,6 +345,7 @@ export async function createAdminPlatformConnection(connection: Omit<AdminPlatfo
 }
 
 export async function updateAdminPlatformConnection(id: string, updates: Partial<AdminPlatformConnection>): Promise<AdminPlatformConnection> {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('admin_platform_connections')
     .update(updates)
@@ -420,6 +426,7 @@ export async function getAdminAccount(adminId: string, provider: string): Promis
 }
 
 export async function getAllAdminAccounts(adminId: string): Promise<AdminAccount[]> {
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('admin_accounts')
     .select('*')
@@ -436,6 +443,7 @@ export async function getAllAdminAccounts(adminId: string): Promise<AdminAccount
 
 export async function createOrUpdateAdminAccount(account: Omit<AdminAccount, 'id' | 'created_at' | 'updated_at'>): Promise<AdminAccount> {
   // Use upsert to either insert or update
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('admin_accounts')
     .upsert([{
@@ -456,6 +464,7 @@ export async function createOrUpdateAdminAccount(account: Omit<AdminAccount, 'id
 }
 
 export async function deleteAdminAccount(adminId: string, provider: string): Promise<void> {
+  const supabaseAdmin = getSupabaseAdmin();
   const { error } = await supabaseAdmin
     .from('admin_accounts')
     .delete()
@@ -494,6 +503,7 @@ export async function isAdminAccountValid(adminId: string, provider: string): Pr
 // Utility functions
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { error } = await supabaseAdmin
       .from('users')
       .select('count')
