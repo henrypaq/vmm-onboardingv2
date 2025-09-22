@@ -29,17 +29,17 @@ export async function GET(
       // TODO: Store client platform connection in onboarding request
       console.log(`Client OAuth success for ${platform}:`, userInfo);
       
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${token}?connected=${platform}&step=${getNextStep(platform)}`);
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${token}?connected=${platform}&success=true&step=${getNextStep(platform)}`);
     } catch (error) {
       console.error('OAuth error:', error);
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${token}?error=oauth_failed`);
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${token}?error=oauth_failed&success=false`);
     }
   }
 
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error);
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${token}?error=oauth_denied`);
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${token}?error=oauth_denied&success=false`);
   }
 
   // Initiate OAuth flow

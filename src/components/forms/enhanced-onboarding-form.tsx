@@ -83,6 +83,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         const connected = urlParams.get('connected');
         const success = urlParams.get('success');
         const error = urlParams.get('error');
+        const step = urlParams.get('step');
         
         if (connected && success === 'true') {
           // Mark platform as connected
@@ -91,10 +92,19 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
             [connected]: true
           }));
           
+          // Advance to the next step if step parameter is provided
+          if (step) {
+            const nextStep = parseInt(step, 10);
+            if (!isNaN(nextStep) && nextStep > 0) {
+              setCurrentStep(nextStep);
+            }
+          }
+          
           // Clean up URL parameters
           const newUrl = new URL(window.location.href);
           newUrl.searchParams.delete('connected');
           newUrl.searchParams.delete('success');
+          newUrl.searchParams.delete('step');
           newUrl.searchParams.delete('username');
           window.history.replaceState({}, '', newUrl.toString());
         } else if (error) {

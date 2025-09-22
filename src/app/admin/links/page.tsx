@@ -82,20 +82,18 @@ export default function LinksPage() {
     }
   };
 
-  const copyToClipboard = async (text: string, event?: React.MouseEvent) => {
+  const copyToClipboard = async (text: string, event: React.MouseEvent) => {
     try {
       await navigator.clipboard.writeText(text);
       // Show success feedback
-      const button = event?.currentTarget as HTMLElement;
-      if (button) {
-        const originalContent = button.innerHTML;
-        button.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
-        button.classList.add('text-green-600');
-        setTimeout(() => {
-          button.innerHTML = originalContent;
-          button.classList.remove('text-green-600');
-        }, 2000);
-      }
+      const button = event.currentTarget as HTMLElement;
+      const originalContent = button.innerHTML;
+      button.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+      button.classList.add('text-green-600');
+      setTimeout(() => {
+        button.innerHTML = originalContent;
+        button.classList.remove('text-green-600');
+      }, 2000);
     } catch (err) {
       console.error('Failed to copy: ', err);
       // Fallback for older browsers
