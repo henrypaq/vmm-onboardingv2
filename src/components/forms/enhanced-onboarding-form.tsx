@@ -53,6 +53,8 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   const [connectedPlatforms, setConnectedPlatforms] = useState<Record<string, boolean>>({});
   const [linkData, setLinkData] = useState<LinkData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [shopifyStep, setShopifyStep] = useState(1);
   const [shopifyData, setShopifyData] = useState({
     storeId: '',
@@ -214,6 +216,49 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     }
   };
 
+  const handleAutoSubmit = async () => {
+    if (isSubmitting || isCompleted) return;
+    
+    setIsSubmitting(true);
+    console.log('[Onboarding] Auto-submitting onboarding data...');
+    
+    try {
+      // Convert selectedPermissions to the format expected by the API
+      const permissions = Object.entries(selectedPermissions).flatMap(([platform, scopes]) =>
+        scopes.map(scope => `${platform}:${scope}`)
+      );
+
+      const response = await fetch('/api/onboarding/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          permissions,
+          data: {
+            name: formData.name,
+            email: formData.email,
+            company: formData.company,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[Onboarding] Auto-submission successful:', data);
+        setIsCompleted(true);
+        onSubmissionComplete(data.requestId);
+      } else {
+        console.error('[Onboarding] Auto-submission failed:', response.statusText);
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('[Onboarding] Error in auto-submission:', error);
+      setIsSubmitting(false);
+    }
+  };
+
   const handleNext = () => {
     if (currentStep < getTotalSteps() - 1) {
       setCurrentStep(prev => prev + 1);
@@ -251,6 +296,14 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
       platformScopes.every(scope => selectedPermissions[platform.id]?.includes(scope));
   });
   const isFinalStepComplete = allPlatformsConnected && allPlatformsHavePermissions;
+
+  // Auto-complete onboarding when all platforms are connected and permissions are selected
+  useEffect(() => {
+    if (isFinalStepComplete && !isLoading && linkData && !isSubmitting && !isCompleted) {
+      console.log('[Onboarding] All platforms connected and permissions selected, auto-completing...');
+      handleAutoSubmit();
+    }
+  }, [isFinalStepComplete, isLoading, linkData, isSubmitting, isCompleted]);
 
   // Debug logging for final step (simplified)
   if (currentStep === getTotalSteps() - 1 && process.env.NODE_ENV === 'development') {
@@ -602,14 +655,27 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           
           <div>
             {currentStep === getTotalSteps() - 1 ? (
-              <Button 
-                onClick={handleSubmit}
-                disabled={!isFinalStepComplete}
-                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span>Complete Access Grant</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              <div className="text-center">
+                {isCompleted ? (
+                  <div className="flex items-center justify-center space-x-2 text-green-600">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="font-medium">Access Granted Successfully!</span>
+                  </div>
+                ) : isSubmitting ? (
+                  <div className="flex items-center justify-center space-x-2 text-blue-600">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span className="font-medium">Finalizing Access Grant...</span>
+                  </div>
+                ) : !isFinalStepComplete ? (
+                  <div className="text-gray-500 text-sm">
+                    Complete all platform connections to automatically finalize access grant
+                  </div>
+                ) : (
+                  <div className="text-blue-600 text-sm">
+                    All platforms connected. Finalizing access grant...
+                  </div>
+                )}
+              </div>
             ) : (
               <Button 
                 onClick={handleNext}
