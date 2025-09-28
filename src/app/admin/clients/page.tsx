@@ -27,15 +27,21 @@ export default function ClientsPage() {
       setIsLoading(true);
       setError(null);
       
+      console.log('[Admin Clients] Fetching clients...');
       const response = await fetch('/api/clients');
+      console.log('[Admin Clients] Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch clients');
+        const errorText = await response.text();
+        console.error('[Admin Clients] Error response:', errorText);
+        throw new Error(`Failed to fetch clients: ${response.status} ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('[Admin Clients] Received data:', data);
       setClients(data.clients || []);
     } catch (err) {
-      console.error('Error fetching clients:', err);
+      console.error('[Admin Clients] Error fetching clients:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch clients');
     } finally {
       setIsLoading(false);
@@ -44,6 +50,14 @@ export default function ClientsPage() {
 
   useEffect(() => {
     fetchClients();
+    
+    // Auto-refresh every 5 seconds for testing
+    const interval = setInterval(() => {
+      console.log('[Admin Clients] Auto-refreshing clients...');
+      fetchClients();
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const getStatusVariant = (status: string) => {
