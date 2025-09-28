@@ -27,11 +27,14 @@ export async function POST(request: NextRequest) {
     // Handle client creation/update
     let clientId: string | undefined;
     if (data?.email) {
+      console.log(`[Onboarding] Creating/updating client for admin ${link.admin_id} with email ${data.email}`);
+      
       // Check if client already exists for this admin
       const existingClient = await getClientByEmail(link.admin_id, data.email);
       
       if (existingClient) {
         // Update existing client
+        console.log(`[Onboarding] Found existing client: ${existingClient.id}`);
         const updatedClient = await updateClient(existingClient.id, {
           full_name: data.name || existingClient.full_name,
           company_name: data.company || existingClient.company_name,
@@ -39,9 +42,10 @@ export async function POST(request: NextRequest) {
           status: 'active'
         });
         clientId = updatedClient.id;
-        console.log(`Updated existing client: ${updatedClient.id}`);
+        console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`);
       } else {
         // Create new client
+        console.log(`[Onboarding] Creating new client for admin ${link.admin_id}`);
         const newClient = await createClient({
           admin_id: link.admin_id,
           email: data.email,
@@ -51,8 +55,10 @@ export async function POST(request: NextRequest) {
           last_onboarding_at: new Date().toISOString()
         });
         clientId = newClient.id;
-        console.log(`Created new client: ${newClient.id}`);
+        console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${link.admin_id}`);
       }
+    } else {
+      console.log(`[Onboarding] No email provided, skipping client creation`);
     }
 
     // Get existing onboarding request with stored OAuth data

@@ -9,7 +9,10 @@ export async function GET() {
     // Temporary: Use a default admin ID for testing
     // In production, this should come from the authenticated session
     const adminId = '00000000-0000-0000-0000-000000000001';
+    console.log(`[Clients API] Fetching clients for admin: ${adminId}`);
+    
     const clients = await getClients(adminId);
+    console.log(`[Clients API] Found ${clients.length} clients:`, clients.map(c => ({ id: c.id, email: c.email, name: c.full_name })));
     
     return NextResponse.json({ clients });
   } catch (error) {
