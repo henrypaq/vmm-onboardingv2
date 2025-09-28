@@ -51,10 +51,36 @@ export async function GET(
       // Fetch user information from the platform
       const userInfo = await fetchPlatformUserInfo(platform, tokenResponse.access_token);
       
-      // TODO: Store client platform connection in onboarding request
+      // Store OAuth data temporarily in session storage or pass via URL
+      // For now, we'll store it in the onboarding request's platform_connections field
       console.log(`[ClientOAuth] Success for ${platform}`, {
-        userId: userInfo?.id ?? 'unknown'
+        userId: userInfo?.id ?? 'unknown',
+        scopes: tokenResponse.scope ? tokenResponse.scope.split(' ') : []
       });
+      
+      // Store the OAuth data in the onboarding request
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/onboarding/store-oauth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: flowToken,
+            platform,
+            accessToken: tokenResponse.access_token,
+            refreshToken: tokenResponse.refresh_token,
+            tokenExpiresAt: tokenResponse.expires_in ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString() : undefined,
+            scopes: tokenResponse.scope ? tokenResponse.scope.split(' ') : [],
+            platformUserId: userInfo?.id || '',
+            platformUsername: userInfo?.username || userInfo?.name || ''
+          })
+        });
+        
+        if (!response.ok) {
+          console.warn('[ClientOAuth] Failed to store OAuth data, continuing anyway');
+        }
+      } catch (error) {
+        console.warn('[ClientOAuth] Error storing OAuth data:', error);
+      }
       
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${flowToken}?connected=${platform}&success=true&step=${getNextStep(platform)}`);
     } catch (error) {

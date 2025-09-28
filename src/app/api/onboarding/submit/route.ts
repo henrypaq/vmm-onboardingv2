@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient, updateClient } from '@/lib/db/database';
+import { createOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient, updateClient, upsertClientPlatformConnection, getOnboardingRequestByLinkId } from '@/lib/db/database';
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,6 +60,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Get existing onboarding request with stored OAuth data
+    const existingRequest = await getOnboardingRequestByLinkId(link.id);
+    const storedPlatformConnections = existingRequest?.platform_connections || {};
+
     // Create the onboarding request
     const onboardingRequest = await createOnboardingRequest({
       link_id: link.id,
@@ -73,15 +77,41 @@ export async function POST(request: NextRequest) {
         acc[platform].push(scope);
         return acc;
       }, {}),
-      platform_connections: {},
+      platform_connections: storedPlatformConnections,
       status: 'completed', // Mark as completed since client has granted access
     });
 
-    // Mark the link as completed
+    // Save platform connections to client_platform_connections table
+    if (clientId && Object.keys(storedPlatformConnections).length > 0) {
+      console.log(`[Onboarding] Saving platform connections for client ${clientId}`);
+      
+      for (const [platform, connectionData] of Object.entries(storedPlatformConnections)) {
+        try {
+          await upsertClientPlatformConnection({
+            client_id: clientId,
+            platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
+            platform_user_id: connectionData.platform_user_id || '',
+            platform_username: connectionData.platform_username,
+            access_token: connectionData.access_token,
+            refresh_token: connectionData.refresh_token,
+            token_expires_at: connectionData.token_expires_at,
+            scopes: connectionData.scopes || [],
+            is_active: true
+          });
+          console.log(`[Onboarding] Saved ${platform} connection for client ${clientId}`);
+        } catch (error) {
+          console.error(`[Onboarding] Failed to save ${platform} connection:`, error);
+        }
+      }
+    }
+
+    // Mark the link as completed and used
     await updateOnboardingLink(link.id, {
       status: 'completed',
       client_id: clientId, // Link the client to the link
     });
+
+    console.log(`[Onboarding] Completed for token ${token}`);
 
     return NextResponse.json({
       success: true,

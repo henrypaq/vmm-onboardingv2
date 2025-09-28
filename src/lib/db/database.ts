@@ -52,6 +52,21 @@ export interface OnboardingRequest {
   updated_at: string;
 }
 
+export interface ClientPlatformConnection {
+  id: string;
+  client_id: string;
+  platform: 'meta' | 'google' | 'tiktok' | 'shopify';
+  platform_user_id: string;
+  platform_username?: string;
+  access_token: string;
+  refresh_token?: string;
+  token_expires_at?: string;
+  scopes: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AdminPlatformConnection {
   id: string;
   admin_id: string;
@@ -519,6 +534,103 @@ export async function isAdminAccountValid(adminId: string, provider: string): Pr
   }
 
   return true;
+}
+
+// Client Platform Connection functions
+export async function createClientPlatformConnection(connection: Omit<ClientPlatformConnection, 'id' | 'created_at' | 'updated_at'>): Promise<ClientPlatformConnection> {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from('client_platform_connections')
+    .insert([connection])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating client platform connection:', error);
+    throw new Error(`Failed to create client platform connection: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function updateClientPlatformConnection(id: string, updates: Partial<ClientPlatformConnection>): Promise<ClientPlatformConnection> {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from('client_platform_connections')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating client platform connection:', error);
+    throw new Error(`Failed to update client platform connection: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function getClientPlatformConnection(clientId: string, platform: string): Promise<ClientPlatformConnection | null> {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from('client_platform_connections')
+    .select('*')
+    .eq('client_id', clientId)
+    .eq('platform', platform)
+    .eq('is_active', true)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null; // No rows found
+    }
+    console.error('Error fetching client platform connection:', error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function upsertClientPlatformConnection(connection: Omit<ClientPlatformConnection, 'id' | 'created_at' | 'updated_at'>): Promise<ClientPlatformConnection> {
+  const supabaseAdmin = getSupabaseAdmin();
+  
+  // First try to find existing connection
+  const existing = await getClientPlatformConnection(connection.client_id, connection.platform);
+  
+  if (existing) {
+    // Update existing connection
+    return await updateClientPlatformConnection(existing.id, {
+      platform_user_id: connection.platform_user_id,
+      platform_username: connection.platform_username,
+      access_token: connection.access_token,
+      refresh_token: connection.refresh_token,
+      token_expires_at: connection.token_expires_at,
+      scopes: connection.scopes,
+      is_active: connection.is_active
+    });
+  } else {
+    // Create new connection
+    return await createClientPlatformConnection(connection);
+  }
+}
+
+export async function getOnboardingRequestByLinkId(linkId: string): Promise<OnboardingRequest | null> {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from('onboarding_requests')
+    .select('*')
+    .eq('link_id', linkId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null; // No rows found
+    }
+    console.error('Error fetching onboarding request:', error);
+    return null;
+  }
+
+  return data;
 }
 
 // Utility functions
