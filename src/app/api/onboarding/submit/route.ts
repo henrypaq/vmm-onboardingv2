@@ -22,12 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (link.status === 'completed') {
-      return NextResponse.json(
-        { error: 'Link has already been used' },
-        { status: 410 }
-      );
-    }
+    // Note: Links can be used multiple times, so we don't check if already completed
 
     // Handle client creation/update
     let clientId: string | undefined;
@@ -132,10 +127,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Mark the link as completed and used
+    // Mark the link as used (but keep it usable for future clients)
     await updateOnboardingLink(link.id, {
-      status: 'completed',
-      client_id: clientId, // Link the client to the link
+      is_used: true, // Track that this link has been used
+      // Don't set status to completed - keep it usable
+      // Don't set client_id - multiple clients can use the same link
     });
 
     console.log(`[Onboarding] Completed for token ${token}`);

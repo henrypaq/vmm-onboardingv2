@@ -33,6 +33,7 @@ export interface OnboardingLink {
   requested_permissions: Record<string, string[]>;
   expires_at: string;
   status: 'pending' | 'in_progress' | 'completed' | 'expired';
+  is_used: boolean; // Track if link has been used (but still usable)
   created_at: string;
   updated_at: string;
 }

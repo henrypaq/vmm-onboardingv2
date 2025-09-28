@@ -17,6 +17,7 @@ interface OnboardingLink {
   requested_permissions: Record<string, string[]>;
   expires_at: string;
   status: string;
+  is_used: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -118,16 +119,16 @@ export default function LinksPage() {
     }
   };
 
-  const getStatusVariant = (status: string, expiresAt: string) => {
-    if (status === 'completed') return 'secondary';
+  const getStatusVariant = (status: string, expiresAt: string, isUsed: boolean) => {
     if (status === 'expired' || new Date(expiresAt) < new Date()) return 'destructive';
+    if (isUsed) return 'secondary'; // Used but still active
     if (status === 'in_progress') return 'default';
     return 'default'; // pending
   };
 
-  const getStatusText = (status: string, expiresAt: string) => {
-    if (status === 'completed') return 'Completed';
+  const getStatusText = (status: string, expiresAt: string, isUsed: boolean) => {
     if (status === 'expired' || new Date(expiresAt) < new Date()) return 'Expired';
+    if (isUsed) return 'Used'; // Used but still active
     if (status === 'in_progress') return 'In Progress';
     return 'Active'; // pending
   };
@@ -231,19 +232,17 @@ export default function LinksPage() {
                             <p className="text-xs text-gray-400">
                               Platforms: {link.platforms.join(', ')}
                             </p>
-                            {link.client_id && (
-                              <p className="text-xs text-gray-400">
-                                Client: {link.client_id}
-                              </p>
-                            )}
+                            <p className="text-xs text-gray-400">
+                              Usage: {link.is_used ? 'Used' : 'Unused'}
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
                     
                     <div className="flex items-center space-x-4">
-                      <Badge variant={getStatusVariant(link.status, link.expires_at)}>
-                        {getStatusText(link.status, link.expires_at)}
+                      <Badge variant={getStatusVariant(link.status, link.expires_at, link.is_used)}>
+                        {getStatusText(link.status, link.expires_at, link.is_used)}
                       </Badge>
                       <div className="text-right text-sm text-gray-500">
                         <p>Expires: {new Date(link.expires_at).toLocaleDateString()}</p>

@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if link has expired
+    // Check if link has expired (links can be used multiple times)
     const expiresAt = new Date(link.expires_at);
-    const isValid = isLinkValid(expiresAt, link.status === 'completed');
+    const isValid = isLinkValid(expiresAt);
     
     if (!isValid) {
       return NextResponse.json(
-        { error: 'Link has expired or been used' },
+        { error: 'Link has expired' },
         { status: 410 }
       );
     }

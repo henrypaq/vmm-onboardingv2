@@ -34,9 +34,9 @@ export function generateOnboardingLink(options: LinkGenerationOptions): Generate
 
 /**
  * Validate if a link token is still valid
+ * Links can be used multiple times, so we only check expiration
  */
-export function isLinkValid(expiresAt: Date, isUsed: boolean = false): boolean {
-  if (isUsed) return false;
+export function isLinkValid(expiresAt: Date): boolean {
   return new Date() < expiresAt;
 }
 
