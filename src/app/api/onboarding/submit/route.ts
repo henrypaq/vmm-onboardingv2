@@ -7,6 +7,14 @@ export async function POST(request: NextRequest) {
     
     console.log('[Onboarding] Submit request received:', { token, testMode, data });
     console.log('[Onboarding] Full request body:', { token, permissions, data, testMode });
+    console.log('[Onboarding] Data validation:', {
+      hasEmail: !!data?.email,
+      hasName: !!data?.name,
+      hasCompany: !!data?.company,
+      emailValue: data?.email,
+      nameValue: data?.name,
+      companyValue: data?.company
+    });
     
     if (!token || !permissions || !Array.isArray(permissions)) {
       return NextResponse.json(
@@ -63,6 +71,14 @@ export async function POST(request: NextRequest) {
         }
       } catch (clientError) {
         console.error(`[Onboarding] Failed to create/update client:`, clientError);
+        console.error(`[Onboarding] Client error details:`, {
+          message: clientError instanceof Error ? clientError.message : 'Unknown error',
+          stack: clientError instanceof Error ? clientError.stack : undefined,
+          adminId: link.admin_id,
+          email: data.email,
+          name: data.name,
+          company: data.company
+        });
         // Continue anyway - the main submission is more important
       }
     } else {

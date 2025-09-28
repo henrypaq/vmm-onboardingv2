@@ -83,6 +83,35 @@ export default function ClientsPage() {
     });
   };
 
+  const handleTestClientCreation = async () => {
+    try {
+      console.log('[Admin Clients] Testing direct client creation...');
+      const response = await fetch('/api/test-client-creation-direct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Test Direct Client',
+          email: 'test-direct@example.com',
+          company: 'Test Direct Company'
+        })
+      });
+      
+      const data = await response.json();
+      console.log('[Admin Clients] Test client creation result:', data);
+      
+      if (data.success) {
+        // Refresh the clients list
+        fetchClients();
+        alert('Test client created successfully! Check console for details.');
+      } else {
+        alert('Test client creation failed: ' + data.error);
+      }
+    } catch (error) {
+      console.error('[Admin Clients] Test client creation error:', error);
+      alert('Test client creation failed: ' + error);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -96,6 +125,9 @@ export default function ClientsPage() {
           <Button onClick={fetchClients} variant="outline" disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
+          </Button>
+          <Button onClick={handleTestClientCreation} variant="outline">
+            Test Client Creation
           </Button>
           <Button>
             <Plus className="h-4 w-4 mr-2" />
