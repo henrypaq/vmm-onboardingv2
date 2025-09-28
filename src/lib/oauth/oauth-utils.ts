@@ -29,7 +29,7 @@ export async function exchangeCodeForToken(
     case 'tiktok':
       return await exchangeTikTokToken(code, redirectUri);
     case 'shopify':
-      return await exchangeShopifyToken(code, redirectUri);
+      return await exchangeShopifyToken(code);
     default:
       throw new Error(`Unsupported platform: ${platform}`);
   }
@@ -146,7 +146,7 @@ async function exchangeTikTokToken(code: string, redirectUri: string): Promise<O
   };
 }
 
-async function exchangeShopifyToken(code: string, _redirectUri: string): Promise<OAuthTokenResponse> {
+async function exchangeShopifyToken(code: string): Promise<OAuthTokenResponse> {
   const clientId = process.env.SHOPIFY_CLIENT_ID;
   const clientSecret = process.env.SHOPIFY_CLIENT_SECRET;
   const shopDomain = process.env.SHOPIFY_SHOP_DOMAIN;

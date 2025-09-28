@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
               access_token: connectionData.access_token,
               refresh_token: connectionData.refresh_token,
               token_expires_at: connectionData.token_expires_at,
-              scopes: connectionData.scopes || [],
+              scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
               is_active: true
             });
             console.log(`[Onboarding] Saved ${platform} connection for client ${clientId}`);
