@@ -5,6 +5,9 @@ export async function POST(request: NextRequest) {
   try {
     const { token, permissions, data, testMode } = await request.json();
     
+    console.log('[Onboarding] Submit request received:', { token, testMode, data });
+    console.log('[Onboarding] Full request body:', { token, permissions, data, testMode });
+    
     if (!token || !permissions || !Array.isArray(permissions)) {
       return NextResponse.json(
         { error: 'Token and permissions are required' },
