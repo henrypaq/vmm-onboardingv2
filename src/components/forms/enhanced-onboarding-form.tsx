@@ -394,6 +394,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   
   // Handle test mode confirmation
   const handleTestModeConfirm = () => {
+    console.log('[Onboarding] Test mode confirmed, starting submission...');
     setTestMode(true);
     setShowTestModePopup(false);
     handleTestModeSubmit();
@@ -834,9 +835,17 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                 </Button>
                 <Button
                   onClick={handleTestModeConfirm}
-                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                  disabled={isSubmitting}
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Continue in Test Mode
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Continue in Test Mode'
+                  )}
                 </Button>
               </div>
             </div>

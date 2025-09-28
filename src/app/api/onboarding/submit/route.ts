@@ -32,33 +32,38 @@ export async function POST(request: NextRequest) {
     if (data?.email) {
       console.log(`[Onboarding] Creating/updating client for admin ${link.admin_id} with email ${data.email}`);
       
-      // Check if client already exists for this admin
-      const existingClient = await getClientByEmail(link.admin_id, data.email);
-      
-      if (existingClient) {
-        // Update existing client
-        console.log(`[Onboarding] Found existing client: ${existingClient.id}`);
-        const updatedClient = await updateClient(existingClient.id, {
-          full_name: data.name || existingClient.full_name,
-          company_name: data.company || existingClient.company_name,
-          last_onboarding_at: new Date().toISOString(),
-          status: 'active'
-        });
-        clientId = updatedClient.id;
-        console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`);
-      } else {
-        // Create new client
-        console.log(`[Onboarding] Creating new client for admin ${link.admin_id}`);
-        const newClient = await createClient({
-          admin_id: link.admin_id,
-          email: data.email,
-          full_name: data.name,
-          company_name: data.company,
-          status: 'active',
-          last_onboarding_at: new Date().toISOString()
-        });
-        clientId = newClient.id;
-        console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${link.admin_id}`);
+      try {
+        // Check if client already exists for this admin
+        const existingClient = await getClientByEmail(link.admin_id, data.email);
+        
+        if (existingClient) {
+          // Update existing client
+          console.log(`[Onboarding] Found existing client: ${existingClient.id}`);
+          const updatedClient = await updateClient(existingClient.id, {
+            full_name: data.name || existingClient.full_name,
+            company_name: data.company || existingClient.company_name,
+            last_onboarding_at: new Date().toISOString(),
+            status: 'active'
+          });
+          clientId = updatedClient.id;
+          console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`);
+        } else {
+          // Create new client
+          console.log(`[Onboarding] Creating new client for admin ${link.admin_id}`);
+          const newClient = await createClient({
+            admin_id: link.admin_id,
+            email: data.email,
+            full_name: data.name,
+            company_name: data.company,
+            status: 'active',
+            last_onboarding_at: new Date().toISOString()
+          });
+          clientId = newClient.id;
+          console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${link.admin_id}`);
+        }
+      } catch (clientError) {
+        console.error(`[Onboarding] Failed to create/update client:`, clientError);
+        // Continue anyway - the main submission is more important
       }
     } else {
       console.log(`[Onboarding] No email provided, skipping client creation`);
@@ -137,11 +142,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark the link as used (but keep it usable for future clients)
-    await updateOnboardingLink(link.id, {
-      is_used: true, // Track that this link has been used
-      // Don't set status to completed - keep it usable
-      // Don't set client_id - multiple clients can use the same link
-    });
+    try {
+      await updateOnboardingLink(link.id, {
+        is_used: true, // Track that this link has been used
+        // Don't set status to completed - keep it usable
+        // Don't set client_id - multiple clients can use the same link
+      });
+      console.log(`[Onboarding] Successfully marked link ${link.id} as used`);
+    } catch (updateError) {
+      console.error(`[Onboarding] Failed to update link ${link.id}:`, updateError);
+      // Continue anyway - the main submission is more important
+    }
 
     console.log(`[Onboarding] Completed for token ${token}`);
 
