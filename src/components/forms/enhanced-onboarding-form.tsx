@@ -57,6 +57,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   const [isCompleted, setIsCompleted] = useState(false);
   const [testMode, setTestMode] = useState(false);
   const [showSuccessScreen, setShowSuccessScreen] = useState(false);
+  const [showTestModePopup, setShowTestModePopup] = useState(false);
   const [shopifyStep, setShopifyStep] = useState(1);
   const [shopifyData, setShopifyData] = useState({
     storeId: '',
@@ -374,6 +375,24 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
 
   // Test mode: allow completion even without OAuth connections
   const canCompleteInTestMode = testMode && formData.name.trim() && formData.email.trim();
+  
+  // Handle completion button click
+  const handleCompletionClick = () => {
+    if (isFinalStepComplete) {
+      // All platforms connected, proceed normally
+      handleAutoSubmit();
+    } else {
+      // OAuth not complete, show test mode popup
+      setShowTestModePopup(true);
+    }
+  };
+  
+  // Handle test mode confirmation
+  const handleTestModeConfirm = () => {
+    setTestMode(true);
+    setShowTestModePopup(false);
+    handleTestModeSubmit();
+  };
 
   // Debug logging for final step (simplified)
   if (currentStep === getTotalSteps() - 1 && process.env.NODE_ENV === 'development') {
@@ -766,58 +785,22 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                     <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                     <span className="font-medium">Finalizing Access Grant...</span>
                   </div>
-                ) : !isFinalStepComplete ? (
-                  <div className="space-y-3">
-                    <div className="text-gray-500 text-sm">
-                      Complete all platform connections to automatically finalize access grant
-                    </div>
-                    {/* Test Mode Toggle */}
-                    <div className="flex items-center justify-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="testMode"
-                        checked={testMode}
-                        onChange={(e) => setTestMode(e.target.checked)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <label htmlFor="testMode" className="text-sm text-gray-600">
-                        Enable test mode (skip OAuth connections)
-                      </label>
-                    </div>
-                    {/* Test Mode Submit Button */}
-                    {testMode && (
-                      <div className="space-y-2">
-                        {!canCompleteInTestMode && (
-                          <p className="text-sm text-gray-500 text-center">
-                            Please fill in your name and email to complete the test mode flow
-                          </p>
-                        )}
-                        <Button
-                          onClick={handleTestModeSubmit}
-                          disabled={!canCompleteInTestMode || isSubmitting}
-                          className="w-full bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                              Completing...
-                            </>
-                          ) : (
-                            'Complete Access Grant (Test Mode)'
-                          )}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="text-blue-600 text-sm text-center">
-                      All platforms connected. Ready to finalize access grant.
+                    <div className="text-gray-500 text-sm text-center">
+                      {isFinalStepComplete 
+                        ? "All platforms connected. Ready to finalize access grant."
+                        : "Platform connections incomplete. Click below to continue anyway."
+                      }
                     </div>
                     <Button
-                      onClick={handleAutoSubmit}
+                      onClick={handleCompletionClick}
                       disabled={isSubmitting || isCompleted}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`w-full text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                        isFinalStepComplete 
+                          ? 'bg-green-600 hover:bg-green-700' 
+                          : 'bg-orange-600 hover:bg-orange-700'
+                      }`}
                     >
                       {isSubmitting ? (
                         <>
@@ -848,6 +831,42 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           </div>
         </div>
       </div>
+
+      {/* Test Mode Popup */}
+      {showTestModePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <div className="text-center">
+              <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Platform Connections Incomplete
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Some platform connections are missing or incomplete. Would you like to continue anyway in test mode?
+              </p>
+              <div className="flex space-x-3">
+                <Button
+                  onClick={() => setShowTestModePopup(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleTestModeConfirm}
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  Continue in Test Mode
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
