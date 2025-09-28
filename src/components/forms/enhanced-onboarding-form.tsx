@@ -83,8 +83,19 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
             requested_permissions: linkData.requested_permissions || {}
           });
           
-          // Initialize selected permissions as empty - user needs to select them
-          setSelectedPermissions({});
+          // Initialize selected permissions with all requested permissions pre-selected
+          const initialPermissions: Record<string, string[]> = {};
+          if (linkData.requested_permissions) {
+            Object.entries(linkData.requested_permissions).forEach(([platform, scopes]) => {
+              // Ensure scopes is an array before spreading
+              if (Array.isArray(scopes)) {
+                initialPermissions[platform] = [...scopes]; // Pre-select all scopes
+              } else {
+                initialPermissions[platform] = []; // Fallback to empty array
+              }
+            });
+          }
+          setSelectedPermissions(initialPermissions);
         }
 
         // Handle OAuth redirect parameters
@@ -774,18 +785,49 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                       </label>
                     </div>
                     {/* Test Mode Submit Button */}
-                    {canCompleteInTestMode && (
-                      <Button
-                        onClick={handleTestModeSubmit}
-                        className="bg-orange-600 hover:bg-orange-700 text-white"
-                      >
-                        Complete Access Grant (Test Mode)
-                      </Button>
+                    {testMode && (
+                      <div className="space-y-2">
+                        {!canCompleteInTestMode && (
+                          <p className="text-sm text-gray-500 text-center">
+                            Please fill in your name and email to complete the test mode flow
+                          </p>
+                        )}
+                        <Button
+                          onClick={handleTestModeSubmit}
+                          disabled={!canCompleteInTestMode || isSubmitting}
+                          className="w-full bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                              Completing...
+                            </>
+                          ) : (
+                            'Complete Access Grant (Test Mode)'
+                          )}
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ) : (
-                  <div className="text-blue-600 text-sm">
-                    All platforms connected. Finalizing access grant...
+                  <div className="space-y-3">
+                    <div className="text-blue-600 text-sm text-center">
+                      All platforms connected. Ready to finalize access grant.
+                    </div>
+                    <Button
+                      onClick={handleAutoSubmit}
+                      disabled={isSubmitting || isCompleted}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Finalizing Access Grant...
+                        </>
+                      ) : (
+                        'Complete Access Grant'
+                      )}
+                    </Button>
                   </div>
                 )}
               </div>
