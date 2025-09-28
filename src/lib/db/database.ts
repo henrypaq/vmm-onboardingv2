@@ -592,8 +592,6 @@ export async function getClientPlatformConnection(clientId: string, platform: st
 }
 
 export async function upsertClientPlatformConnection(connection: Omit<ClientPlatformConnection, 'id' | 'created_at' | 'updated_at'>): Promise<ClientPlatformConnection> {
-  const supabaseAdmin = getSupabaseAdmin();
-  
   // First try to find existing connection
   const existing = await getClientPlatformConnection(connection.client_id, connection.platform);
   
