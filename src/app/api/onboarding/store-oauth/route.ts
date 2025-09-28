@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOnboardingLinkByToken, createOnboardingRequest, updateOnboardingRequest, getSupabaseAdmin } from '@/lib/db/database';
+import { getOnboardingLinkByToken, createOnboardingRequest, updateOnboardingRequest } from '@/lib/db/database';
+import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
