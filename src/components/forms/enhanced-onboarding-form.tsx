@@ -252,26 +252,12 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   });
   const isFinalStepComplete = allPlatformsConnected && allPlatformsHavePermissions;
 
-  // Debug logging for final step
-  if (currentStep === getTotalSteps() - 1) {
-    console.log('[Onboarding] Final step debug:', {
-      currentStep,
-      totalSteps: getTotalSteps(),
+  // Debug logging for final step (simplified)
+  if (currentStep === getTotalSteps() - 1 && process.env.NODE_ENV === 'development') {
+    console.log('[Onboarding] Final step:', {
       allPlatformsConnected,
       allPlatformsHavePermissions,
-      isFinalStepComplete,
-      connectedPlatforms,
-      selectedPermissions,
-      linkData: linkData ? {
-        platforms: linkData.platforms,
-        requested_permissions: linkData.requested_permissions
-      } : null,
-      requestedPlatforms: requestedPlatforms.map(p => ({ 
-        id: p.id, 
-        scopes: linkData?.requested_permissions[p.id] || [],
-        hasSelectedPermissions: selectedPermissions[p.id] || [],
-        isConnected: connectedPlatforms[p.id] || false
-      }))
+      isFinalStepComplete
     });
   }
 
