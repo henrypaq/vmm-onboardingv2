@@ -55,6 +55,8 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [testMode, setTestMode] = useState(false);
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false);
   const [shopifyStep, setShopifyStep] = useState(1);
   const [shopifyData, setShopifyData] = useState({
     storeId: '',
@@ -248,13 +250,67 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         const data = await response.json();
         console.log('[Onboarding] Auto-submission successful:', data);
         setIsCompleted(true);
+        setShowSuccessScreen(true);
         onSubmissionComplete(data.requestId);
+        
+        // Redirect to client dashboard after 3 seconds
+        setTimeout(() => {
+          window.location.href = '/client';
+        }, 3000);
       } else {
         console.error('[Onboarding] Auto-submission failed:', response.statusText);
         setIsSubmitting(false);
       }
     } catch (error) {
       console.error('[Onboarding] Error in auto-submission:', error);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTestModeSubmit = async () => {
+    if (isSubmitting || isCompleted) return;
+    
+    setIsSubmitting(true);
+    console.log('[Onboarding] Test mode submission...');
+    
+    try {
+      // Create dummy permissions for test mode
+      const testPermissions = linkData?.platforms.map(platform => `${platform}:test_scope`) || [];
+
+      const response = await fetch('/api/onboarding/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          permissions: testPermissions,
+          data: {
+            name: formData.name,
+            email: formData.email,
+            company: formData.company,
+          },
+          testMode: true, // Flag to indicate test mode
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[Onboarding] Test mode submission successful:', data);
+        setIsCompleted(true);
+        setShowSuccessScreen(true);
+        onSubmissionComplete(data.requestId);
+        
+        // Redirect to client dashboard after 3 seconds
+        setTimeout(() => {
+          window.location.href = '/client';
+        }, 3000);
+      } else {
+        console.error('[Onboarding] Test mode submission failed:', response.statusText);
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('[Onboarding] Error in test mode submission:', error);
       setIsSubmitting(false);
     }
   };
@@ -305,6 +361,9 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     }
   }, [isFinalStepComplete, isLoading, linkData, isSubmitting, isCompleted]);
 
+  // Test mode: allow completion even without OAuth connections
+  const canCompleteInTestMode = testMode && formData.name.trim() && formData.email.trim();
+
   // Debug logging for final step (simplified)
   if (currentStep === getTotalSteps() - 1 && process.env.NODE_ENV === 'development') {
     console.log('[Onboarding] Final step:', {
@@ -321,6 +380,36 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading onboarding link...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Success screen
+  if (showSuccessScreen) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Granted Successfully!</h2>
+            <p className="text-gray-600 mb-6">
+              Thank you for completing the onboarding process. Your access has been granted and you'll be redirected to your dashboard shortly.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-800">
+                🚀 Redirecting to client dashboard in 3 seconds...
+              </p>
+            </div>
+            <Button 
+              onClick={() => window.location.href = '/client'} 
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Go to Dashboard Now
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -655,7 +744,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           
           <div>
             {currentStep === getTotalSteps() - 1 ? (
-              <div className="text-center">
+              <div className="text-center space-y-4">
                 {isCompleted ? (
                   <div className="flex items-center justify-center space-x-2 text-green-600">
                     <CheckCircle className="h-5 w-5" />
@@ -667,8 +756,32 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                     <span className="font-medium">Finalizing Access Grant...</span>
                   </div>
                 ) : !isFinalStepComplete ? (
-                  <div className="text-gray-500 text-sm">
-                    Complete all platform connections to automatically finalize access grant
+                  <div className="space-y-3">
+                    <div className="text-gray-500 text-sm">
+                      Complete all platform connections to automatically finalize access grant
+                    </div>
+                    {/* Test Mode Toggle */}
+                    <div className="flex items-center justify-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="testMode"
+                        checked={testMode}
+                        onChange={(e) => setTestMode(e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label htmlFor="testMode" className="text-sm text-gray-600">
+                        Enable test mode (skip OAuth connections)
+                      </label>
+                    </div>
+                    {/* Test Mode Submit Button */}
+                    {canCompleteInTestMode && (
+                      <Button
+                        onClick={handleTestModeSubmit}
+                        className="bg-orange-600 hover:bg-orange-700 text-white"
+                      >
+                        Complete Access Grant (Test Mode)
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="text-blue-600 text-sm">

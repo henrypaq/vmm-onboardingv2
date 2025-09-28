@@ -3,7 +3,7 @@ import { createOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, permissions, data } = await request.json();
+    const { token, permissions, data, testMode } = await request.json();
     
     if (!token || !permissions || !Array.isArray(permissions)) {
       return NextResponse.json(
@@ -82,26 +82,53 @@ export async function POST(request: NextRequest) {
     });
 
     // Save platform connections to client_platform_connections table
-    if (clientId && Object.keys(storedPlatformConnections).length > 0) {
+    if (clientId) {
       console.log(`[Onboarding] Saving platform connections for client ${clientId}`);
       
-      for (const [platform, connectionData] of Object.entries(storedPlatformConnections)) {
-        try {
-          await upsertClientPlatformConnection({
-            client_id: clientId,
-            platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
-            platform_user_id: connectionData.platform_user_id || '',
-            platform_username: connectionData.platform_username,
-            access_token: connectionData.access_token,
-            refresh_token: connectionData.refresh_token,
-            token_expires_at: connectionData.token_expires_at,
-            scopes: connectionData.scopes || [],
-            is_active: true
-          });
-          console.log(`[Onboarding] Saved ${platform} connection for client ${clientId}`);
-        } catch (error) {
-          console.error(`[Onboarding] Failed to save ${platform} connection:`, error);
+      if (testMode) {
+        // Test mode: create placeholder connections for all requested platforms
+        console.log(`[Onboarding] Test mode: creating placeholder connections`);
+        
+        for (const platform of link.platforms) {
+          try {
+            await upsertClientPlatformConnection({
+              client_id: clientId,
+              platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
+              platform_user_id: `test_user_${platform}_${Date.now()}`,
+              platform_username: `Test User (${platform})`,
+              access_token: `test_token_${platform}_${Date.now()}`,
+              refresh_token: `test_refresh_${platform}_${Date.now()}`,
+              token_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+              scopes: ['test_scope', 'dummy_scope'],
+              is_active: false // Mark as inactive to indicate it's a test connection
+            });
+            console.log(`[Onboarding] Created test placeholder for ${platform} connection`);
+          } catch (error) {
+            console.error(`[Onboarding] Failed to create test placeholder for ${platform}:`, error);
+          }
         }
+      } else if (Object.keys(storedPlatformConnections).length > 0) {
+        // Normal mode: save real OAuth connections
+        for (const [platform, connectionData] of Object.entries(storedPlatformConnections)) {
+          try {
+            await upsertClientPlatformConnection({
+              client_id: clientId,
+              platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
+              platform_user_id: connectionData.platform_user_id || '',
+              platform_username: connectionData.platform_username,
+              access_token: connectionData.access_token,
+              refresh_token: connectionData.refresh_token,
+              token_expires_at: connectionData.token_expires_at,
+              scopes: connectionData.scopes || [],
+              is_active: true
+            });
+            console.log(`[Onboarding] Saved ${platform} connection for client ${clientId}`);
+          } catch (error) {
+            console.error(`[Onboarding] Failed to save ${platform} connection:`, error);
+          }
+        }
+      } else {
+        console.log(`[Onboarding] No OAuth connections found, skipping platform connection creation`);
       }
     }
 
