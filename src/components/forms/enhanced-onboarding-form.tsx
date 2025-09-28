@@ -17,8 +17,8 @@ interface OnboardingFormProps {
 
 interface LinkData {
   platforms: string[];
-  requestedScopes: Record<string, string[]>;
-  linkName?: string;
+  requested_permissions: Record<string, string[]>;
+  link_name?: string;
 }
 
 // Platform icons and colors (matching demo)
@@ -76,11 +76,11 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           });
           setLinkData({
             platforms: linkData.platforms || [],
-            requestedScopes: linkData.requested_permissions || {}
+            requested_permissions: linkData.requested_permissions || {}
           });
           
-          // Initialize selected permissions with requested scopes
-          setSelectedPermissions(linkData.requested_permissions || {});
+          // Initialize selected permissions as empty - user needs to select them
+          setSelectedPermissions({});
         }
 
         // Handle OAuth redirect parameters
@@ -239,14 +239,14 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   const isConnected = currentPlatform ? connectedPlatforms[currentPlatform.id] : false;
   
   // Check if we have the requested scopes selected
-  const requestedScopes = currentPlatform ? (linkData?.requestedScopes[currentPlatform.id] || []) : [];
+  const requestedScopes = currentPlatform ? (linkData?.requested_permissions[currentPlatform.id] || []) : [];
   const hasRequiredPermissions = requestedScopes.length === 0 || 
     requestedScopes.every(scope => selectedPermissions[currentPlatform?.id || '']?.includes(scope));
 
   // For the final step, check if ALL platforms are connected and have required permissions
   const allPlatformsConnected = requestedPlatforms.every(platform => connectedPlatforms[platform.id]);
   const allPlatformsHavePermissions = requestedPlatforms.every(platform => {
-    const platformScopes = linkData?.requestedScopes[platform.id] || [];
+    const platformScopes = linkData?.requested_permissions[platform.id] || [];
     return platformScopes.length === 0 || 
       platformScopes.every(scope => selectedPermissions[platform.id]?.includes(scope));
   });
@@ -262,7 +262,16 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
       isFinalStepComplete,
       connectedPlatforms,
       selectedPermissions,
-      requestedPlatforms: requestedPlatforms.map(p => ({ id: p.id, scopes: linkData?.requestedScopes[p.id] || [] }))
+      linkData: linkData ? {
+        platforms: linkData.platforms,
+        requested_permissions: linkData.requested_permissions
+      } : null,
+      requestedPlatforms: requestedPlatforms.map(p => ({ 
+        id: p.id, 
+        scopes: linkData?.requested_permissions[p.id] || [],
+        hasSelectedPermissions: selectedPermissions[p.id] || [],
+        isConnected: connectedPlatforms[p.id] || false
+      }))
     });
   }
 
