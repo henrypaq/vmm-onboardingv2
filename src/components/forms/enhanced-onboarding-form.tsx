@@ -379,7 +379,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
       
       console.log('[Onboarding] Request body:', requestBody);
 
-      const response = await fetch('/api/simplified-submit', {
+      const response = await fetch('/api/onboarding/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

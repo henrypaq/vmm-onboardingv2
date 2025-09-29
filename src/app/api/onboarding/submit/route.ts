@@ -83,53 +83,52 @@ export async function POST(request: NextRequest) {
       console.log(`[Onboarding] Client data:`, { name: data.name, email: data.email, company: data.company });
       console.log(`[Onboarding] Link admin_id:`, link.admin_id, 'Type:', typeof link.admin_id);
       
-      // Skip client creation if no admin_id - not required for the flow
-      if (!link.admin_id) {
-        console.log(`[Onboarding] No admin_id found in link, skipping client creation`);
-      } else {
-        try {
-          // Check if client already exists for this admin
-          const existingClient = await getClientByEmail(link.admin_id, data.email);
-        
-          if (existingClient) {
-            // Update existing client
-            console.log(`[Onboarding] Found existing client: ${existingClient.id}`);
-            const updatedClient = await updateClient(existingClient.id, {
-              full_name: data.name || existingClient.full_name,
-              company_name: data.company || existingClient.company_name,
-              last_onboarding_at: new Date().toISOString(),
-              status: 'active'
-            });
-            clientId = updatedClient.id;
-            console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`, updatedClient);
-          } else {
-            // Create new client
-            console.log(`[Onboarding] Creating new client for admin ${link.admin_id}`);
-            const clientData = {
-              admin_id: link.admin_id,
-              email: data.email,
-              full_name: data.name,
-              company_name: data.company,
-              status: 'active' as const,
-              last_onboarding_at: new Date().toISOString()
-            };
-            console.log(`[Onboarding] Client data to insert:`, clientData);
-            const newClient = await createClient(clientData);
-            clientId = newClient.id;
-            console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${link.admin_id}`, newClient);
-          }
-        } catch (clientError) {
-          console.error(`[Onboarding] Failed to create/update client:`, clientError);
-          console.error(`[Onboarding] Client error details:`, {
-            message: clientError instanceof Error ? clientError.message : 'Unknown error',
-            stack: clientError instanceof Error ? clientError.stack : undefined,
-            adminId: link.admin_id,
-            email: data.email,
-            name: data.name,
-            company: data.company
+      // Use admin_id if available, otherwise use a default for the flow
+      const adminId = link.admin_id || '00000000-0000-0000-0000-000000000000';
+      console.log(`[Onboarding] Using admin_id:`, adminId);
+      
+      try {
+        // Check if client already exists for this admin
+        const existingClient = await getClientByEmail(adminId, data.email);
+      
+        if (existingClient) {
+          // Update existing client
+          console.log(`[Onboarding] Found existing client: ${existingClient.id}`);
+          const updatedClient = await updateClient(existingClient.id, {
+            full_name: data.name || existingClient.full_name,
+            company_name: data.company || existingClient.company_name,
+            last_onboarding_at: new Date().toISOString(),
+            status: 'active'
           });
-          // Continue anyway - the main submission is more important
+          clientId = updatedClient.id;
+          console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`, updatedClient);
+        } else {
+          // Create new client
+          console.log(`[Onboarding] Creating new client for admin ${adminId}`);
+          const clientData = {
+            admin_id: adminId,
+            email: data.email,
+            full_name: data.name,
+            company_name: data.company,
+            status: 'active' as const,
+            last_onboarding_at: new Date().toISOString()
+          };
+          console.log(`[Onboarding] Client data to insert:`, clientData);
+          const newClient = await createClient(clientData);
+          clientId = newClient.id;
+          console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${adminId}`, newClient);
         }
+      } catch (clientError) {
+        console.error(`[Onboarding] Failed to create/update client:`, clientError);
+        console.error(`[Onboarding] Client error details:`, {
+          message: clientError instanceof Error ? clientError.message : 'Unknown error',
+          stack: clientError instanceof Error ? clientError.stack : undefined,
+          adminId: adminId,
+          email: data.email,
+          name: data.name,
+          company: data.company
+        });
+        // Continue anyway - the main submission is more important
       }
     } else {
       console.log(`[Onboarding] No email provided, skipping client creation`);
@@ -209,55 +208,65 @@ export async function POST(request: NextRequest) {
     if (clientId) {
       console.log(`[Onboarding] Saving platform connections for client ${clientId}`);
       
-      if (testMode) {
-        // Test mode: create placeholder connections for all requested platforms
-        console.log(`[Onboarding] Test mode: creating placeholder connections`);
-        
-        for (const platform of link.platforms) {
-          try {
-            await upsertClientPlatformConnection({
-              client_id: clientId,
-              platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
-              platform_user_id: `test_user_${platform}_${Date.now()}`,
-              platform_username: `Test User (${platform})`,
-              access_token: `test_token_${platform}_${Date.now()}`,
-              refresh_token: `test_refresh_${platform}_${Date.now()}`,
-              token_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
-              scopes: ['test_scope', 'dummy_scope'],
-              is_active: false // Mark as inactive to indicate it's a test connection
-            });
-            console.log(`[Onboarding] Created test placeholder for ${platform} connection`);
-          } catch (error) {
-            console.error(`[Onboarding] Failed to create test placeholder for ${platform}:`, error);
+      try {
+        if (testMode) {
+          // Test mode: create placeholder connections for all requested platforms
+          console.log(`[Onboarding] Test mode: creating placeholder connections`);
+          
+          for (const platform of link.platforms) {
+            try {
+              await upsertClientPlatformConnection({
+                client_id: clientId,
+                platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
+                platform_user_id: `test_user_${platform}_${Date.now()}`,
+                platform_username: `Test User (${platform})`,
+                access_token: `test_token_${platform}_${Date.now()}`,
+                refresh_token: `test_refresh_${platform}_${Date.now()}`,
+                token_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+                scopes: ['test_scope', 'dummy_scope'],
+                is_active: false // Mark as inactive to indicate it's a test connection
+              });
+              console.log(`[Onboarding] Created test placeholder for ${platform} connection`);
+            } catch (error) {
+              console.error(`[Onboarding] Failed to create test placeholder for ${platform}:`, error);
+              // Continue with other platforms
+            }
           }
-        }
-      } else if (Object.keys(storedPlatformConnections).length > 0) {
-        // Normal mode: save real OAuth connections
-        for (const [platform, connectionData] of Object.entries(storedPlatformConnections)) {
-          try {
-            await upsertClientPlatformConnection({
-              client_id: clientId,
-              platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
-              platform_user_id: connectionData.platform_user_id || '',
-              platform_username: connectionData.platform_username,
-              access_token: connectionData.access_token,
-              refresh_token: connectionData.refresh_token,
-              token_expires_at: connectionData.token_expires_at,
-              scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
-              is_active: true
-            });
-            console.log(`[Onboarding] Saved ${platform} connection for client ${clientId}`);
-          } catch (error) {
-            console.error(`[Onboarding] Failed to save ${platform} connection:`, error);
+        } else if (Object.keys(storedPlatformConnections).length > 0) {
+          // Normal mode: save real OAuth connections
+          for (const [platform, connectionData] of Object.entries(storedPlatformConnections)) {
+            try {
+              await upsertClientPlatformConnection({
+                client_id: clientId,
+                platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
+                platform_user_id: connectionData.platform_user_id || '',
+                platform_username: connectionData.platform_username,
+                access_token: connectionData.access_token,
+                refresh_token: connectionData.refresh_token,
+                token_expires_at: connectionData.token_expires_at,
+                scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
+                is_active: true
+              });
+              console.log(`[Onboarding] Saved ${platform} connection for client ${clientId}`);
+            } catch (error) {
+              console.error(`[Onboarding] Failed to save ${platform} connection:`, error);
+              // Continue with other platforms
+            }
           }
+        } else {
+          console.log(`[Onboarding] No OAuth connections found, skipping platform connection creation`);
         }
-      } else {
-        console.log(`[Onboarding] No OAuth connections found, skipping platform connection creation`);
+      } catch (error) {
+        console.error(`[Onboarding] Error in platform connections section:`, error);
+        // Continue anyway - platform connections are not critical
       }
+    } else {
+      console.log(`[Onboarding] No client ID, skipping platform connections`);
     }
 
     // Mark the link as used (but keep it usable for future clients)
     try {
+      console.log(`[Onboarding] Updating link ${link.id} to mark as used`);
       await updateOnboardingLink(link.id, {
         is_used: true, // Track that this link has been used
         // Don't set status to completed - keep it usable
@@ -266,6 +275,10 @@ export async function POST(request: NextRequest) {
       console.log(`[Onboarding] Successfully marked link ${link.id} as used`);
     } catch (updateError) {
       console.error(`[Onboarding] Failed to update link ${link.id}:`, updateError);
+      console.error(`[Onboarding] Link update error details:`, {
+        message: updateError instanceof Error ? updateError.message : 'Unknown error',
+        stack: updateError instanceof Error ? updateError.stack : undefined
+      });
       // Continue anyway - the main submission is more important
     }
 
