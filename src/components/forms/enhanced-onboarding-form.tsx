@@ -234,6 +234,8 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     
     setIsSubmitting(true);
     console.log('[Onboarding] Auto-submitting onboarding data...');
+    console.log('[Onboarding] Form data state:', formData);
+    console.log('[Onboarding] Selected permissions:', selectedPermissions);
     
     try {
       // Convert selectedPermissions to the format expected by the API
@@ -241,20 +243,32 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         scopes.map(scope => `${platform}:${scope}`)
       );
 
+      const payload = {
+        token,
+        permissions,
+        data: {
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+        },
+      };
+      
+      console.log('[Onboarding] Full payload being sent:', payload);
+      console.log('[Onboarding] Data validation:', {
+        hasName: !!formData.name,
+        hasEmail: !!formData.email,
+        hasCompany: !!formData.company,
+        nameValue: formData.name,
+        emailValue: formData.email,
+        companyValue: formData.company
+      });
+
       const response = await fetch('/api/onboarding/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          token,
-          permissions,
-          data: {
-            name: formData.name,
-            email: formData.email,
-            company: formData.company,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {

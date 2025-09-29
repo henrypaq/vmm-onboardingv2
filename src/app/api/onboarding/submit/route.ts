@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     
     console.log('[Onboarding] Submit request received:', { token, testMode, data });
     console.log('[Onboarding] Full request body:', { token, permissions, data, testMode });
+    console.log('[Onboarding] Raw request body:', rawBody);
     console.log('[Onboarding] Data validation:', {
       hasEmail: !!data?.email,
       hasName: !!data?.name,
@@ -28,6 +29,8 @@ export async function POST(request: NextRequest) {
       nameValue: data?.name,
       companyValue: data?.company
     });
+    console.log('[Onboarding] Data object type:', typeof data);
+    console.log('[Onboarding] Data object keys:', data ? Object.keys(data) : 'null');
     
     if (!token) {
       return NextResponse.json(
