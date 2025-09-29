@@ -44,6 +44,42 @@ ALTER TABLE clients
   ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 
 -- =====================================================
+-- FIX ONBOARDING_REQUESTS TABLE
+-- =====================================================
+
+-- Ensure onboarding_requests table has all required columns matching the code interface
+ALTER TABLE onboarding_requests
+  ADD COLUMN IF NOT EXISTS link_id uuid,
+  ADD COLUMN IF NOT EXISTS client_id uuid,
+  ADD COLUMN IF NOT EXISTS client_email text,
+  ADD COLUMN IF NOT EXISTS client_name text,
+  ADD COLUMN IF NOT EXISTS company_name text,
+  ADD COLUMN IF NOT EXISTS granted_permissions jsonb NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS platform_connections jsonb NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'in_progress',
+  ADD COLUMN IF NOT EXISTS submitted_at timestamptz,
+  ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+
+-- =====================================================
+-- FIX ONBOARDING_LINKS TABLE
+-- =====================================================
+
+-- Ensure onboarding_links table has all required columns matching the code interface
+ALTER TABLE onboarding_links
+  ADD COLUMN IF NOT EXISTS admin_id uuid,
+  ADD COLUMN IF NOT EXISTS client_id uuid,
+  ADD COLUMN IF NOT EXISTS link_name text,
+  ADD COLUMN IF NOT EXISTS token text,
+  ADD COLUMN IF NOT EXISTS platforms text[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS requested_permissions jsonb NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS expires_at timestamptz,
+  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS is_used boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+
+-- =====================================================
 -- ADD FOREIGN KEY CONSTRAINTS
 -- =====================================================
 
@@ -176,39 +212,3 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns 
 WHERE table_name = 'onboarding_links' 
 ORDER BY ordinal_position;
-
--- =====================================================
--- FIX ONBOARDING_REQUESTS TABLE
--- =====================================================
-
--- Ensure onboarding_requests table has all required columns matching the code interface
-ALTER TABLE onboarding_requests
-  ADD COLUMN IF NOT EXISTS link_id uuid,
-  ADD COLUMN IF NOT EXISTS client_id uuid,
-  ADD COLUMN IF NOT EXISTS client_email text,
-  ADD COLUMN IF NOT EXISTS client_name text,
-  ADD COLUMN IF NOT EXISTS company_name text,
-  ADD COLUMN IF NOT EXISTS granted_permissions jsonb NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS platform_connections jsonb NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'in_progress',
-  ADD COLUMN IF NOT EXISTS submitted_at timestamptz,
-  ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(),
-  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
-
--- =====================================================
--- FIX ONBOARDING_LINKS TABLE
--- =====================================================
-
--- Ensure onboarding_links table has all required columns matching the code interface
-ALTER TABLE onboarding_links
-  ADD COLUMN IF NOT EXISTS admin_id uuid,
-  ADD COLUMN IF NOT EXISTS client_id uuid,
-  ADD COLUMN IF NOT EXISTS link_name text,
-  ADD COLUMN IF NOT EXISTS token text,
-  ADD COLUMN IF NOT EXISTS platforms text[] NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS requested_permissions jsonb NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS expires_at timestamptz,
-  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'pending',
-  ADD COLUMN IF NOT EXISTS is_used boolean NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(),
-  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
