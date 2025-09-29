@@ -139,12 +139,18 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         if (requestResponse.ok) {
           const data = await requestResponse.json();
           if (data.request) {
+            console.log('[Onboarding] Loading existing request data:', data.request);
+            console.log('[Onboarding] Current form data before loading:', formData);
             // Only set form data if it's currently empty (don't overwrite user input)
-            setFormData(prev => ({
-              name: prev.name || data.request.client_name || '',
-              email: prev.email || data.request.client_email || '',
-              company: prev.company || data.request.company_name || '',
-            }));
+            setFormData(prev => {
+              const newData = {
+                name: prev.name || data.request.client_name || '',
+                email: prev.email || data.request.client_email || '',
+                company: prev.company || data.request.company_name || '',
+              };
+              console.log('[Onboarding] Form data after loading request data:', newData);
+              return newData;
+            });
             
             // Load existing connected platforms
             if (data.request.platform_connections) {
@@ -178,64 +184,11 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     });
   };
 
-  // Auto-proceed to test mode when form data is complete and we're on step 0
+  // Debug: Log form data changes
   useEffect(() => {
-    if (currentStep === 0 && formData.name.trim() && formData.email.trim() && testMode) {
-      console.log('[Onboarding] Form data complete, auto-proceeding to test mode submission');
-      // Call the submit function directly to avoid dependency issues
-      const submitTestMode = async () => {
-        console.log('[Onboarding] handleTestModeSubmit called from auto-proceed');
-        console.log('[Onboarding] isSubmitting:', isSubmitting, 'isCompleted:', isCompleted);
-        
-        if (isSubmitting || isCompleted) {
-          console.log('[Onboarding] Already submitting or completed, skipping');
-          return;
-        }
-        
-        setIsSubmitting(true);
-        
-        try {
-          const payload = {
-            token,
-            data: {
-              name: formData.name,
-              email: formData.email,
-              company: formData.company
-            },
-            permissions: selectedPermissions,
-            testMode: true
-          };
-          
-          console.log('[Onboarding] Submitting test mode payload:', payload);
-          
-          const response = await fetch('/api/onboarding/submit', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            console.log('[Onboarding] Test mode submission successful:', result);
-            setIsCompleted(true);
-            if (onSubmissionComplete) {
-              onSubmissionComplete(result);
-            }
-          } else {
-            console.error('[Onboarding] Test mode submission failed:', response.status, response.statusText);
-          }
-        } catch (error) {
-          console.error('[Onboarding] Test mode submission error:', error);
-        } finally {
-          setIsSubmitting(false);
-        }
-      };
-      
-      submitTestMode();
-    }
-  }, [formData, currentStep, testMode, isSubmitting, isCompleted, token, selectedPermissions, onSubmissionComplete]);
+    console.log('[Onboarding] Form data changed:', formData);
+  }, [formData]);
+
 
   const handlePermissionChange = (platformId: string, permission: string, checked: boolean) => {
     setSelectedPermissions(prev => ({
@@ -418,8 +371,14 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   };
 
   const handleNext = () => {
+    console.log('[Onboarding] handleNext called - current step:', currentStep);
+    console.log('[Onboarding] Form data before advancing:', formData);
     if (currentStep < getTotalSteps() - 1) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep(prev => {
+        const nextStep = prev + 1;
+        console.log('[Onboarding] Advancing from step', prev, 'to step', nextStep);
+        return nextStep;
+      });
     }
   };
 
@@ -490,14 +449,6 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   const handleTestModeConfirm = () => {
     console.log('[Onboarding] Test mode confirmed, starting submission...');
     console.log('[Onboarding] Current form data before test mode:', formData);
-    
-    // If form data is empty, redirect to step 0 to collect the data first
-    if (!formData.name.trim() || !formData.email.trim()) {
-      console.warn('[Onboarding] Missing personal info, redirecting to step 0 to collect data');
-      setCurrentStep(0);
-      setShowTestModePopup(false);
-      return;
-    }
     
     setTestMode(true);
     setShowTestModePopup(false);
