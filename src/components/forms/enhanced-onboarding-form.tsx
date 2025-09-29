@@ -292,7 +292,13 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   };
 
   const handleTestModeSubmit = async () => {
-    if (isSubmitting || isCompleted) return;
+    console.log('[Onboarding] handleTestModeSubmit called');
+    console.log('[Onboarding] isSubmitting:', isSubmitting, 'isCompleted:', isCompleted);
+    
+    if (isSubmitting || isCompleted) {
+      console.log('[Onboarding] Skipping test mode submit - already submitting or completed');
+      return;
+    }
     
     setIsSubmitting(true);
     console.log('[Onboarding] Test mode submission...');
@@ -397,11 +403,18 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   
   // Handle completion button click
   const handleCompletionClick = () => {
+    console.log('[Onboarding] Completion button clicked');
+    console.log('[Onboarding] isFinalStepComplete:', isFinalStepComplete);
+    console.log('[Onboarding] testMode:', testMode);
+    console.log('[Onboarding] canCompleteInTestMode:', canCompleteInTestMode);
+    
     if (isFinalStepComplete) {
       // All platforms connected, proceed normally
+      console.log('[Onboarding] Proceeding with normal submission');
       handleAutoSubmit();
     } else {
       // OAuth not complete, show test mode popup
+      console.log('[Onboarding] OAuth not complete, showing test mode popup');
       setShowTestModePopup(true);
     }
   };
@@ -409,8 +422,10 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   // Handle test mode confirmation
   const handleTestModeConfirm = () => {
     console.log('[Onboarding] Test mode confirmed, starting submission...');
+    console.log('[Onboarding] Current form data before test mode:', formData);
     setTestMode(true);
     setShowTestModePopup(false);
+    console.log('[Onboarding] About to call handleTestModeSubmit');
     handleTestModeSubmit();
   };
 
