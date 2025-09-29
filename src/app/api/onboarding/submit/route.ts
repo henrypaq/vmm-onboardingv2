@@ -155,8 +155,11 @@ export async function POST(request: NextRequest) {
         return acc;
       }, {}),
       platform_connections: storedPlatformConnections,
-      status: 'completed', // Mark as completed since client has granted access
+      status: 'completed' as const, // Mark as completed since client has granted access
     };
+    
+    console.log(`[Onboarding] Link ID:`, link.id, 'Type:', typeof link.id);
+    console.log(`[Onboarding] Link object:`, link);
     
     console.log(`[Onboarding] Creating onboarding request with data:`, onboardingRequestData);
     console.log(`[Onboarding] Client data being saved:`, {
