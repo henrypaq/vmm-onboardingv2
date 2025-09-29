@@ -139,11 +139,12 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         if (requestResponse.ok) {
           const data = await requestResponse.json();
           if (data.request) {
-            setFormData({
-              name: data.request.client_name || '',
-              email: data.request.client_email || '',
-              company: data.request.company_name || '',
-            });
+            // Only set form data if it's currently empty (don't overwrite user input)
+            setFormData(prev => ({
+              name: prev.name || data.request.client_name || '',
+              email: prev.email || data.request.client_email || '',
+              company: prev.company || data.request.company_name || '',
+            }));
             
             // Load existing connected platforms
             if (data.request.platform_connections) {
@@ -166,10 +167,15 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   }, [token]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    console.log(`[Onboarding] Input change - ${field}:`, value);
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value
+      };
+      console.log('[Onboarding] Updated form data:', newData);
+      return newData;
+    });
   };
 
   const handlePermissionChange = (platformId: string, permission: string, checked: boolean) => {
@@ -415,13 +421,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
       console.log('[Onboarding] Proceeding with normal submission');
       handleAutoSubmit();
     } else {
-      // Require personal info before allowing test mode or completion
-      if (!hasPersonalInfo) {
-        console.warn('[Onboarding] Missing personal info (name/email). Redirecting to step 0');
-        setCurrentStep(0);
-        return;
-      }
-      // OAuth not complete, show test mode popup
+      // OAuth not complete, show test mode popup (allow even if personal info seems missing)
       console.log('[Onboarding] OAuth not complete, showing test mode popup');
       setShowTestModePopup(true);
     }
@@ -431,14 +431,37 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   const handleTestModeConfirm = () => {
     console.log('[Onboarding] Test mode confirmed, starting submission...');
     console.log('[Onboarding] Current form data before test mode:', formData);
-    if (!hasPersonalInfo) {
-      console.warn('[Onboarding] Cannot proceed with test mode - missing name/email');
+    
+    // Fallback: read values directly from DOM if formData is empty
+    let finalFormData = { ...formData };
+    if (!formData.name || !formData.email) {
+      console.log('[Onboarding] Form data empty, reading from DOM as fallback');
+      const nameInput = document.getElementById('name') as HTMLInputElement;
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      const companyInput = document.getElementById('company') as HTMLInputElement;
+      
+      if (nameInput && emailInput) {
+        finalFormData = {
+          name: nameInput.value || '',
+          email: emailInput.value || '',
+          company: companyInput?.value || ''
+        };
+        console.log('[Onboarding] DOM fallback values:', finalFormData);
+        
+        // Update state with DOM values
+        setFormData(finalFormData);
+      }
+    }
+    
+    if (!finalFormData.name.trim() || !finalFormData.email.trim()) {
+      console.warn('[Onboarding] Cannot proceed with test mode - missing name/email even after DOM fallback');
       setCurrentStep(0);
       return;
     }
+    
     setTestMode(true);
     setShowTestModePopup(false);
-    console.log('[Onboarding] About to call handleTestModeSubmit');
+    console.log('[Onboarding] About to call handleTestModeSubmit with final data:', finalFormData);
     handleTestModeSubmit();
   };
 
