@@ -3,7 +3,20 @@ import { createOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, permissions, data, testMode } = await request.json();
+    // Accept both payload shapes:
+    // - { token, permissions: string[], data: { name, email, company }, testMode }
+    // - { token, client_name, client_email, company_name, requested_permissions }
+    const rawBody = await request.json();
+    const token: string | undefined = rawBody.token;
+    const testMode: boolean = Boolean(rawBody.testMode);
+    const data: { name?: string; email?: string; company?: string } = rawBody.data ?? {
+      name: rawBody.client_name,
+      email: rawBody.client_email,
+      company: rawBody.company_name,
+    };
+    let permissions: string[] | undefined = Array.isArray(rawBody.permissions)
+      ? rawBody.permissions as string[]
+      : undefined;
     
     console.log('[Onboarding] Submit request received:', { token, testMode, data });
     console.log('[Onboarding] Full request body:', { token, permissions, data, testMode });
@@ -16,9 +29,9 @@ export async function POST(request: NextRequest) {
       companyValue: data?.company
     });
     
-    if (!token || !permissions || !Array.isArray(permissions)) {
+    if (!token) {
       return NextResponse.json(
-        { error: 'Token and permissions are required' },
+        { error: 'Token is required' },
         { status: 400 }
       );
     }
@@ -34,6 +47,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Note: Links can be used multiple times, so we don't check if already completed
+
+    // If no permissions provided, synthesize from link platforms so flow can complete
+    if (!permissions || !Array.isArray(permissions) || permissions.length === 0) {
+      // Use requested_permissions if present, else platform-level basic scope
+      try {
+        const requested = link.requested_permissions as Record<string, string[]> | null | undefined;
+        if (requested && typeof requested === 'object') {
+          const synthesized: string[] = [];
+          for (const [platform, scopes] of Object.entries(requested)) {
+            if (Array.isArray(scopes) && scopes.length > 0) {
+              for (const s of scopes) synthesized.push(`${platform}:${s}`);
+            } else {
+              synthesized.push(`${platform}:basic`);
+            }
+          }
+          permissions = synthesized;
+        } else if (Array.isArray(link.platforms) && link.platforms.length > 0) {
+          permissions = link.platforms.map((p) => `${p}:basic`);
+        } else {
+          permissions = [];
+        }
+      } catch {
+        permissions = [];
+      }
+    }
 
     // Handle client creation/update
     let clientId: string | undefined;
