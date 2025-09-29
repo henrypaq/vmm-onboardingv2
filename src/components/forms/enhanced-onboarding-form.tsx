@@ -400,6 +400,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
 
   // Test mode: allow completion even without OAuth connections
   const canCompleteInTestMode = testMode && formData.name.trim() && formData.email.trim();
+  const hasPersonalInfo = Boolean(formData.name.trim() && formData.email.trim());
   
   // Handle completion button click
   const handleCompletionClick = () => {
@@ -407,12 +408,19 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     console.log('[Onboarding] isFinalStepComplete:', isFinalStepComplete);
     console.log('[Onboarding] testMode:', testMode);
     console.log('[Onboarding] canCompleteInTestMode:', canCompleteInTestMode);
+    console.log('[Onboarding] hasPersonalInfo:', hasPersonalInfo, 'formData:', formData);
     
     if (isFinalStepComplete) {
       // All platforms connected, proceed normally
       console.log('[Onboarding] Proceeding with normal submission');
       handleAutoSubmit();
     } else {
+      // Require personal info before allowing test mode or completion
+      if (!hasPersonalInfo) {
+        console.warn('[Onboarding] Missing personal info (name/email). Redirecting to step 0');
+        setCurrentStep(0);
+        return;
+      }
       // OAuth not complete, show test mode popup
       console.log('[Onboarding] OAuth not complete, showing test mode popup');
       setShowTestModePopup(true);
@@ -423,6 +431,11 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   const handleTestModeConfirm = () => {
     console.log('[Onboarding] Test mode confirmed, starting submission...');
     console.log('[Onboarding] Current form data before test mode:', formData);
+    if (!hasPersonalInfo) {
+      console.warn('[Onboarding] Cannot proceed with test mode - missing name/email');
+      setCurrentStep(0);
+      return;
+    }
     setTestMode(true);
     setShowTestModePopup(false);
     console.log('[Onboarding] About to call handleTestModeSubmit');
