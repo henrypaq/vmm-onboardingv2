@@ -462,6 +462,10 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   });
   const isFinalStepComplete = allPlatformsConnected && allPlatformsHavePermissions;
   
+  // Test mode: allow completion even without OAuth connections
+  const canCompleteInTestMode = testMode && formData.name.trim() && formData.email.trim();
+  const hasPersonalInfo = Boolean(formData.name.trim() && formData.email.trim());
+  
   // For test mode, we don't require OAuth connections to be complete
   const canProceedWithTestMode = !isFinalStepComplete && hasPersonalInfo;
 
@@ -472,10 +476,6 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
       handleAutoSubmit();
     }
   }, [isFinalStepComplete, isLoading, linkData, isSubmitting, isCompleted]);
-
-  // Test mode: allow completion even without OAuth connections
-  const canCompleteInTestMode = testMode && formData.name.trim() && formData.email.trim();
-  const hasPersonalInfo = Boolean(formData.name.trim() && formData.email.trim());
   
   // Handle completion button click
   const handleCompletionClick = () => {
