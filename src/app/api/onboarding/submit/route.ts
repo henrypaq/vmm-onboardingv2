@@ -136,28 +136,51 @@ export async function POST(request: NextRequest) {
     }
 
     // Get existing onboarding request with stored OAuth data
-    const existingRequest = await getOnboardingRequestByLinkId(link.id);
-    const storedPlatformConnections = existingRequest?.platform_connections || {};
+    let existingRequest = null;
+    let storedPlatformConnections = {};
+    
+    try {
+      existingRequest = await getOnboardingRequestByLinkId(link.id);
+      storedPlatformConnections = existingRequest?.platform_connections || {};
+      console.log(`[Onboarding] Existing request found:`, existingRequest);
+    } catch (error) {
+      console.log(`[Onboarding] No existing request found (this is normal for new submissions):`, error);
+      // This is normal for new submissions, continue with empty connections
+    }
 
     // Create the onboarding request
+    let grantedPermissions = {};
+    try {
+      grantedPermissions = permissions.reduce((acc: Record<string, string[]>, perm: string) => {
+        const [platform, scope] = perm.split(':');
+        if (!acc[platform]) acc[platform] = [];
+        acc[platform].push(scope);
+        return acc;
+      }, {});
+      console.log(`[Onboarding] Processed granted permissions:`, grantedPermissions);
+    } catch (error) {
+      console.error(`[Onboarding] Error processing permissions:`, error);
+      grantedPermissions = { meta: ['basic'] }; // Fallback
+    }
+    
     const onboardingRequestData = {
       link_id: link.id,
       client_id: clientId,
       client_email: data?.email,
       client_name: data?.name,
       company_name: data?.company,
-      granted_permissions: permissions.reduce((acc: Record<string, string[]>, perm: string) => {
-        const [platform, scope] = perm.split(':');
-        if (!acc[platform]) acc[platform] = [];
-        acc[platform].push(scope);
-        return acc;
-      }, {}),
+      granted_permissions: grantedPermissions,
       platform_connections: storedPlatformConnections,
       status: 'completed' as const, // Mark as completed since client has granted access
     };
     
     console.log(`[Onboarding] Link ID:`, link.id, 'Type:', typeof link.id);
     console.log(`[Onboarding] Link object:`, link);
+    
+    // Validate link.id
+    if (!link.id) {
+      throw new Error('Link ID is missing or invalid');
+    }
     
     console.log(`[Onboarding] Creating onboarding request with data:`, onboardingRequestData);
     console.log(`[Onboarding] Client data being saved:`, {
