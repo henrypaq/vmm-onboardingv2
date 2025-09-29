@@ -81,6 +81,14 @@ export async function POST(request: NextRequest) {
     if (data?.email) {
       console.log(`[Onboarding] Creating/updating client for admin ${link.admin_id} with email ${data.email}`);
       console.log(`[Onboarding] Client data:`, { name: data.name, email: data.email, company: data.company });
+      console.log(`[Onboarding] Link admin_id:`, link.admin_id, 'Type:', typeof link.admin_id);
+      
+      // Check if admin_id is valid
+      if (!link.admin_id) {
+        console.error(`[Onboarding] No admin_id found in link, using placeholder`);
+        // Use a placeholder admin_id for now
+        link.admin_id = '00000000-0000-0000-0000-000000000000';
+      }
       
       try {
         // Check if client already exists for this admin
@@ -158,10 +166,20 @@ export async function POST(request: NextRequest) {
       company_name: data?.company
     });
     
-    const onboardingRequest = await createOnboardingRequest(onboardingRequestData);
-    
-    console.log(`[Onboarding] Created onboarding request:`, onboardingRequest);
-    console.log(`[Onboarding] Onboarding request ID:`, onboardingRequest?.id);
+    let onboardingRequest;
+    try {
+      onboardingRequest = await createOnboardingRequest(onboardingRequestData);
+      console.log(`[Onboarding] Created onboarding request:`, onboardingRequest);
+      console.log(`[Onboarding] Onboarding request ID:`, onboardingRequest?.id);
+    } catch (onboardingError) {
+      console.error(`[Onboarding] Failed to create onboarding request:`, onboardingError);
+      console.error(`[Onboarding] Onboarding error details:`, {
+        message: onboardingError instanceof Error ? onboardingError.message : 'Unknown error',
+        stack: onboardingError instanceof Error ? onboardingError.stack : undefined,
+        data: onboardingRequestData
+      });
+      throw onboardingError; // Re-throw to trigger 500 error handling
+    }
 
     // Save platform connections to client_platform_connections table
     if (clientId) {
