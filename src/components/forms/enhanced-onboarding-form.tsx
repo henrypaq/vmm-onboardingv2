@@ -178,6 +178,65 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     });
   };
 
+  // Auto-proceed to test mode when form data is complete and we're on step 0
+  useEffect(() => {
+    if (currentStep === 0 && formData.name.trim() && formData.email.trim() && testMode) {
+      console.log('[Onboarding] Form data complete, auto-proceeding to test mode submission');
+      // Call the submit function directly to avoid dependency issues
+      const submitTestMode = async () => {
+        console.log('[Onboarding] handleTestModeSubmit called from auto-proceed');
+        console.log('[Onboarding] isSubmitting:', isSubmitting, 'isCompleted:', isCompleted);
+        
+        if (isSubmitting || isCompleted) {
+          console.log('[Onboarding] Already submitting or completed, skipping');
+          return;
+        }
+        
+        setIsSubmitting(true);
+        
+        try {
+          const payload = {
+            token,
+            data: {
+              name: formData.name,
+              email: formData.email,
+              company: formData.company
+            },
+            permissions: selectedPermissions,
+            testMode: true
+          };
+          
+          console.log('[Onboarding] Submitting test mode payload:', payload);
+          
+          const response = await fetch('/api/onboarding/submit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log('[Onboarding] Test mode submission successful:', result);
+            setIsCompleted(true);
+            if (onSubmissionComplete) {
+              onSubmissionComplete(result);
+            }
+          } else {
+            console.error('[Onboarding] Test mode submission failed:', response.status, response.statusText);
+          }
+        } catch (error) {
+          console.error('[Onboarding] Test mode submission error:', error);
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
+      
+      submitTestMode();
+    }
+  }, [formData, currentStep, testMode, isSubmitting, isCompleted, token, selectedPermissions, onSubmissionComplete]);
+
   const handlePermissionChange = (platformId: string, permission: string, checked: boolean) => {
     setSelectedPermissions(prev => ({
       ...prev,
@@ -432,36 +491,17 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     console.log('[Onboarding] Test mode confirmed, starting submission...');
     console.log('[Onboarding] Current form data before test mode:', formData);
     
-    // Fallback: read values directly from DOM if formData is empty
-    let finalFormData = { ...formData };
-    if (!formData.name || !formData.email) {
-      console.log('[Onboarding] Form data empty, reading from DOM as fallback');
-      const nameInput = document.getElementById('name') as HTMLInputElement;
-      const emailInput = document.getElementById('email') as HTMLInputElement;
-      const companyInput = document.getElementById('company') as HTMLInputElement;
-      
-      if (nameInput && emailInput) {
-        finalFormData = {
-          name: nameInput.value || '',
-          email: emailInput.value || '',
-          company: companyInput?.value || ''
-        };
-        console.log('[Onboarding] DOM fallback values:', finalFormData);
-        
-        // Update state with DOM values
-        setFormData(finalFormData);
-      }
-    }
-    
-    if (!finalFormData.name.trim() || !finalFormData.email.trim()) {
-      console.warn('[Onboarding] Cannot proceed with test mode - missing name/email even after DOM fallback');
+    // If form data is empty, redirect to step 0 to collect the data first
+    if (!formData.name.trim() || !formData.email.trim()) {
+      console.warn('[Onboarding] Missing personal info, redirecting to step 0 to collect data');
       setCurrentStep(0);
+      setShowTestModePopup(false);
       return;
     }
     
     setTestMode(true);
     setShowTestModePopup(false);
-    console.log('[Onboarding] About to call handleTestModeSubmit with final data:', finalFormData);
+    console.log('[Onboarding] About to call handleTestModeSubmit with data:', formData);
     handleTestModeSubmit();
   };
 
