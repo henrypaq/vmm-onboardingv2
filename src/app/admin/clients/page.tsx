@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreHorizontal, RefreshCw } from 'lucide-react';
+import { Plus, MoreHorizontal, RefreshCw, Eye } from 'lucide-react';
+import { ClientDetailsPanel } from '@/components/admin/client-details';
 
 interface Client {
   id: string;
@@ -21,6 +22,7 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   const fetchClients = async () => {
     try {
@@ -166,7 +168,11 @@ export default function ClientsPage() {
           ) : (
             <div className="space-y-4">
               {clients.map((client) => (
-                <div key={client.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div 
+                  key={client.id} 
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => setSelectedClientId(client.id)}
+                >
                   <div className="flex-1">
                     <div className="flex items-center space-x-4">
                       <div>
@@ -189,6 +195,17 @@ export default function ClientsPage() {
                         <p>Last Onboarding: {formatDate(client.last_onboarding_at)}</p>
                       )}
                     </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedClientId(client.id);
+                      }}
+                      title="View Details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="icon">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
@@ -199,6 +216,14 @@ export default function ClientsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Client Details Panel */}
+      {selectedClientId && (
+        <ClientDetailsPanel
+          clientId={selectedClientId}
+          onClose={() => setSelectedClientId(null)}
+        />
+      )}
     </div>
   );
 }
