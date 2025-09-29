@@ -461,6 +461,9 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
       platformScopes.every(scope => selectedPermissions[platform.id]?.includes(scope));
   });
   const isFinalStepComplete = allPlatformsConnected && allPlatformsHavePermissions;
+  
+  // For test mode, we don't require OAuth connections to be complete
+  const canProceedWithTestMode = !isFinalStepComplete && hasPersonalInfo;
 
   // Auto-complete onboarding when all platforms are connected and permissions are selected
   useEffect(() => {
@@ -481,15 +484,20 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     console.log('[Onboarding] testMode:', testMode);
     console.log('[Onboarding] canCompleteInTestMode:', canCompleteInTestMode);
     console.log('[Onboarding] hasPersonalInfo:', hasPersonalInfo, 'formData:', formData);
+    console.log('[Onboarding] canProceedWithTestMode:', canProceedWithTestMode);
     
     if (isFinalStepComplete) {
       // All platforms connected, proceed normally
       console.log('[Onboarding] Proceeding with normal submission');
       handleAutoSubmit();
-    } else {
-      // OAuth not complete, show test mode popup (allow even if personal info seems missing)
+    } else if (canProceedWithTestMode) {
+      // OAuth not complete but we have personal info, show test mode popup
       console.log('[Onboarding] OAuth not complete, showing test mode popup');
       setShowTestModePopup(true);
+    } else {
+      // Missing personal info, redirect to step 0
+      console.log('[Onboarding] Missing personal info, redirecting to step 0');
+      setCurrentStep(0);
     }
   };
   
@@ -871,7 +879,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                     <div className="text-gray-500 text-sm text-center">
                       {isFinalStepComplete 
                         ? "All platforms connected. Ready to finalize access grant."
-                        : "Platform connections incomplete. Click below to continue anyway."
+                        : "OAuth connections didn't work properly. Click below to complete the flow in test mode."
                       }
                     </div>
                     <Button
@@ -924,10 +932,10 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Platform Connections Incomplete
+                OAuth Didn't Work Properly
               </h3>
               <p className="text-gray-600 mb-6">
-                Some platform connections are missing or incomplete. Would you like to continue anyway in test mode?
+                The OAuth connections didn't complete successfully. You can continue in test mode to complete the onboarding flow and save your information.
               </p>
               <div className="flex space-x-3">
                 <Button

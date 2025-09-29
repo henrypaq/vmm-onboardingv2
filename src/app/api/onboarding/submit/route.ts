@@ -76,60 +76,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Handle client creation/update
+    // Handle client creation/update - ONLY when flow is completed
     let clientId: string | undefined;
     if (data?.email) {
-      console.log(`[Onboarding] Creating/updating client with email ${data.email}`);
+      console.log(`[Onboarding] Will create/update client with email ${data.email} after onboarding request is created`);
       console.log(`[Onboarding] Client data:`, { name: data.name, email: data.email, company: data.company });
       console.log(`[Onboarding] Link admin_id:`, link.admin_id, 'Type:', typeof link.admin_id);
-      
-      // Use admin_id if available, otherwise use a default for the flow
-      const adminId = link.admin_id || '00000000-0000-0000-0000-000000000000';
-      console.log(`[Onboarding] Using admin_id:`, adminId);
-      
-      try {
-        // Check if client already exists for this admin
-        const existingClient = await getClientByEmail(adminId, data.email);
-      
-        if (existingClient) {
-          // Update existing client
-          console.log(`[Onboarding] Found existing client: ${existingClient.id}`);
-          const updatedClient = await updateClient(existingClient.id, {
-            full_name: data.name || existingClient.full_name,
-            company_name: data.company || existingClient.company_name,
-            last_onboarding_at: new Date().toISOString(),
-            status: 'active'
-          });
-          clientId = updatedClient.id;
-          console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`, updatedClient);
-        } else {
-          // Create new client
-          console.log(`[Onboarding] Creating new client for admin ${adminId}`);
-          const clientData = {
-            admin_id: adminId,
-            email: data.email,
-            full_name: data.name,
-            company_name: data.company,
-            status: 'active' as const,
-            last_onboarding_at: new Date().toISOString()
-          };
-          console.log(`[Onboarding] Client data to insert:`, clientData);
-          const newClient = await createClient(clientData);
-          clientId = newClient.id;
-          console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${adminId}`, newClient);
-        }
-      } catch (clientError) {
-        console.error(`[Onboarding] Failed to create/update client:`, clientError);
-        console.error(`[Onboarding] Client error details:`, {
-          message: clientError instanceof Error ? clientError.message : 'Unknown error',
-          stack: clientError instanceof Error ? clientError.stack : undefined,
-          adminId: adminId,
-          email: data.email,
-          name: data.name,
-          company: data.company
-        });
-        // Continue anyway - the main submission is more important
-      }
     } else {
       console.log(`[Onboarding] No email provided, skipping client creation`);
     }
@@ -280,6 +232,59 @@ export async function POST(request: NextRequest) {
         stack: updateError instanceof Error ? updateError.stack : undefined
       });
       // Continue anyway - the main submission is more important
+    }
+
+    // NOW create/update client since onboarding request was successful
+    if (data?.email) {
+      console.log(`[Onboarding] Creating/updating client with email ${data.email} after successful onboarding`);
+      
+      // Use admin_id if available, otherwise use a default for the flow
+      const adminId = link.admin_id || '00000000-0000-0000-0000-000000000000';
+      console.log(`[Onboarding] Using admin_id:`, adminId);
+      
+      try {
+        // Check if client already exists for this admin
+        const existingClient = await getClientByEmail(adminId, data.email);
+      
+        if (existingClient) {
+          // Update existing client
+          console.log(`[Onboarding] Found existing client: ${existingClient.id}`);
+          const updatedClient = await updateClient(existingClient.id, {
+            full_name: data.name || existingClient.full_name,
+            company_name: data.company || existingClient.company_name,
+            last_onboarding_at: new Date().toISOString(),
+            status: 'active'
+          });
+          clientId = updatedClient.id;
+          console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`, updatedClient);
+        } else {
+          // Create new client
+          console.log(`[Onboarding] Creating new client for admin ${adminId}`);
+          const clientData = {
+            admin_id: adminId,
+            email: data.email,
+            full_name: data.name,
+            company_name: data.company,
+            status: 'active' as const,
+            last_onboarding_at: new Date().toISOString()
+          };
+          console.log(`[Onboarding] Client data to insert:`, clientData);
+          const newClient = await createClient(clientData);
+          clientId = newClient.id;
+          console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${adminId}`, newClient);
+        }
+      } catch (clientError) {
+        console.error(`[Onboarding] Failed to create/update client:`, clientError);
+        console.error(`[Onboarding] Client error details:`, {
+          message: clientError instanceof Error ? clientError.message : 'Unknown error',
+          stack: clientError instanceof Error ? clientError.stack : undefined,
+          adminId: adminId,
+          email: data.email,
+          name: data.name,
+          company: data.company
+        });
+        // Continue anyway - the main submission is more important
+      }
     }
 
     console.log(`[Onboarding] Completed for token ${token}`);
