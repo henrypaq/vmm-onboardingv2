@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     let clientId: string | undefined;
     if (data?.email) {
       console.log(`[Onboarding] Creating/updating client for admin ${link.admin_id} with email ${data.email}`);
+      console.log(`[Onboarding] Client data:`, { name: data.name, email: data.email, company: data.company });
       
       try {
         // Check if client already exists for this admin
@@ -54,20 +55,22 @@ export async function POST(request: NextRequest) {
             status: 'active'
           });
           clientId = updatedClient.id;
-          console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`);
+          console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`, updatedClient);
         } else {
           // Create new client
           console.log(`[Onboarding] Creating new client for admin ${link.admin_id}`);
-          const newClient = await createClient({
+          const clientData = {
             admin_id: link.admin_id,
             email: data.email,
             full_name: data.name,
             company_name: data.company,
-            status: 'active',
+            status: 'active' as const,
             last_onboarding_at: new Date().toISOString()
-          });
+          };
+          console.log(`[Onboarding] Client data to insert:`, clientData);
+          const newClient = await createClient(clientData);
           clientId = newClient.id;
-          console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${link.admin_id}`);
+          console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${link.admin_id}`, newClient);
         }
       } catch (clientError) {
         console.error(`[Onboarding] Failed to create/update client:`, clientError);
@@ -105,6 +108,8 @@ export async function POST(request: NextRequest) {
       platform_connections: storedPlatformConnections,
       status: 'completed', // Mark as completed since client has granted access
     });
+    
+    console.log(`[Onboarding] Created onboarding request:`, onboardingRequest);
 
     // Save platform connections to client_platform_connections table
     if (clientId) {
