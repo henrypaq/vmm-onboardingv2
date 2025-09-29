@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     const storedPlatformConnections = existingRequest?.platform_connections || {};
 
     // Create the onboarding request
-    const onboardingRequest = await createOnboardingRequest({
+    const onboardingRequestData = {
       link_id: link.id,
       client_id: clientId,
       client_email: data?.email,
@@ -145,7 +145,17 @@ export async function POST(request: NextRequest) {
       }, {}),
       platform_connections: storedPlatformConnections,
       status: 'completed', // Mark as completed since client has granted access
+    };
+    
+    console.log(`[Onboarding] Creating onboarding request with data:`, onboardingRequestData);
+    console.log(`[Onboarding] Client data being saved:`, {
+      client_id: clientId,
+      client_email: data?.email,
+      client_name: data?.name,
+      company_name: data?.company
     });
+    
+    const onboardingRequest = await createOnboardingRequest(onboardingRequestData);
     
     console.log(`[Onboarding] Created onboarding request:`, onboardingRequest);
 

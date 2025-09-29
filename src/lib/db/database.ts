@@ -315,6 +315,8 @@ export async function getOnboardingRequests(linkId?: string): Promise<Onboarding
 }
 
 export async function createOnboardingRequest(request: Omit<OnboardingRequest, 'id' | 'created_at' | 'updated_at'>): Promise<OnboardingRequest> {
+  console.log('[DB] Creating onboarding request with data:', request);
+  
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('onboarding_requests')
@@ -324,9 +326,16 @@ export async function createOnboardingRequest(request: Omit<OnboardingRequest, '
 
   if (error) {
     console.error('Error creating onboarding request:', error);
+    console.error('Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
     throw new Error('Failed to create onboarding request');
   }
 
+  console.log('[DB] Successfully created onboarding request:', data);
   return data;
 }
 
