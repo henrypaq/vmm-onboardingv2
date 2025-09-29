@@ -3,11 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { clientId: string } }
+  { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
     const supabase = createClient();
-    const { clientId } = params;
+    const { clientId } = await params;
 
     console.log('[Client Connections API] Fetching connections for client:', clientId);
 
