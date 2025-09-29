@@ -398,7 +398,10 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           console.log('[Onboarding] Cleared localStorage data after successful submission');
         }
         
-        onSubmissionComplete(data.requestId);
+        // Call onSubmissionComplete with requestId if available, otherwise with success message
+        if (onSubmissionComplete) {
+          onSubmissionComplete(data.requestId || 'submission-successful');
+        }
         
         // Redirect to client dashboard after 3 seconds
         setTimeout(() => {

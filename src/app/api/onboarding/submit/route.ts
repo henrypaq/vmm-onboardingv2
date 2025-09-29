@@ -161,6 +161,7 @@ export async function POST(request: NextRequest) {
     const onboardingRequest = await createOnboardingRequest(onboardingRequestData);
     
     console.log(`[Onboarding] Created onboarding request:`, onboardingRequest);
+    console.log(`[Onboarding] Onboarding request ID:`, onboardingRequest?.id);
 
     // Save platform connections to client_platform_connections table
     if (clientId) {
@@ -230,7 +231,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      requestId: onboardingRequest.id,
+      requestId: onboardingRequest?.id || 'unknown',
+      message: 'Onboarding request submitted successfully'
     });
   } catch (error) {
     console.error('Onboarding submission error:', error);
