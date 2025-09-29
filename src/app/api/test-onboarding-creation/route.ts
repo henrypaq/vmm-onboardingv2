@@ -9,9 +9,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token required' }, { status: 400 });
     }
     
+    // First get a real link_id from the database
+    const { getOnboardingLinkByToken } = await import('@/lib/db/database');
+    const link = await getOnboardingLinkByToken(token);
+    
+    if (!link) {
+      return NextResponse.json({ error: 'Link not found' }, { status: 404 });
+    }
+    
     // Create a minimal test onboarding request
     const testData = {
-      link_id: token, // Use token as link_id for testing
+      link_id: link.id, // Use actual link.id
       client_id: '00000000-0000-0000-0000-000000000000',
       client_email: 'test@example.com',
       client_name: 'Test User',

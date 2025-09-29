@@ -16,7 +16,7 @@ BEGIN
     ALTER TABLE onboarding_requests DROP CONSTRAINT fk_onboarding_requests_link;
   END IF;
   
-  -- Add the constraint back
+  -- Add the constraint back - references onboarding_links.id
   ALTER TABLE onboarding_requests
     ADD CONSTRAINT fk_onboarding_requests_link
     FOREIGN KEY (link_id) REFERENCES onboarding_links(id) ON DELETE CASCADE;
