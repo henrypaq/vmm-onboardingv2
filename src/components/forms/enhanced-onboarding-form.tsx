@@ -44,10 +44,25 @@ const getPlatformColor = (platformId: string) => {
 
 export function EnhancedOnboardingForm({ token, onSubmissionComplete }: OnboardingFormProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: ''
+  const [formData, setFormData] = useState(() => {
+    // Initialize form data from localStorage if available
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`onboarding_form_${token}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          console.log('[Onboarding] Restored form data from localStorage:', parsed);
+          return parsed;
+        } catch (e) {
+          console.warn('[Onboarding] Failed to parse saved form data:', e);
+        }
+      }
+    }
+    return {
+      name: '',
+      email: '',
+      company: ''
+    };
   });
   const [selectedPermissions, setSelectedPermissions] = useState<Record<string, string[]>>({});
   const [connectedPlatforms, setConnectedPlatforms] = useState<Record<string, boolean>>({});
@@ -141,16 +156,32 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           if (data.request) {
             console.log('[Onboarding] Loading existing request data:', data.request);
             console.log('[Onboarding] Current form data before loading:', formData);
-            // Only set form data if it's currently empty (don't overwrite user input)
-            setFormData(prev => {
-              const newData = {
-                name: prev.name || data.request.client_name || '',
-                email: prev.email || data.request.client_email || '',
-                company: prev.company || data.request.company_name || '',
-              };
-              console.log('[Onboarding] Form data after loading request data:', newData);
-              return newData;
-            });
+            
+            // Check if we have saved form data in localStorage
+            const hasLocalData = typeof window !== 'undefined' && 
+              localStorage.getItem(`onboarding_form_${token}`) !== null;
+            
+            if (!hasLocalData) {
+              // Only load from API if we don't have localStorage data
+              console.log('[Onboarding] No localStorage data, loading from API');
+              setFormData(prev => {
+                const newData = {
+                  name: prev.name || data.request.client_name || '',
+                  email: prev.email || data.request.client_email || '',
+                  company: prev.company || data.request.company_name || '',
+                };
+                console.log('[Onboarding] Form data after loading request data:', newData);
+                
+                // Save to localStorage
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem(`onboarding_form_${token}`, JSON.stringify(newData));
+                }
+                
+                return newData;
+              });
+            } else {
+              console.log('[Onboarding] localStorage data exists, skipping API form data load');
+            }
             
             // Load existing connected platforms
             if (data.request.platform_connections) {
@@ -180,6 +211,13 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         [field]: value
       };
       console.log('[Onboarding] Updated form data:', newData);
+      
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`onboarding_form_${token}`, JSON.stringify(newData));
+        console.log('[Onboarding] Saved form data to localStorage');
+      }
+      
       return newData;
     });
   };
@@ -353,6 +391,13 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         const data = await response.json();
         console.log('[Onboarding] Test mode submission successful:', data);
         setIsCompleted(true);
+        
+        // Clear localStorage data after successful submission
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(`onboarding_form_${token}`);
+          console.log('[Onboarding] Cleared localStorage data after successful submission');
+        }
+        
         onSubmissionComplete(data.requestId);
         
         // Redirect to client dashboard after 3 seconds
