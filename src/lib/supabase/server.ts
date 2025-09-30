@@ -25,3 +25,8 @@ export function getSupabaseAdmin(): SupabaseClient {
 
   return cachedClient;
 }
+
+// Export createClient function for API routes
+export function createClient() {
+  return getSupabaseAdmin();
+}

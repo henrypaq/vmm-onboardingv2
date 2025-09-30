@@ -1,54 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mountain, Users, User, Settings, Link as LinkIcon, FileText, ExternalLink, RefreshCw } from 'lucide-react';
-
-interface DemoLink {
-  token: string;
-  link_name: string;
-  platforms: string[];
-  requested_permissions: Record<string, string[]>;
-  expires_at: string;
-}
+import { Mountain, Users, User, Settings, Link as LinkIcon, FileText } from 'lucide-react';
 
 export default function HomePage() {
-  const [demoLink, setDemoLink] = useState<DemoLink | null>(null);
-  const [demoUrl, setDemoUrl] = useState<string>('');
-  const [isLoadingDemo, setIsLoadingDemo] = useState(false);
-  const [demoError, setDemoError] = useState<string | null>(null);
-
-  const fetchDemoLink = async () => {
-    try {
-      setIsLoadingDemo(true);
-      setDemoError(null);
-      
-      console.log('[HomePage] Fetching demo link...');
-      const response = await fetch('/api/demo-link');
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch demo link');
-      }
-      
-      const data = await response.json();
-      console.log('[HomePage] Demo link data:', data);
-      
-      setDemoLink(data.link);
-      setDemoUrl(data.demoUrl);
-    } catch (error) {
-      console.error('[HomePage] Error fetching demo link:', error);
-      setDemoError(error instanceof Error ? error.message : 'Failed to fetch demo link');
-    } finally {
-      setIsLoadingDemo(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDemoLink();
-  }, []);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -153,65 +110,6 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* Demo Link Connect Flow */}
-        <div className="mt-16">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              Demo: Client Onboarding Flow
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Experience the client onboarding process. Click the demo link below to see how clients 
-              grant permissions when they receive an onboarding invitation.
-            </p>
-          </div>
-          
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">Demo Onboarding Link</h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Simulate a client clicking on an onboarding invitation
-                  </p>
-                  {demoLink && (
-                    <div className="mt-2 text-xs text-gray-400">
-                      <p>Token: {demoLink.token.substring(0, 8)}...</p>
-                      <p>Platforms: {demoLink.platforms.join(', ')}</p>
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col items-center space-y-2">
-                  {isLoadingDemo ? (
-                    <Button disabled className="bg-blue-600">
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Loading Demo...
-                    </Button>
-                  ) : demoError ? (
-                    <div className="text-center">
-                      <Button onClick={fetchDemoLink} variant="outline" className="mb-2">
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Retry
-                      </Button>
-                      <p className="text-xs text-red-500">{demoError}</p>
-                    </div>
-                  ) : demoUrl ? (
-                    <Link href={demoUrl} target="_blank" rel="noopener noreferrer">
-                      <Button className="bg-blue-600 hover:bg-blue-700">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Start Demo Flow
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button onClick={fetchDemoLink} className="bg-blue-600 hover:bg-blue-700">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Create Demo Link
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Additional Info */}
         <div className="mt-16 text-center">
