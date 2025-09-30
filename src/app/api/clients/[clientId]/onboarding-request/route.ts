@@ -11,20 +11,10 @@ export async function GET(
 
     console.log('[Client Onboarding Request API] Fetching onboarding request for client:', clientId);
 
-    // Fetch onboarding request for this client with link details
+    // Fetch latest onboarding request for this client
     const { data: request, error: requestError } = await supabase
       .from('onboarding_requests')
-      .select(`
-        *,
-        link:onboarding_links(
-          id,
-          token,
-          link_name,
-          platforms,
-          requested_permissions,
-          created_at
-        )
-      `)
+      .select('*')
       .eq('client_id', clientId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -42,14 +32,24 @@ export async function GET(
       if (clientRow?.email) {
         const { data: requestByEmail } = await supabase
           .from('onboarding_requests')
-          .select(`*, link:onboarding_links(id, token, link_name, platforms, requested_permissions, created_at)`) 
+          .select('*')
           .eq('client_email', clientRow.email)
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
 
         if (requestByEmail) {
-          return NextResponse.json({ success: true, request: requestByEmail });
+          // Manually fetch link by link_id to include link_name and other fields
+          let link = null as any;
+          if (requestByEmail.link_id) {
+            const { data: linkRow } = await supabase
+              .from('onboarding_links')
+              .select('id, token, link_name, platforms, requested_permissions, created_at')
+              .eq('id', requestByEmail.link_id)
+              .single();
+            link = linkRow || null;
+          }
+          return NextResponse.json({ success: true, request: { ...requestByEmail, link } });
         }
       }
 
@@ -59,9 +59,20 @@ export async function GET(
 
     console.log('[Client Onboarding Request API] Found request:', request);
 
+    // Manually fetch link by link_id to include link_name and other fields
+    let link = null as any;
+    if (request?.link_id) {
+      const { data: linkRow } = await supabase
+        .from('onboarding_links')
+        .select('id, token, link_name, platforms, requested_permissions, created_at')
+        .eq('id', request.link_id)
+        .single();
+      link = linkRow || null;
+    }
+
     return NextResponse.json({
       success: true,
-      request
+      request: request ? { ...request, link } : null
     });
 
   } catch (error) {
