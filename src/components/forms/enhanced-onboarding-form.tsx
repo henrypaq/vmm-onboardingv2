@@ -133,7 +133,14 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
             const nextStep = parseInt(step, 10);
             if (!isNaN(nextStep) && nextStep > 0) {
               console.log('[Onboarding] Advancing to step', nextStep);
-              setCurrentStep(nextStep);
+              // Validate that the step is within bounds
+              const maxSteps = (linkData?.platforms?.length || 0) + 1; // +1 for personal info
+              if (nextStep <= maxSteps) {
+                setCurrentStep(nextStep);
+              } else {
+                console.warn('[Onboarding] Step', nextStep, 'is out of bounds, max is', maxSteps);
+                setCurrentStep(Math.min(nextStep, maxSteps));
+              }
             }
           }
           
@@ -441,12 +448,28 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     allPlatforms.filter(platform => linkData.platforms.includes(platform.id)) : 
     allPlatforms;
 
+  // Debug logging
+  console.log('[Onboarding] Debug info:', {
+    linkData,
+    requestedPlatforms: requestedPlatforms.map(p => p.id),
+    currentStep,
+    allPlatforms: allPlatforms.map(p => p.id)
+  });
+
   const getTotalSteps = () => {
     return requestedPlatforms.length + 1; // +1 for personal info step
   };
 
   const currentPlatform = requestedPlatforms[currentStep - 1]; // -1 because step 0 is personal info
   const isConnected = currentPlatform ? connectedPlatforms[currentPlatform.id] : false;
+  
+  // Safety check: if we're on a platform step but currentPlatform is undefined, go back to step 0
+  useEffect(() => {
+    if (currentStep > 0 && !currentPlatform && linkData && !isLoading) {
+      console.warn('[Onboarding] currentPlatform is undefined for step', currentStep, 'going back to step 0');
+      setCurrentStep(0);
+    }
+  }, [currentStep, currentPlatform, linkData, isLoading]);
   
   // Check if we have the requested scopes selected
   const requestedScopes = currentPlatform ? (linkData?.requested_permissions[currentPlatform.id] || []) : [];

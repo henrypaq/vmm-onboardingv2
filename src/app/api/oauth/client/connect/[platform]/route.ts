@@ -137,7 +137,8 @@ export async function GET(
         console.warn('[ClientOAuth] Error storing OAuth data:', error);
       }
       
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${flowToken}?connected=${platform}&success=true&step=${getNextStep(platform)}`);
+      const nextStep = await getNextStep(platform, flowToken);
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/onboarding/${flowToken}?connected=${platform}&success=true&step=${nextStep}`);
     } catch (error) {
       console.error('[ClientOAuth] OAuth error during token exchange', error);
       const fallbackToken = token || (stateParam ? safeExtractTokenFromState(stateParam) : undefined);
@@ -235,7 +236,23 @@ export async function GET(
   return NextResponse.redirect(oauthUrl);
 }
 
-function getNextStep(platform: string): number {
+async function getNextStep(platform: string, token: string): Promise<number> {
+  try {
+    // Fetch the link data to get the actual platforms in this link
+    const linkResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/links/validate?token=${token}`);
+    if (linkResponse.ok) {
+      const linkData = await linkResponse.json();
+      const platforms = linkData.platforms || [];
+      const currentIndex = platforms.indexOf(platform);
+      const nextStep = currentIndex + 1; // Next step index (step 0 is personal info)
+      console.log(`[ClientOAuth] getNextStep: platform=${platform}, platforms=${platforms.join(',')}, currentIndex=${currentIndex}, nextStep=${nextStep}`);
+      return nextStep;
+    }
+  } catch (error) {
+    console.warn('[ClientOAuth] Failed to fetch link data for step calculation, using fallback');
+  }
+  
+  // Fallback to original logic
   const platforms = ['meta', 'google', 'tiktok', 'shopify'];
   const currentIndex = platforms.indexOf(platform);
   return currentIndex + 1; // Next step index
