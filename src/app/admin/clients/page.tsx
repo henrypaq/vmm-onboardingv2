@@ -60,14 +60,8 @@ export default function ClientsPage() {
 
   useEffect(() => {
     fetchClients();
-    
-    // Auto-refresh every 5 seconds for testing
-    const interval = setInterval(() => {
-      console.log('[Admin Clients] Auto-refreshing clients...');
-      fetchClients();
-    }, 5000);
-    
-    return () => clearInterval(interval);
+    // Removed auto-refresh; rely on explicit actions for updates
+    return () => {};
   }, []);
 
   const getStatusVariant = (status: string) => {
@@ -244,12 +238,16 @@ export default function ClientsPage() {
                         <DropdownMenuItem className="text-red-600" onClick={async () => {
                           if (!confirm('Delete this client? This will remove their platform connections.')) return;
                           try {
+                            // Optimistic UI: remove locally first
+                            setClients((prev) => prev.filter((c) => c.id !== client.id));
                             const res = await fetch(`/api/clients/${client.id}`, { method: 'DELETE' });
                             if (!res.ok) throw new Error(await res.text());
-                            await fetchClients();
+                            // No need to refetch; keep optimistic state
                           } catch (err) {
                             console.error('Delete failed', err);
                             alert('Failed to delete client');
+                            // Revert if server failed
+                            await fetchClients();
                           }
                         }}>
                           <Trash2 className="mr-2 h-4 w-4" /> Delete
