@@ -82,7 +82,7 @@ export async function GET(
         } else {
           switch (platform) {
             case 'meta':
-              resolvedScopes = ['pages_read_engagement', 'pages_manage_posts', 'ads_read', 'pages_show_list'];
+              resolvedScopes = ['pages_read_engagement', 'pages_manage_posts', 'ads_management', 'pages_show_list', 'catalog_management', 'business_management', 'instagram_basic'];
               break;
             case 'google':
               resolvedScopes = ['openid', 'email', 'profile'];
@@ -183,7 +183,7 @@ export async function GET(
   switch (platform) {
     case 'meta':
       // Get Meta scopes from the onboarding request or use defaults
-      let metaScopes = ['pages_read_engagement', 'pages_manage_posts', 'ads_read', 'pages_show_list']; // Default fallback
+      let metaScopes = ['pages_read_engagement', 'pages_manage_posts', 'ads_management', 'pages_show_list', 'catalog_management', 'business_management', 'instagram_basic']; // Default fallback
       
       try {
         // Try to get the actual requested scopes from the onboarding request

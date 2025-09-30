@@ -280,29 +280,25 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                               const isGroupAvailable = groupData.available;
                               
                               return (
-                                <div key={groupName} className={`border rounded-lg p-3 ${!isGroupAvailable ? 'opacity-50 bg-gray-50' : ''}`}>
+                                <div key={groupName} className="border rounded-lg p-3">
                                   <div className="flex items-start space-x-2">
                                     <Checkbox
                                       id={`meta-group-${groupName}`}
                                       checked={isGroupSelected}
-                                      disabled={!isGroupAvailable}
                                       onCheckedChange={(checked) => 
-                                        isGroupAvailable ? handleMetaAssetGroupToggle(groupName, checked as boolean) : undefined
+                                        handleMetaAssetGroupToggle(groupName, checked as boolean)
                                       }
                                     />
                                     <div className="flex-1">
                                       <label 
                                         htmlFor={`meta-group-${groupName}`}
-                                        className={`text-sm font-medium ${isGroupAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                                        className="text-sm font-medium cursor-pointer"
                                       >
                                         {groupName}
-                                        {!isGroupAvailable && (
-                                          <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
-                                        )}
                                       </label>
                                       
                                       {/* Show sub-options for Pages */}
-                                      {groupName === 'Pages' && isGroupAvailable && (
+                                      {groupName === 'Pages' && (
                                         <div className="mt-2 ml-6 space-y-1">
                                           {groupData.scopes.map((scope) => {
                                             const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;

@@ -47,6 +47,10 @@ export async function POST(request: NextRequest) {
         testResult = await testMetaPage(connection.access_token, assetId);
       } else if (assetType === 'catalog') {
         testResult = await testMetaCatalog(connection.access_token, assetId);
+      } else if (assetType === 'business_dataset') {
+        testResult = await testMetaBusinessDataset(connection.access_token, assetId);
+      } else if (assetType === 'instagram_account') {
+        testResult = await testMetaInstagramAccount(connection.access_token, assetId);
       } else {
         // Generic asset test
         testResult = await testMetaGeneric(connection.access_token, assetId);
@@ -134,6 +138,45 @@ async function testMetaCatalog(accessToken: string, catalogId: string) {
     catalogId: catalogId,
     name: data.name || 'Unknown Catalog',
     productCount: data.product_count || 0
+  };
+}
+
+async function testMetaBusinessDataset(accessToken: string, businessId: string) {
+  // Test business dataset by fetching basic info
+  const response = await fetch(`https://graph.facebook.com/v19.0/${businessId}?fields=name,id&access_token=${accessToken}`);
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Business dataset access failed: ${errorData.error?.message || 'Unknown error'}`);
+  }
+
+  const data = await response.json();
+  
+  return {
+    businessId: businessId,
+    name: data.name || 'Unknown Business',
+    id: data.id,
+    type: 'business_dataset'
+  };
+}
+
+async function testMetaInstagramAccount(accessToken: string, instagramId: string) {
+  // Test Instagram account by fetching basic info
+  const response = await fetch(`https://graph.facebook.com/v19.0/${instagramId}?fields=name,username,followers_count&access_token=${accessToken}`);
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Instagram account access failed: ${errorData.error?.message || 'Unknown error'}`);
+  }
+
+  const data = await response.json();
+  
+  return {
+    instagramId: instagramId,
+    name: data.name || 'Unknown Instagram Account',
+    username: data.username || 'unknown',
+    followersCount: data.followers_count || 0,
+    type: 'instagram_account'
   };
 }
 

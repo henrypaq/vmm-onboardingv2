@@ -45,8 +45,10 @@ export const availableScopes = {
     "ads_management",
     "pages_show_list",
     "pages_read_engagement", 
-    "pages_manage_posts"
-    // catalog_management, business_management, instagram_basic disabled for testing
+    "pages_manage_posts",
+    "catalog_management",
+    "business_management",
+    "instagram_basic"
   ],
   tiktok: [
     // TikTok disabled for now
@@ -120,15 +122,15 @@ export const metaAssetGroups = {
   },
   'Catalogs': {
     scopes: ['catalog_management'],
-    available: false // Coming soon
+    available: true
   },
   'Datasets (Business Manager)': {
     scopes: ['business_management'],
-    available: false // Coming soon
+    available: true
   },
   'Instagram Accounts': {
     scopes: ['instagram_basic'],
-    available: false // Coming soon
+    available: true
   }
 };
 

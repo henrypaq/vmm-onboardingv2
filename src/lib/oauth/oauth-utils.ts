@@ -376,6 +376,48 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
       }
     }
 
+    // Fetch business datasets if business_management scope is present
+    if (scopes.some(scope => scope.includes('business_management'))) {
+      try {
+        const response = await fetch(`https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            assets.push(...data.data.map((business: any) => ({
+              id: business.id,
+              name: business.name || `Business ${business.id}`,
+              type: 'business_dataset'
+            })));
+          }
+        }
+      } catch (error) {
+        console.log('[Meta] Failed to fetch business datasets:', error);
+      }
+    }
+
+    // Fetch Instagram accounts if instagram_basic scope is present
+    if (scopes.some(scope => scope.includes('instagram_basic'))) {
+      try {
+        const response = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&fields=instagram_business_account`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            data.data.forEach((account: any) => {
+              if (account.instagram_business_account) {
+                assets.push({
+                  id: account.instagram_business_account.id,
+                  name: account.instagram_business_account.name || `Instagram Account ${account.instagram_business_account.id}`,
+                  type: 'instagram_account'
+                });
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.log('[Meta] Failed to fetch Instagram accounts:', error);
+      }
+    }
+
     // If no assets found, add placeholder
     if (assets.length === 0) {
       assets.push({
