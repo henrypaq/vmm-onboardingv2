@@ -330,16 +330,49 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                               );
                             })}
                           </div>
+                        ) : platform.id === 'google' ? (
+                          // Google grouped asset structure (similar to Meta)
+                          <div className="space-y-3">
+                            {getScopesForProvider(platform.id as keyof typeof scopes).map((scope) => {
+                              const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
+                              const isScopeAvailable = getAvailableScopesForProvider(platform.id as keyof typeof scopes).includes(scope);
+                              
+                              // Skip background scopes for Google (they're always included)
+                              if (['openid', 'email', 'profile'].includes(scope)) {
+                                return null;
+                              }
+                              
+                              return (
+                                <div key={scope} className="border rounded-lg p-3">
+                                  <div className="flex items-start space-x-2">
+                                    <Checkbox
+                                      id={`scope-${platform.id}-${scope}`}
+                                      checked={isScopeSelected}
+                                      onCheckedChange={(checked) => 
+                                        handleScopeToggle(platform.id, scope, checked as boolean)
+                                      }
+                                    />
+                                    <div className="flex-1">
+                                      <label 
+                                        htmlFor={`scope-${platform.id}-${scope}`}
+                                        className="text-sm font-medium cursor-pointer"
+                                      >
+                                        {getGoogleServiceName(scope)}
+                                      </label>
+                                      <p className="text-xs text-gray-500">
+                                        {getScopeDescription(platform.id as keyof typeof scopes, scope)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         ) : (
-                          // Other platforms (Google, etc.)
+                          // Other platforms (TikTok, Shopify, etc.)
                           getScopesForProvider(platform.id as keyof typeof scopes).map((scope) => {
                             const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
                             const isScopeAvailable = getAvailableScopesForProvider(platform.id as keyof typeof scopes).includes(scope);
-                            
-                            // Skip background scopes for Google (they're always included)
-                            if (platform.id === 'google' && ['openid', 'email', 'profile'].includes(scope)) {
-                              return null;
-                            }
                             
                             return (
                               <div key={scope} className={`flex items-start space-x-2 ${!isScopeAvailable ? 'opacity-50' : ''}`}>
@@ -356,7 +389,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                                     htmlFor={`scope-${platform.id}-${scope}`}
                                     className={`text-sm font-medium ${isScopeAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                                   >
-                                    {platform.id === 'google' ? getGoogleServiceName(scope) : scope}
+                                    {scope}
                                     {!isScopeAvailable && (
                                       <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
                                     )}
