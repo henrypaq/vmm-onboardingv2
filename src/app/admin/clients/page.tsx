@@ -4,7 +4,15 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreHorizontal, RefreshCw, Eye } from 'lucide-react';
+import { Plus, MoreHorizontal, RefreshCw, Eye, Trash2, Edit3 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ClientDetailsPanel } from '@/components/admin/client-details';
 
 interface Client {
@@ -206,9 +214,48 @@ export default function ClientsPage() {
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={(e)=>e.stopPropagation()}>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e)=>e.stopPropagation()}>
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={async () => {
+                          const newName = prompt('Enter new client name', client.full_name || '');
+                          if (newName === null) return;
+                          try {
+                            const res = await fetch(`/api/clients/${client.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ full_name: newName })
+                            });
+                            if (!res.ok) throw new Error(await res.text());
+                            await fetchClients();
+                          } catch (err) {
+                            console.error('Rename failed', err);
+                            alert('Failed to rename client');
+                          }
+                        }}>
+                          <Edit3 className="mr-2 h-4 w-4" /> Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600" onClick={async () => {
+                          if (!confirm('Delete this client? This will remove their platform connections.')) return;
+                          try {
+                            const res = await fetch(`/api/clients/${client.id}`, { method: 'DELETE' });
+                            if (!res.ok) throw new Error(await res.text());
+                            await fetchClients();
+                          } catch (err) {
+                            console.error('Delete failed', err);
+                            alert('Failed to delete client');
+                          }
+                        }}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}
