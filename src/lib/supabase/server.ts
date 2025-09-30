@@ -9,11 +9,13 @@ export function getSupabaseAdmin(): SupabaseClient {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    // Do not throw at import/build time. Throw only on actual usage.
-    throw new Error(
-      'Supabase environment variables are missing (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY). ' +
-      'Ensure they are set in the hosting environment.'
-    );
+    // Provide more actionable diagnostics in production logs instead of crashing early
+    const message = 'Supabase envs missing: ' + JSON.stringify({
+      NEXT_PUBLIC_SUPABASE_URL: Boolean(supabaseUrl),
+      SUPABASE_SERVICE_ROLE_KEY: Boolean(supabaseServiceKey),
+    });
+    console.error('[Supabase] ' + message);
+    throw new Error('Supabase configuration missing. See server logs for details.');
   }
 
   cachedClient = createClient(supabaseUrl, supabaseServiceKey, {

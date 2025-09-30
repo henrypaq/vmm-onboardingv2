@@ -3,6 +3,14 @@ import { getClients, createClient as createClientRecord } from '@/lib/db/databas
 
 export async function GET() {
   try {
+    // Proactive env diagnostics to avoid opaque 500s in hosting environments
+    const envDiagnostics = {
+      NEXT_PUBLIC_SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+      SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+    };
+    if (!envDiagnostics.NEXT_PUBLIC_SUPABASE_URL || !envDiagnostics.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('[Clients API] Missing required Supabase envs', envDiagnostics);
+    }
     // TODO: Implement proper authentication
     // const session = await requireAuth('admin');
     
@@ -16,9 +24,17 @@ export async function GET() {
     
     return NextResponse.json({ clients });
   } catch (error) {
-    console.error('Get clients error:', error);
+    console.error('[Clients API] Get clients error:', error);
+    // Surface richer diagnostics to help fix production env issues quickly
     return NextResponse.json(
-      { error: 'Failed to fetch clients' },
+      {
+        error: 'Failed to fetch clients',
+        details: error instanceof Error ? error.message : String(error),
+        env: {
+          NEXT_PUBLIC_SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+          SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+        },
+      },
       { status: 500 }
     );
   }
