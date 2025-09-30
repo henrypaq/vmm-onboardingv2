@@ -3,13 +3,14 @@
 
 export const scopes = {
   google: {
-    "openid email profile": "Basic profile access (name, email, profile picture)",
+    "openid": "OpenID Connect (required for account identification)",
+    "email": "Email address (required for account identification)",
+    "profile": "Basic profile information (required for account identification)",
     "https://www.googleapis.com/auth/adwords": "Google Ads Account - Manage ad campaigns and billing",
     "https://www.googleapis.com/auth/analytics.readonly": "Google Analytics Account - Read website and app analytics data",
     "https://www.googleapis.com/auth/business.manage": "Google Business Profile Location - Manage business listings and reviews",
     "https://www.googleapis.com/auth/tagmanager.readonly": "Google Tag Manager - Read tag configuration and data",
-    "https://www.googleapis.com/auth/webmasters.readonly": "Google Search Console - Read search performance and sitemap data",
-    "https://www.googleapis.com/auth/content": "Google Merchant Center - Manage product listings and shopping campaigns"
+    "https://www.googleapis.com/auth/webmasters.readonly": "Google Search Console - Read search performance and sitemap data"
   },
   meta: {
     "pages_show_list": "View list of your Facebook Pages",
@@ -30,11 +31,15 @@ export const scopes = {
   }
 } as const;
 
-// Define which scopes are available for testing
+// Define which scopes are available for selection (Leadsie-style)
 export const availableScopes = {
   google: [
-    "openid email profile"
-    // Other Google scopes disabled for testing
+    "https://www.googleapis.com/auth/adwords",
+    "https://www.googleapis.com/auth/analytics.readonly", 
+    "https://www.googleapis.com/auth/business.manage",
+    "https://www.googleapis.com/auth/tagmanager.readonly",
+    "https://www.googleapis.com/auth/webmasters.readonly"
+    // openid, email, profile are always included automatically
   ],
   meta: [
     "pages_show_list",
@@ -83,4 +88,22 @@ export function getScopesForProviders(providers: string[]): Record<string, strin
 export function validateScopes(provider: keyof typeof scopes, selectedScopes: string[]): boolean {
   const availableScopes = getScopesForProvider(provider);
   return selectedScopes.every(scope => availableScopes.includes(scope));
+}
+
+// Helper function to get Google scopes with required background scopes
+export function getGoogleScopesWithRequired(selectedScopes: string[]): string[] {
+  const requiredScopes = ['openid', 'email', 'profile'];
+  return [...requiredScopes, ...selectedScopes];
+}
+
+// Helper function to get human-readable Google service names
+export function getGoogleServiceName(scope: string): string {
+  const serviceMap: Record<string, string> = {
+    'https://www.googleapis.com/auth/adwords': 'Google Ads Account',
+    'https://www.googleapis.com/auth/analytics.readonly': 'Google Analytics Account',
+    'https://www.googleapis.com/auth/business.manage': 'Google Business Profile Location',
+    'https://www.googleapis.com/auth/tagmanager.readonly': 'Google Tag Manager',
+    'https://www.googleapis.com/auth/webmasters.readonly': 'Google Search Console'
+  };
+  return serviceMap[scope] || scope;
 }

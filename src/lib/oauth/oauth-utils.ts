@@ -401,7 +401,7 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
   
   try {
     // Fetch Google Ads accounts if ads scope is present
-    if (scopes.some(scope => scope.includes('ads') || scope.includes('googleads'))) {
+    if (scopes.some(scope => scope.includes('adwords'))) {
       try {
         // For now, simulate Google Ads accounts since the API setup is complex
         assets.push({
@@ -415,7 +415,7 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
     }
 
     // Fetch Analytics properties if analytics scope is present
-    if (scopes.some(scope => scope.includes('analytics') || scope.includes('analytics.readonly'))) {
+    if (scopes.some(scope => scope.includes('analytics.readonly'))) {
       try {
         // For now, simulate Analytics properties
         assets.push({
@@ -425,6 +425,45 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
         });
       } catch (error) {
         console.log('[Google] Failed to fetch analytics properties:', error);
+      }
+    }
+
+    // Fetch Business Profile locations if business scope is present
+    if (scopes.some(scope => scope.includes('business.manage'))) {
+      try {
+        assets.push({
+          id: 'business_placeholder',
+          name: 'Google Business Profile Location (simulated)',
+          type: 'business_profile'
+        });
+      } catch (error) {
+        console.log('[Google] Failed to fetch business profile:', error);
+      }
+    }
+
+    // Fetch Tag Manager containers if tagmanager scope is present
+    if (scopes.some(scope => scope.includes('tagmanager.readonly'))) {
+      try {
+        assets.push({
+          id: 'tagmanager_placeholder',
+          name: 'Google Tag Manager Container (simulated)',
+          type: 'tag_manager'
+        });
+      } catch (error) {
+        console.log('[Google] Failed to fetch tag manager:', error);
+      }
+    }
+
+    // Fetch Search Console properties if webmasters scope is present
+    if (scopes.some(scope => scope.includes('webmasters.readonly'))) {
+      try {
+        assets.push({
+          id: 'searchconsole_placeholder',
+          name: 'Google Search Console Property (simulated)',
+          type: 'search_console'
+        });
+      } catch (error) {
+        console.log('[Google] Failed to fetch search console:', error);
       }
     }
 

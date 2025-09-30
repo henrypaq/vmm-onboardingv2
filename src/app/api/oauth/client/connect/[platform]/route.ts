@@ -166,8 +166,24 @@ export async function GET(
       oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_read_engagement,pages_manage_posts,ads_read,pages_show_list&response_type=code&state=${encodeURIComponent(state)}`;
       break;
     case 'google':
-      const googleScopes = ['openid', 'email', 'profile'];
-      console.log('[ClientOAuth][google] Requested scopes', googleScopes);
+      // Get Google scopes from the onboarding request or use defaults
+      let googleScopes = ['openid', 'email', 'profile']; // Always include these
+      
+      try {
+        // Try to get the actual requested scopes from the onboarding request
+        const linkResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/links/validate?token=${onboardingToken}`);
+        if (linkResponse.ok) {
+          const linkData = await linkResponse.json();
+          const requestedScopes = linkData.requested_permissions?.google || [];
+          if (requestedScopes.length > 0) {
+            googleScopes = ['openid', 'email', 'profile', ...requestedScopes];
+          }
+        }
+      } catch (error) {
+        console.warn('[ClientOAuth][google] Could not fetch requested scopes, using defaults');
+      }
+      
+      console.log('[ClientOAuth][google] Final scopes', googleScopes);
       oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(googleScopes.join(' '))}&response_type=code&state=${encodeURIComponent(state)}`;
       break;
     case 'tiktok':

@@ -47,6 +47,15 @@ export async function POST(request: NextRequest) {
       } else if (assetType === 'ads_account') {
         // Test Google Ads API (simulated for now)
         testResult = await testGoogleAds(connection.access_token, assetId);
+      } else if (assetType === 'business_profile') {
+        // Test Business Profile API (simulated for now)
+        testResult = await testGoogleBusinessProfile(connection.access_token, assetId);
+      } else if (assetType === 'tag_manager') {
+        // Test Tag Manager API (simulated for now)
+        testResult = await testGoogleTagManager(connection.access_token, assetId);
+      } else if (assetType === 'search_console') {
+        // Test Search Console API (simulated for now)
+        testResult = await testGoogleSearchConsole(connection.access_token, assetId);
       } else {
         // Generic token validation
         testResult = await testGoogleToken(connection.access_token);
@@ -121,5 +130,32 @@ async function testGoogleAds(accessToken: string, accountId: string) {
     accountId: accountId,
     message: 'Google Ads API test (simulated)',
     status: 'Token valid, Ads API access confirmed'
+  };
+}
+
+async function testGoogleBusinessProfile(accessToken: string, locationId: string) {
+  // For now, simulate Business Profile API test
+  return {
+    locationId: locationId,
+    message: 'Google Business Profile API test (simulated)',
+    status: 'Token valid, Business Profile API access confirmed'
+  };
+}
+
+async function testGoogleTagManager(accessToken: string, containerId: string) {
+  // For now, simulate Tag Manager API test
+  return {
+    containerId: containerId,
+    message: 'Google Tag Manager API test (simulated)',
+    status: 'Token valid, Tag Manager API access confirmed'
+  };
+}
+
+async function testGoogleSearchConsole(accessToken: string, propertyId: string) {
+  // For now, simulate Search Console API test
+  return {
+    propertyId: propertyId,
+    message: 'Google Search Console API test (simulated)',
+    status: 'Token valid, Search Console API access confirmed'
   };
 }

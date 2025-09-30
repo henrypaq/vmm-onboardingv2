@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Users, Search, Video, ShoppingBag } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
-import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider } from '@/lib/scopes';
+import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider, getGoogleScopesWithRequired, getGoogleServiceName } from '@/lib/scopes';
 
 interface EnhancedLinkGeneratorFormProps {
   onLinkGenerated: (link: { url: string; token: string; platforms: string[]; requestedScopes: Record<string, string[]> }) => void;
@@ -46,20 +46,26 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
   const handlePlatformToggle = (platformId: string, checked: boolean) => {
     if (checked) {
       setSelectedPlatforms(prev => [...prev, platformId]);
-      // Initialize with available scopes for this platform (only those enabled for testing)
-      const availableScopes = getAvailableScopesForProvider(platformId as keyof typeof scopes);
-      if (availableScopes.length > 0) {
-        // Select the first available scope by default
+      // For Google, don't auto-select any scopes - let user choose
+      // For other platforms, keep existing behavior
+      if (platformId !== 'google') {
+        const availableScopes = getAvailableScopesForProvider(platformId as keyof typeof scopes);
+        if (availableScopes.length > 0) {
+          setSelectedScopes(prev => ({
+            ...prev,
+            [platformId]: [availableScopes[0]]
+          }));
+        } else {
+          console.warn(`No available scopes for platform: ${platformId}`);
+          alert(`Warning: ${platformId} has no available scopes for testing. This platform will be skipped.`);
+          return;
+        }
+      } else {
+        // Initialize Google with empty scopes - user must select services
         setSelectedScopes(prev => ({
           ...prev,
-          [platformId]: [availableScopes[0]]
+          [platformId]: []
         }));
-      } else {
-        // If no scopes are available for this platform, show a warning
-        console.warn(`No available scopes for platform: ${platformId}`);
-        alert(`Warning: ${platformId} has no available scopes for testing. This platform will be skipped.`);
-        // Don't add the platform if it has no scopes
-        return;
       }
     } else {
       setSelectedPlatforms(prev => prev.filter(id => id !== platformId));
@@ -94,9 +100,9 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
       return;
     }
     
-    // Validate that each selected platform has at least one scope
+    // Validate that each selected platform has at least one scope (except Google which always has openid/email/profile)
     for (const platform of selectedPlatforms) {
-      if (!selectedScopes[platform] || selectedScopes[platform].length === 0) {
+      if (platform !== 'google' && (!selectedScopes[platform] || selectedScopes[platform].length === 0)) {
         alert(`Please select at least one scope for ${platform}`);
         return;
       }
@@ -236,9 +242,22 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                     {isSelected && (
                       <div className="ml-8 space-y-2">
                         <p className="text-sm font-medium text-gray-700">Select OAuth Scopes:</p>
+                        {platform.id === 'google' && (
+                          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <p className="text-sm text-blue-800 font-medium">
+                              ✓ OpenID, Email, and Profile access will be automatically included for account identification
+                            </p>
+                          </div>
+                        )}
                         {getScopesForProvider(platform.id as keyof typeof scopes).map((scope) => {
                           const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
                           const isScopeAvailable = getAvailableScopesForProvider(platform.id as keyof typeof scopes).includes(scope);
+                          
+                          // Skip background scopes for Google (they're always included)
+                          if (platform.id === 'google' && ['openid', 'email', 'profile'].includes(scope)) {
+                            return null;
+                          }
+                          
                           return (
                             <div key={scope} className={`flex items-start space-x-2 ${!isScopeAvailable ? 'opacity-50' : ''}`}>
                               <Checkbox
@@ -254,7 +273,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                                   htmlFor={`scope-${platform.id}-${scope}`}
                                   className={`text-sm font-medium ${isScopeAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                                 >
-                                  {scope}
+                                  {platform.id === 'google' ? getGoogleServiceName(scope) : scope}
                                   {!isScopeAvailable && (
                                     <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
                                   )}

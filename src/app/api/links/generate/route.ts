@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateOnboardingLink } from '@/lib/links/link-generator';
 import { createOnboardingLink } from '@/lib/db/database';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
+import { getGoogleScopesWithRequired } from '@/lib/scopes';
 // import { requireAuth } from '@/lib/auth/auth';
 
 export async function POST(request: NextRequest) {
@@ -39,6 +40,12 @@ export async function POST(request: NextRequest) {
       platforms,
       requestedScopes
     });
+
+    // Process requested scopes to include required Google scopes
+    const processedScopes = { ...requestedScopes };
+    if (platforms.includes('google') && requestedScopes.google) {
+      processedScopes.google = getGoogleScopesWithRequired(requestedScopes.google);
+    }
 
     // Generate the link
     const generatedLink = generateOnboardingLink({
@@ -81,7 +88,7 @@ export async function POST(request: NextRequest) {
       // client_id is intentionally omitted - onboarding links are public and don't require pre-existing clients
       token: generatedLink.token,
       platforms: platforms,
-      requested_permissions: requestedScopes || {},
+      requested_permissions: processedScopes || {},
       expires_at: generatedLink.expiresAt.toISOString(),
       status: 'pending' as const,
       is_used: false, // New links start as unused
