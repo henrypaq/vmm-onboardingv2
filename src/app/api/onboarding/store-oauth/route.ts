@@ -42,7 +42,12 @@ export async function POST(request: NextRequest) {
       };
       
       await updateOnboardingRequest(existingRequest.id, {
-        platform_connections: updatedConnections
+        platform_connections: updatedConnections,
+        // If scopes were passed but granted_permissions lacks this platform, initialize it
+        granted_permissions: {
+          ...existingRequest.granted_permissions,
+          ...(scopes && scopes.length ? { [platform]: scopes } : {})
+        }
       });
     } else {
       // Create new onboarding request with platform connection
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
         platform_connections: {
           [platform]: oauthData
         },
-        granted_permissions: {},
+        granted_permissions: scopes && scopes.length ? { [platform]: scopes } : {},
         status: 'in_progress'
       });
     }

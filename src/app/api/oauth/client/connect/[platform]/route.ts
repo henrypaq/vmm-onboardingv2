@@ -58,6 +58,26 @@ export async function GET(
         scopes: tokenResponse.scope ? tokenResponse.scope.split(' ') : []
       });
       
+      // Derive scopes robustly. Some providers (e.g., Meta) don't return scope in token response.
+      let resolvedScopes: string[] = [];
+      if (tokenResponse.scope) {
+        resolvedScopes = tokenResponse.scope.split(' ');
+      } else {
+        switch (platform) {
+          case 'meta':
+            resolvedScopes = ['pages_read_engagement', 'pages_manage_posts', 'ads_read', 'pages_show_list'];
+            break;
+          case 'google':
+            resolvedScopes = ['openid', 'email', 'profile'];
+            break;
+          case 'tiktok':
+            resolvedScopes = ['user_info', 'video_read'];
+            break;
+          default:
+            resolvedScopes = [];
+        }
+      }
+
       // Store the OAuth data in the onboarding request
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/onboarding/store-oauth`, {
@@ -69,7 +89,7 @@ export async function GET(
             accessToken: tokenResponse.access_token,
             refreshToken: tokenResponse.refresh_token,
             tokenExpiresAt: tokenResponse.expires_in ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString() : undefined,
-            scopes: tokenResponse.scope ? tokenResponse.scope.split(' ') : [],
+            scopes: resolvedScopes,
             platformUserId: userInfo?.id || '',
             platformUsername: userInfo?.username || userInfo?.name || ''
           })
