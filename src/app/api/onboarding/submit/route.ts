@@ -160,65 +160,7 @@ export async function POST(request: NextRequest) {
       throw onboardingError;
     }
 
-    // Save platform connections to client_platform_connections table (permanent record)
-    if (clientId) {
-      console.log(`[Onboarding] Saving platform connections for client ${clientId}`);
-      
-      try {
-        if (testMode) {
-          // Test mode: create placeholder connections for all requested platforms
-          console.log(`[Onboarding] Test mode: creating placeholder connections`);
-          
-          for (const platform of link.platforms) {
-            try {
-              await upsertClientPlatformConnection({
-                client_id: clientId,
-                platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
-                platform_user_id: `test_user_${platform}_${Date.now()}`,
-                platform_username: `Test User (${platform})`,
-                access_token: `test_token_${platform}_${Date.now()}`,
-                refresh_token: `test_refresh_${platform}_${Date.now()}`,
-                token_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
-                scopes: ['test_scope', 'dummy_scope'],
-                is_active: false // Mark as inactive to indicate it's a test connection
-              });
-              console.log(`[Onboarding] Created test placeholder for ${platform} connection`);
-            } catch (error) {
-              console.error(`[Onboarding] Failed to create test placeholder for ${platform}:`, error);
-              // Continue with other platforms
-            }
-          }
-        } else if (Object.keys(storedPlatformConnections).length > 0) {
-          // Normal mode: save real OAuth connections
-          for (const [platform, connectionData] of Object.entries(storedPlatformConnections)) {
-            try {
-              await upsertClientPlatformConnection({
-                client_id: clientId,
-                platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
-                platform_user_id: connectionData.platform_user_id || '',
-                platform_username: connectionData.platform_username,
-                access_token: connectionData.access_token,
-                refresh_token: connectionData.refresh_token,
-                token_expires_at: connectionData.token_expires_at,
-                scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
-                is_active: true
-              });
-              console.log(`[Onboarding] Saved ${platform} connection for client ${clientId}`);
-            } catch (error) {
-              console.error(`[Onboarding] Failed to save ${platform} connection:`, error);
-              // Continue with other platforms
-            }
-          }
-        } else {
-          console.log(`[Onboarding] No OAuth connections found, skipping platform connection creation`);
-        }
-      } catch (error) {
-        console.error(`[Onboarding] Error in platform connections section:`, error);
-        // Continue anyway - platform connections are not critical
-      }
-    } else {
-      console.log(`[Onboarding] No client ID, skipping platform connections`);
-    }
+    // DEFERRED: We save client_platform_connections AFTER we create/update the client below
 
     // Mark the link as used (but keep it usable for future clients)
     try {
@@ -288,6 +230,33 @@ export async function POST(request: NextRequest) {
           company: data.company
         });
         // Continue anyway - the main submission is more important
+      }
+    }
+
+    // After we have clientId, persist permanent platform connections
+    if (clientId) {
+      try {
+        const connections = storedPlatformConnections || {};
+        if (Object.keys(connections).length > 0) {
+          for (const [platform, connectionData] of Object.entries<any>(connections)) {
+            await upsertClientPlatformConnection({
+              client_id: clientId,
+              platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
+              platform_user_id: connectionData.platform_user_id || '',
+              platform_username: connectionData.platform_username,
+              access_token: connectionData.access_token,
+              refresh_token: connectionData.refresh_token,
+              token_expires_at: connectionData.token_expires_at,
+              scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
+              is_active: true
+            });
+          }
+          console.log(`[Onboarding] Persisted ${Object.keys(connections).length} platform connection(s) for client ${clientId}`);
+        } else {
+          console.log('[Onboarding] No stored platform connections to persist');
+        }
+      } catch (err) {
+        console.error('[Onboarding] Failed to persist client_platform_connections:', err);
       }
     }
 
