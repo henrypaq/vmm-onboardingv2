@@ -469,13 +469,9 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
   // For test mode, we don't require OAuth connections to be complete
   const canProceedWithTestMode = !isFinalStepComplete && hasPersonalInfo;
 
-  // Auto-complete onboarding when all platforms are connected and permissions are selected
-  useEffect(() => {
-    if (isFinalStepComplete && !isLoading && linkData && !isSubmitting && !isCompleted) {
-      console.log('[Onboarding] All platforms connected and permissions selected, auto-completing...');
-      handleAutoSubmit();
-    }
-  }, [isFinalStepComplete, isLoading, linkData, isSubmitting, isCompleted]);
+  // Removed auto-complete behavior: require explicit button click to finish
+  // Previously, this auto-submitted when all platforms were connected and required permissions were selected.
+  // Now we only submit when the user clicks the completion button.
   
   // Handle completion button click
   const handleCompletionClick = () => {

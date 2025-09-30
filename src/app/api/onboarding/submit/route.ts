@@ -260,6 +260,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Link the onboarding request to the client record so admin details can load by client_id
+    try {
+      if (clientId && onboardingRequest?.id) {
+        await updateOnboardingRequest(onboardingRequest.id, {
+          client_id: clientId,
+        } as any);
+        console.log(`[Onboarding] Linked onboarding request ${onboardingRequest.id} to client ${clientId}`);
+      }
+    } catch (linkErr) {
+      console.error('[Onboarding] Failed to backfill client_id on onboarding request:', linkErr);
+      // Non-fatal
+    }
+
     console.log(`[Onboarding] Completed for token ${token}`);
 
     return NextResponse.json({
