@@ -290,6 +290,182 @@ async function fetchShopifyUserInfo(accessToken: string): Promise<PlatformUserIn
   };
 }
 
+export interface Asset {
+  id: string;
+  name: string;
+  type: string;
+}
+
+export async function fetchPlatformAssets(
+  platform: string,
+  accessToken: string,
+  scopes: string[]
+): Promise<Asset[]> {
+  switch (platform) {
+    case 'meta':
+      return await fetchMetaAssets(accessToken, scopes);
+    case 'google':
+      return await fetchGoogleAssets(accessToken, scopes);
+    case 'tiktok':
+      return await fetchTikTokAssets(accessToken, scopes);
+    case 'shopify':
+      return await fetchShopifyAssets(accessToken, scopes);
+    default:
+      return [];
+  }
+}
+
+async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<Asset[]> {
+  const assets: Asset[] = [];
+  
+  try {
+    // Fetch ad accounts if ads_management scope is present
+    if (scopes.some(scope => scope.includes('ads_management') || scope.includes('ads_read'))) {
+      try {
+        const response = await fetch(`https://graph.facebook.com/v18.0/me/adaccounts?access_token=${accessToken}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            assets.push(...data.data.map((account: any) => ({
+              id: account.id,
+              name: account.name || `Ad Account ${account.id}`,
+              type: 'ad_account'
+            })));
+          }
+        }
+      } catch (error) {
+        console.log('[Meta] Failed to fetch ad accounts:', error);
+      }
+    }
+
+    // Fetch pages if pages_* scopes are present
+    if (scopes.some(scope => scope.includes('pages_'))) {
+      try {
+        const response = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            assets.push(...data.data.map((page: any) => ({
+              id: page.id,
+              name: page.name || `Page ${page.id}`,
+              type: 'page'
+            })));
+          }
+        }
+      } catch (error) {
+        console.log('[Meta] Failed to fetch pages:', error);
+      }
+    }
+
+    // Fetch catalogs if catalog_management scope is present
+    if (scopes.some(scope => scope.includes('catalog_management'))) {
+      try {
+        const response = await fetch(`https://graph.facebook.com/v18.0/me/catalogs?access_token=${accessToken}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            assets.push(...data.data.map((catalog: any) => ({
+              id: catalog.id,
+              name: catalog.name || `Catalog ${catalog.id}`,
+              type: 'catalog'
+            })));
+          }
+        }
+      } catch (error) {
+        console.log('[Meta] Failed to fetch catalogs:', error);
+      }
+    }
+
+    // If no assets found, add placeholder
+    if (assets.length === 0) {
+      assets.push({
+        id: 'placeholder',
+        name: 'Basic Access (no advanced assets)',
+        type: 'basic'
+      });
+    }
+  } catch (error) {
+    console.error('[Meta] Error fetching assets:', error);
+    assets.push({
+      id: 'error',
+      name: 'Unable to fetch assets',
+      type: 'error'
+    });
+  }
+
+  return assets;
+}
+
+async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise<Asset[]> {
+  const assets: Asset[] = [];
+  
+  try {
+    // Fetch Google Ads accounts if ads scope is present
+    if (scopes.some(scope => scope.includes('ads') || scope.includes('googleads'))) {
+      try {
+        // For now, simulate Google Ads accounts since the API setup is complex
+        assets.push({
+          id: 'ads_placeholder',
+          name: 'Google Ads Account (simulated)',
+          type: 'ads_account'
+        });
+      } catch (error) {
+        console.log('[Google] Failed to fetch ads accounts:', error);
+      }
+    }
+
+    // Fetch Analytics properties if analytics scope is present
+    if (scopes.some(scope => scope.includes('analytics') || scope.includes('analytics.readonly'))) {
+      try {
+        // For now, simulate Analytics properties
+        assets.push({
+          id: 'analytics_placeholder',
+          name: 'Google Analytics Property (simulated)',
+          type: 'analytics_property'
+        });
+      } catch (error) {
+        console.log('[Google] Failed to fetch analytics properties:', error);
+      }
+    }
+
+    // If no assets found, add placeholder
+    if (assets.length === 0) {
+      assets.push({
+        id: 'placeholder',
+        name: 'Basic Access (no advanced assets)',
+        type: 'basic'
+      });
+    }
+  } catch (error) {
+    console.error('[Google] Error fetching assets:', error);
+    assets.push({
+      id: 'error',
+      name: 'Unable to fetch assets',
+      type: 'error'
+    });
+  }
+
+  return assets;
+}
+
+async function fetchTikTokAssets(accessToken: string, scopes: string[]): Promise<Asset[]> {
+  // TikTok asset fetching would go here
+  return [{
+    id: 'placeholder',
+    name: 'TikTok Account (basic access)',
+    type: 'account'
+  }];
+}
+
+async function fetchShopifyAssets(accessToken: string, scopes: string[]): Promise<Asset[]> {
+  // Shopify asset fetching would go here
+  return [{
+    id: 'placeholder',
+    name: 'Shopify Store (basic access)',
+    type: 'store'
+  }];
+}
+
 export async function storePlatformConnection(
   adminId: string,
   platform: string,

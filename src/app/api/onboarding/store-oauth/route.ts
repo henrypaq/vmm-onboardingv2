@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, platform, accessToken, refreshToken, tokenExpiresAt, scopes, platformUserId, platformUsername, client_email, client_name, company_name } = await request.json();
+    const { token, platform, accessToken, refreshToken, tokenExpiresAt, scopes, platformUserId, platformUsername, client_email, client_name, company_name, assets } = await request.json();
     
     if (!token || !platform || !accessToken) {
       return NextResponse.json(
@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
       token_expires_at: tokenExpiresAt,
       scopes: scopes || [],
       platform_user_id: platformUserId,
-      platform_username: platformUsername
+      platform_username: platformUsername,
+      assets: assets || []
     };
 
     if (existingRequest) {

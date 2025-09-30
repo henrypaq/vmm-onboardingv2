@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exchangeCodeForToken, fetchPlatformUserInfo } from '@/lib/oauth/oauth-utils';
+import { exchangeCodeForToken, fetchPlatformUserInfo, fetchPlatformAssets } from '@/lib/oauth/oauth-utils';
 
 // Client OAuth connection endpoints
 // These will be used when clients connect their platform accounts during onboarding
@@ -78,6 +78,17 @@ export async function GET(
         }
       }
 
+      // Fetch platform assets using the access token
+      let assets = [];
+      try {
+        console.log(`[ClientOAuth] Fetching assets for ${platform}...`);
+        assets = await fetchPlatformAssets(platform, tokenResponse.access_token, resolvedScopes);
+        console.log(`[ClientOAuth] Fetched ${assets.length} assets for ${platform}:`, assets);
+      } catch (error) {
+        console.warn(`[ClientOAuth] Failed to fetch assets for ${platform}:`, error);
+        // Continue without assets
+      }
+
       // Store the OAuth data in the onboarding request with stable platform_user_id
       try {
         // Prefer internal call on same origin when running on Netlify/Next to avoid CORS and env domain mismatch
@@ -96,7 +107,8 @@ export async function GET(
             tokenExpiresAt: tokenResponse.expires_in ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString() : undefined,
             scopes: resolvedScopes,
             platformUserId: userInfo?.id || '',
-            platformUsername: userInfo?.username || userInfo?.name || ''
+            platformUsername: userInfo?.username || userInfo?.name || '',
+            assets: assets
           })
         });
         

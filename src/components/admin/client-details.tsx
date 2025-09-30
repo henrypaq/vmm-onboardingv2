@@ -32,6 +32,12 @@ interface PlatformConnection {
   updated_at: string;
 }
 
+interface Asset {
+  id: string;
+  name: string;
+  type: string;
+}
+
 interface OnboardingRequest {
   id: string;
   link_id: string;
@@ -332,6 +338,31 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                               <Badge key={index} variant="outline" className="text-xs">
                                 {scope}
                               </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Display assets from onboarding request if available */}
+                      {onboardingRequest?.platform_connections?.[connection.platform]?.assets && (
+                        <div className="mt-3">
+                          <label className="text-sm font-medium text-gray-500">Available Assets</label>
+                          <div className="mt-1 space-y-2">
+                            {onboardingRequest.platform_connections[connection.platform].assets.map((asset: Asset, index: number) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                                <div>
+                                  <span className="text-sm font-medium">{asset.name}</span>
+                                  <span className="text-xs text-gray-500 ml-2 capitalize">({asset.type})</span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs"
+                                  onClick={() => console.log(`Open ${asset.name} in ${connection.platform}`)}
+                                >
+                                  Open in {connection.platform === 'meta' ? 'Meta' : connection.platform === 'google' ? 'Google' : connection.platform}
+                                </Button>
+                              </div>
                             ))}
                           </div>
                         </div>
