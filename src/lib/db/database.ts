@@ -622,6 +622,70 @@ export async function upsertClientPlatformConnection(connection: Omit<ClientPlat
   }
 }
 
+// Find any connection by stable platform user id
+export async function findConnectionByPlatformUserId(platform: string, platformUserId: string): Promise<ClientPlatformConnection | null> {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from('client_platform_connections')
+    .select('*')
+    .eq('platform', platform)
+    .eq('platform_user_id', platformUserId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    console.error('Error searching connection by platform user id:', error);
+    return null;
+  }
+
+  return data;
+}
+
+// Upsert by stable id across clients (moves ownership if needed)
+export async function upsertClientPlatformConnectionByStableId(params: Omit<ClientPlatformConnection, 'id' | 'created_at' | 'updated_at'>): Promise<ClientPlatformConnection> {
+  const existingByStable = await findConnectionByPlatformUserId(params.platform, params.platform_user_id);
+  const supabaseAdmin = getSupabaseAdmin();
+
+  if (existingByStable) {
+    const { data, error } = await supabaseAdmin
+      .from('client_platform_connections')
+      .update({
+        client_id: params.client_id,
+        platform_username: params.platform_username,
+        access_token: params.access_token,
+        refresh_token: params.refresh_token,
+        token_expires_at: params.token_expires_at,
+        scopes: params.scopes,
+        is_active: params.is_active,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingByStable.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating connection by stable id:', error);
+      throw new Error('Failed to update platform connection');
+    }
+
+    return data;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('client_platform_connections')
+    .insert([params])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error inserting connection by stable id:', error);
+    throw new Error('Failed to create platform connection');
+  }
+  return data;
+}
+
 export async function getOnboardingRequestByLinkId(linkId: string): Promise<OnboardingRequest | null> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin

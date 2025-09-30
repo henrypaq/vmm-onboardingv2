@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOnboardingLinkByToken, createOnboardingRequest, updateOnboardingRequest } from '@/lib/db/database';
+import { getOnboardingLinkByToken, createOnboardingRequest, updateOnboardingRequest, getClientByEmail, createClient as createClientRecord, upsertClientPlatformConnectionByStableId } from '@/lib/db/database';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, platform, accessToken, refreshToken, tokenExpiresAt, scopes, platformUserId, platformUsername } = await request.json();
+    const { token, platform, accessToken, refreshToken, tokenExpiresAt, scopes, platformUserId, platformUsername, client_email, client_name, company_name } = await request.json();
     
     if (!token || !platform || !accessToken) {
       return NextResponse.json(
@@ -59,6 +59,48 @@ export async function POST(request: NextRequest) {
         granted_permissions: scopes && scopes.length ? { [platform]: scopes } : {},
         status: 'in_progress'
       });
+    }
+
+    // Also upsert into client_platform_connections immediately using stable id
+    try {
+      let clientId: string | undefined = existingRequest?.client_id;
+      const email = existingRequest?.client_email || client_email;
+      const name = existingRequest?.client_name || client_name;
+      const company = existingRequest?.company_name || company_name;
+
+      if (!clientId && email) {
+        const adminId = link.admin_id;
+        const existingClient = await getClientByEmail(adminId, email);
+        if (existingClient) {
+          clientId = existingClient.id;
+        } else {
+          const newClient = await createClientRecord({
+            admin_id: adminId,
+            email,
+            full_name: name,
+            company_name: company,
+            status: 'active' as const,
+            last_onboarding_at: new Date().toISOString(),
+          });
+          clientId = newClient.id;
+        }
+      }
+
+      if (clientId && platformUserId) {
+        await upsertClientPlatformConnectionByStableId({
+          client_id: clientId,
+          platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
+          platform_user_id: platformUserId,
+          platform_username: platformUsername,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          token_expires_at: tokenExpiresAt,
+          scopes: scopes || [],
+          is_active: true,
+        });
+      }
+    } catch (e) {
+      console.warn('[Store OAuth] Upsert to client_platform_connections failed (will not block flow):', e);
     }
 
     return NextResponse.json({ success: true });
