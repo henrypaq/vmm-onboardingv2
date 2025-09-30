@@ -258,19 +258,23 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                   {client.last_onboarding_at ? formatDate(client.last_onboarding_at) : 'Never'}
                 </p>
               </div>
-              {onboardingRequest && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Onboarding Link Used</label>
-                  <div className="mt-1">
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {onboardingRequest.link.token.substring(0, 8)}...
-                    </Badge>
-                    {onboardingRequest.link.link_name && (
-                      <p className="text-sm text-gray-600 mt-1">{onboardingRequest.link.link_name}</p>
-                    )}
-                  </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Onboarding Link Used</label>
+                <div className="mt-1">
+                  {onboardingRequest?.link ? (
+                    <>
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {onboardingRequest.link.token.substring(0, 8)}...
+                      </Badge>
+                      {onboardingRequest.link.link_name && (
+                        <p className="text-sm text-gray-600 mt-1">{onboardingRequest.link.link_name}</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-500">No onboarding request recorded for this client yet.</p>
+                  )}
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
@@ -346,19 +350,19 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
             </CardContent>
           </Card>
 
-          {/* Onboarding Request Details */}
-          {onboardingRequest && (
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <ExternalLink className="h-5 w-5 mr-2" />
-                  Onboarding Request Details
-                </CardTitle>
-                <CardDescription>
-                  Information about the onboarding request that created this client
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+          {/* Onboarding Request Details (shows placeholders if missing) */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <ExternalLink className="h-5 w-5 mr-2" />
+                Onboarding Request Details
+              </CardTitle>
+              <CardDescription>
+                Information about the onboarding request and permissions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {onboardingRequest ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Request Status</label>
@@ -390,10 +394,36 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       ))}
                     </div>
                   </div>
+                  {onboardingRequest.link?.requested_permissions && (
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium text-gray-500">Requested Permissions (from link)</label>
+                      <div className="mt-1">
+                        {Object.entries(onboardingRequest.link.requested_permissions).map(([platform, scopes]) => (
+                          <div key={platform} className="mb-2">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg">{getPlatformIcon(platform)}</span>
+                              <span className="font-medium capitalize">{platform}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1 ml-6">
+                              {scopes.map((scope, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {scope}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <div className="text-sm text-gray-500">
+                  No onboarding request found for this client. The client may have been created manually or not completed the flow.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Footer */}
