@@ -6,6 +6,7 @@ export interface OAuthTokenResponse {
   expires_in?: number;
   token_type?: string;
   scope?: string;
+  id_token?: string;
 }
 
 export interface PlatformUserInfo {
@@ -107,6 +108,7 @@ async function exchangeGoogleToken(code: string, redirectUri: string): Promise<O
     expires_in: data.expires_in,
     token_type: data.token_type,
     scope: data.scope,
+    id_token: data.id_token,
   };
 }
 
@@ -182,13 +184,14 @@ async function exchangeShopifyToken(code: string): Promise<OAuthTokenResponse> {
 
 export async function fetchPlatformUserInfo(
   platform: string,
-  accessToken: string
+  accessToken: string,
+  idToken?: string
 ): Promise<PlatformUserInfo> {
   switch (platform) {
     case 'meta':
       return await fetchMetaUserInfo(accessToken);
     case 'google':
-      return await fetchGoogleUserInfo(accessToken);
+      return await fetchGoogleUserInfo(accessToken, idToken);
     case 'tiktok':
       return await fetchTikTokUserInfo(accessToken);
     case 'shopify':
@@ -199,7 +202,8 @@ export async function fetchPlatformUserInfo(
 }
 
 async function fetchMetaUserInfo(accessToken: string): Promise<PlatformUserInfo> {
-  const response = await fetch(`https://graph.facebook.com/v18.0/me?access_token=${accessToken}&fields=id,name,email`);
+  // Use basic /me call that works with minimal scopes
+  const response = await fetch(`https://graph.facebook.com/v18.0/me?access_token=${accessToken}`);
   
   if (!response.ok) {
     throw new Error('Failed to fetch Meta user info');
@@ -213,7 +217,16 @@ async function fetchMetaUserInfo(accessToken: string): Promise<PlatformUserInfo>
   };
 }
 
-async function fetchGoogleUserInfo(accessToken: string): Promise<PlatformUserInfo> {
+function decodeJwt(token: string): any {
+  try {
+    const [, payload] = token.split('.');
+    return JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+
+async function fetchGoogleUserInfo(accessToken: string, idToken?: string): Promise<PlatformUserInfo> {
   const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -225,8 +238,10 @@ async function fetchGoogleUserInfo(accessToken: string): Promise<PlatformUserInf
   }
 
   const data = await response.json();
+  const payload = idToken ? decodeJwt(idToken) : null;
+  const stableId = payload?.sub || data.id;
   return {
-    id: data.id,
+    id: stableId,
     username: data.email,
     name: data.name,
     email: data.email,

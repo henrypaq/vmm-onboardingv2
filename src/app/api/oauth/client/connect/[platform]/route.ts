@@ -49,7 +49,7 @@ export async function GET(
       const tokenResponse = await exchangeCodeForToken(platform, code, redirectUri);
       
       // Fetch user information from the platform
-      const userInfo = await fetchPlatformUserInfo(platform, tokenResponse.access_token);
+      const userInfo = await fetchPlatformUserInfo(platform, tokenResponse.access_token, tokenResponse.id_token);
       
       // Store OAuth data temporarily in session storage or pass via URL
       // For now, we'll store it in the onboarding request's platform_connections field
@@ -78,7 +78,7 @@ export async function GET(
         }
       }
 
-      // Store the OAuth data in the onboarding request
+      // Store the OAuth data in the onboarding request with stable platform_user_id
       try {
         // Prefer internal call on same origin when running on Netlify/Next to avoid CORS and env domain mismatch
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || '';
