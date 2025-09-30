@@ -350,7 +350,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
             </CardContent>
           </Card>
 
-          {/* Onboarding Request Details (shows placeholders if missing) */}
+          {/* Onboarding Request Details (simplified) */}
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -358,23 +358,25 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                 Onboarding Request Details
               </CardTitle>
               <CardDescription>
-                Information about the onboarding request and permissions
+                Link used and permissions granted
               </CardDescription>
             </CardHeader>
             <CardContent>
               {onboardingRequest ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Request Status</label>
-                    <p className="text-lg capitalize">{onboardingRequest.status}</p>
+                    <label className="text-sm font-medium text-gray-500">Link Used</label>
+                    <div className="mt-1">
+                      {onboardingRequest.link?.link_name ? (
+                        <p className="text-lg font-medium">{onboardingRequest.link.link_name}</p>
+                      ) : (
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {onboardingRequest.link?.token?.substring(0, 8)}...
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Submitted At</label>
-                    <p className="text-lg">
-                      {onboardingRequest.submitted_at ? formatDate(onboardingRequest.submitted_at) : 'Not submitted'}
-                    </p>
-                  </div>
-                  <div className="md:col-span-2">
                     <label className="text-sm font-medium text-gray-500">Granted Permissions</label>
                     <div className="mt-1">
                       {Object.entries(onboardingRequest.granted_permissions).map(([platform, scopes]) => (
@@ -394,28 +396,6 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       ))}
                     </div>
                   </div>
-                  {onboardingRequest.link?.requested_permissions && (
-                    <div className="md:col-span-2">
-                      <label className="text-sm font-medium text-gray-500">Requested Permissions (from link)</label>
-                      <div className="mt-1">
-                        {Object.entries(onboardingRequest.link.requested_permissions).map(([platform, scopes]) => (
-                          <div key={platform} className="mb-2">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-lg">{getPlatformIcon(platform)}</span>
-                              <span className="font-medium capitalize">{platform}</span>
-                            </div>
-                            <div className="flex flex-wrap gap-1 mt-1 ml-6">
-                              {scopes.map((scope, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {scope}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="text-sm text-gray-500">
