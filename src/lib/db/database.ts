@@ -628,7 +628,9 @@ export async function getOnboardingRequestByLinkId(linkId: string): Promise<Onbo
     .from('onboarding_requests')
     .select('*')
     .eq('link_id', linkId)
-    .single();
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   if (error) {
     if (error.code === 'PGRST116') {

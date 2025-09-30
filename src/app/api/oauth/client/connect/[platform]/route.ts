@@ -80,6 +80,11 @@ export async function GET(
 
       // Store the OAuth data in the onboarding request
       try {
+        // Prefer internal call on same origin when running on Netlify/Next to avoid CORS and env domain mismatch
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+        const storeUrl = baseUrl
+          ? `${baseUrl}/api/onboarding/store-oauth`
+          : `/api/onboarding/store-oauth`;
         const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/onboarding/store-oauth`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
