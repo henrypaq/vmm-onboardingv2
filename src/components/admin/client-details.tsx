@@ -278,7 +278,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
             </CardContent>
           </Card>
 
-          {/* Platform Connections */}
+          {/* Platform Connections (permanent records) */}
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -286,7 +286,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                 Platform Connections
               </CardTitle>
               <CardDescription>
-                Connected platforms and their permissions
+                Connected platforms and their permissions (from client_platform_connections)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -294,7 +294,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                 <div className="text-center py-8">
                   <p className="text-gray-500">No platform connections found</p>
                   <p className="text-sm text-gray-400 mt-1">
-                    This client hasn't connected any platforms yet
+                    This client hasn't connected any platforms yet, or the onboarding flow hasn't been completed
                   </p>
                 </div>
               ) : (

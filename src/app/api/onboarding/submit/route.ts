@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       // This is normal for new submissions, continue with empty connections
     }
 
-    // Create the onboarding request
+    // Prepare granted permissions from synthesized input
     let grantedPermissions = {};
     try {
       grantedPermissions = permissions.reduce((acc: Record<string, string[]>, perm: string) => {
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       company_name: data?.company,
       granted_permissions: grantedPermissions,
       platform_connections: storedPlatformConnections,
-      status: 'completed' as const, // Mark as completed since client has granted access
+      status: 'completed' as const,
     };
     
     console.log(`[Onboarding] Link ID:`, link.id, 'Type:', typeof link.id);
@@ -141,22 +141,26 @@ export async function POST(request: NextRequest) {
       company_name: data?.company
     });
     
+    // Update existing in_progress request if present, else create
     let onboardingRequest;
     try {
-      onboardingRequest = await createOnboardingRequest(onboardingRequestData);
-      console.log(`[Onboarding] Created onboarding request:`, onboardingRequest);
-      console.log(`[Onboarding] Onboarding request ID:`, onboardingRequest?.id);
+      const existing = await getOnboardingRequestByLinkId(link.id);
+      if (existing) {
+        onboardingRequest = await (async () => {
+          const updated = await updateOnboardingRequest(existing.id, onboardingRequestData);
+          return updated;
+        })();
+        console.log('[Onboarding] Updated existing onboarding request to completed');
+      } else {
+        onboardingRequest = await createOnboardingRequest(onboardingRequestData);
+        console.log('[Onboarding] Created new onboarding request as completed');
+      }
     } catch (onboardingError) {
-      console.error(`[Onboarding] Failed to create onboarding request:`, onboardingError);
-      console.error(`[Onboarding] Onboarding error details:`, {
-        message: onboardingError instanceof Error ? onboardingError.message : 'Unknown error',
-        stack: onboardingError instanceof Error ? onboardingError.stack : undefined,
-        data: onboardingRequestData
-      });
-      throw onboardingError; // Re-throw to trigger 500 error handling
+      console.error('[Onboarding] Failed to upsert onboarding request:', onboardingError);
+      throw onboardingError;
     }
 
-    // Save platform connections to client_platform_connections table
+    // Save platform connections to client_platform_connections table (permanent record)
     if (clientId) {
       console.log(`[Onboarding] Saving platform connections for client ${clientId}`);
       
