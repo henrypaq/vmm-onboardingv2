@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Users, Search, Video, ShoppingBag } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
-import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider, getGoogleScopesWithRequired, getGoogleServiceName } from '@/lib/scopes';
+import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider, getGoogleScopesWithRequired, getGoogleServiceName, metaAssetGroups, areAllSubScopesSelected } from '@/lib/scopes';
 
 interface EnhancedLinkGeneratorFormProps {
   onLinkGenerated: (link: { url: string; token: string; platforms: string[]; requestedScopes: Record<string, string[]> }) => void;
@@ -84,6 +84,29 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
         ? [...(prev[platformId] || []), scope]
         : (prev[platformId] || []).filter(s => s !== scope)
     }));
+  };
+
+  const handleMetaAssetGroupToggle = (groupName: string, checked: boolean) => {
+    const group = metaAssetGroups[groupName as keyof typeof metaAssetGroups];
+    if (!group) return;
+
+    setSelectedScopes(prev => {
+      const currentScopes = prev.meta || [];
+      let newScopes: string[];
+
+      if (checked) {
+        // Add all scopes from this group
+        newScopes = [...new Set([...currentScopes, ...group.scopes])];
+      } else {
+        // Remove all scopes from this group
+        newScopes = currentScopes.filter(scope => !group.scopes.includes(scope));
+      }
+
+      return {
+        ...prev,
+        meta: newScopes
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -249,42 +272,107 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                             </p>
                           </div>
                         )}
-                        {getScopesForProvider(platform.id as keyof typeof scopes).map((scope) => {
-                          const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
-                          const isScopeAvailable = getAvailableScopesForProvider(platform.id as keyof typeof scopes).includes(scope);
-                          
-                          // Skip background scopes for Google (they're always included)
-                          if (platform.id === 'google' && ['openid', 'email', 'profile'].includes(scope)) {
-                            return null;
-                          }
-                          
-                          return (
-                            <div key={scope} className={`flex items-start space-x-2 ${!isScopeAvailable ? 'opacity-50' : ''}`}>
-                              <Checkbox
-                                id={`scope-${platform.id}-${scope}`}
-                                checked={isScopeSelected}
-                                disabled={!isScopeAvailable}
-                                onCheckedChange={(checked) => 
-                                  isScopeAvailable ? handleScopeToggle(platform.id, scope, checked as boolean) : undefined
-                                }
-                              />
-                              <div className="flex-1">
-                                <label 
-                                  htmlFor={`scope-${platform.id}-${scope}`}
-                                  className={`text-sm font-medium ${isScopeAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                                >
-                                  {platform.id === 'google' ? getGoogleServiceName(scope) : scope}
-                                  {!isScopeAvailable && (
-                                    <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
-                                  )}
-                                </label>
-                                <p className="text-xs text-gray-500">
-                                  {getScopeDescription(platform.id as keyof typeof scopes, scope)}
-                                </p>
+                        {platform.id === 'meta' ? (
+                          // Meta grouped asset structure
+                          <div className="space-y-3">
+                            {Object.entries(metaAssetGroups).map(([groupName, groupData]) => {
+                              const isGroupSelected = areAllSubScopesSelected(groupName, selectedScopes[platform.id] || []);
+                              const isGroupAvailable = groupData.available;
+                              
+                              return (
+                                <div key={groupName} className={`border rounded-lg p-3 ${!isGroupAvailable ? 'opacity-50 bg-gray-50' : ''}`}>
+                                  <div className="flex items-start space-x-2">
+                                    <Checkbox
+                                      id={`meta-group-${groupName}`}
+                                      checked={isGroupSelected}
+                                      disabled={!isGroupAvailable}
+                                      onCheckedChange={(checked) => 
+                                        isGroupAvailable ? handleMetaAssetGroupToggle(groupName, checked as boolean) : undefined
+                                      }
+                                    />
+                                    <div className="flex-1">
+                                      <label 
+                                        htmlFor={`meta-group-${groupName}`}
+                                        className={`text-sm font-medium ${isGroupAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                                      >
+                                        {groupName}
+                                        {!isGroupAvailable && (
+                                          <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
+                                        )}
+                                      </label>
+                                      
+                                      {/* Show sub-options for Pages */}
+                                      {groupName === 'Pages' && isGroupAvailable && (
+                                        <div className="mt-2 ml-6 space-y-1">
+                                          {groupData.scopes.map((scope) => {
+                                            const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
+                                            return (
+                                              <div key={scope} className="flex items-start space-x-2">
+                                                <Checkbox
+                                                  id={`scope-${platform.id}-${scope}`}
+                                                  checked={isScopeSelected}
+                                                  onCheckedChange={(checked) => 
+                                                    handleScopeToggle(platform.id, scope, checked as boolean)
+                                                  }
+                                                />
+                                                <div className="flex-1">
+                                                  <label 
+                                                    htmlFor={`scope-${platform.id}-${scope}`}
+                                                    className="text-xs cursor-pointer"
+                                                  >
+                                                    {getScopeDescription(platform.id as keyof typeof scopes, scope)}
+                                                  </label>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          // Other platforms (Google, etc.)
+                          getScopesForProvider(platform.id as keyof typeof scopes).map((scope) => {
+                            const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
+                            const isScopeAvailable = getAvailableScopesForProvider(platform.id as keyof typeof scopes).includes(scope);
+                            
+                            // Skip background scopes for Google (they're always included)
+                            if (platform.id === 'google' && ['openid', 'email', 'profile'].includes(scope)) {
+                              return null;
+                            }
+                            
+                            return (
+                              <div key={scope} className={`flex items-start space-x-2 ${!isScopeAvailable ? 'opacity-50' : ''}`}>
+                                <Checkbox
+                                  id={`scope-${platform.id}-${scope}`}
+                                  checked={isScopeSelected}
+                                  disabled={!isScopeAvailable}
+                                  onCheckedChange={(checked) => 
+                                    isScopeAvailable ? handleScopeToggle(platform.id, scope, checked as boolean) : undefined
+                                  }
+                                />
+                                <div className="flex-1">
+                                  <label 
+                                    htmlFor={`scope-${platform.id}-${scope}`}
+                                    className={`text-sm font-medium ${isScopeAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                                  >
+                                    {platform.id === 'google' ? getGoogleServiceName(scope) : scope}
+                                    {!isScopeAvailable && (
+                                      <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
+                                    )}
+                                  </label>
+                                  <p className="text-xs text-gray-500">
+                                    {getScopeDescription(platform.id as keyof typeof scopes, scope)}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        )}
                       </div>
                     )}
                   </div>

@@ -58,23 +58,41 @@ export async function GET(
         scopes: tokenResponse.scope ? tokenResponse.scope.split(' ') : []
       });
       
-      // Derive scopes robustly. Some providers (e.g., Meta) don't return scope in token response.
+      // Get the exact requested scopes from the onboarding link
       let resolvedScopes: string[] = [];
-      if (tokenResponse.scope) {
-        resolvedScopes = tokenResponse.scope.split(' ');
-      } else {
-        switch (platform) {
-          case 'meta':
-            resolvedScopes = ['pages_read_engagement', 'pages_manage_posts', 'ads_read', 'pages_show_list'];
-            break;
-          case 'google':
-            resolvedScopes = ['openid', 'email', 'profile'];
-            break;
-          case 'tiktok':
-            resolvedScopes = ['user_info', 'video_read'];
-            break;
-          default:
-            resolvedScopes = [];
+      try {
+        // Fetch the link data to get the exact requested scopes
+        const linkResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/links/validate?token=${flowToken}`);
+        if (linkResponse.ok) {
+          const linkData = await linkResponse.json();
+          const requestedScopes = linkData.requested_permissions?.[platform] || [];
+          if (requestedScopes.length > 0) {
+            resolvedScopes = requestedScopes;
+            console.log(`[ClientOAuth] Using exact requested scopes for ${platform}:`, resolvedScopes);
+          }
+        }
+      } catch (error) {
+        console.warn(`[ClientOAuth] Could not fetch requested scopes for ${platform}, using fallback`);
+      }
+
+      // Fallback to token response scopes or defaults if no requested scopes found
+      if (resolvedScopes.length === 0) {
+        if (tokenResponse.scope) {
+          resolvedScopes = tokenResponse.scope.split(' ');
+        } else {
+          switch (platform) {
+            case 'meta':
+              resolvedScopes = ['pages_read_engagement', 'pages_manage_posts', 'ads_read', 'pages_show_list'];
+              break;
+            case 'google':
+              resolvedScopes = ['openid', 'email', 'profile'];
+              break;
+            case 'tiktok':
+              resolvedScopes = ['user_info', 'video_read'];
+              break;
+            default:
+              resolvedScopes = [];
+          }
         }
       }
 
@@ -163,7 +181,25 @@ export async function GET(
   
   switch (platform) {
     case 'meta':
-      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_read_engagement,pages_manage_posts,ads_read,pages_show_list&response_type=code&state=${encodeURIComponent(state)}`;
+      // Get Meta scopes from the onboarding request or use defaults
+      let metaScopes = ['pages_read_engagement', 'pages_manage_posts', 'ads_read', 'pages_show_list']; // Default fallback
+      
+      try {
+        // Try to get the actual requested scopes from the onboarding request
+        const linkResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/links/validate?token=${onboardingToken}`);
+        if (linkResponse.ok) {
+          const linkData = await linkResponse.json();
+          const requestedScopes = linkData.requested_permissions?.meta || [];
+          if (requestedScopes.length > 0) {
+            metaScopes = requestedScopes;
+          }
+        }
+      } catch (error) {
+        console.warn('[ClientOAuth][meta] Could not fetch requested scopes, using defaults');
+      }
+      
+      console.log('[ClientOAuth][meta] Final scopes', metaScopes);
+      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(metaScopes.join(','))}&response_type=code&state=${encodeURIComponent(state)}`;
       break;
     case 'google':
       // Get Google scopes from the onboarding request or use defaults

@@ -13,12 +13,12 @@ export const scopes = {
     "https://www.googleapis.com/auth/webmasters.readonly": "Google Search Console - Read search performance and sitemap data"
   },
   meta: {
+    "ads_management": "Ad Accounts - Manage Facebook and Instagram ad campaigns",
     "pages_show_list": "View list of your Facebook Pages",
-    "pages_read_engagement": "Read Page content and engagement data",
-    "ads_management": "Ad Account - Manage Facebook and Instagram ad campaigns",
-    "pages_manage_posts": "Pages - Create and manage posts on your Pages",
+    "pages_read_engagement": "Read Page content and engagement data", 
+    "pages_manage_posts": "Create and manage posts on your Pages",
     "catalog_management": "Catalogs - Manage product catalogs for shopping ads",
-    "business_management": "Datasets - Access business data and insights",
+    "business_management": "Datasets (Business Manager) - Access business data and insights",
     "instagram_basic": "Instagram Accounts - Access Instagram account information"
   },
   tiktok: {
@@ -42,11 +42,11 @@ export const availableScopes = {
     // openid, email, profile are always included automatically
   ],
   meta: [
+    "ads_management",
     "pages_show_list",
     "pages_read_engagement", 
-    "ads_management",
     "pages_manage_posts"
-    // Catalogs, Datasets, Instagram disabled for testing
+    // catalog_management, business_management, instagram_basic disabled for testing
   ],
   tiktok: [
     // TikTok disabled for now
@@ -106,4 +106,45 @@ export function getGoogleServiceName(scope: string): string {
     'https://www.googleapis.com/auth/webmasters.readonly': 'Google Search Console'
   };
   return serviceMap[scope] || scope;
+}
+
+// Meta asset groups and their sub-scopes
+export const metaAssetGroups = {
+  'Ad Accounts': {
+    scopes: ['ads_management'],
+    available: true
+  },
+  'Pages': {
+    scopes: ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'],
+    available: true
+  },
+  'Catalogs': {
+    scopes: ['catalog_management'],
+    available: false // Coming soon
+  },
+  'Datasets (Business Manager)': {
+    scopes: ['business_management'],
+    available: false // Coming soon
+  },
+  'Instagram Accounts': {
+    scopes: ['instagram_basic'],
+    available: false // Coming soon
+  }
+};
+
+// Helper function to get Meta asset group name from scope
+export function getMetaAssetGroupName(scope: string): string {
+  for (const [groupName, groupData] of Object.entries(metaAssetGroups)) {
+    if (groupData.scopes.includes(scope)) {
+      return groupName;
+    }
+  }
+  return scope;
+}
+
+// Helper function to check if all sub-scopes of a group are selected
+export function areAllSubScopesSelected(groupName: string, selectedScopes: string[]): boolean {
+  const group = metaAssetGroups[groupName as keyof typeof metaAssetGroups];
+  if (!group) return false;
+  return group.scopes.every(scope => selectedScopes.includes(scope));
 }
