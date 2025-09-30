@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { X, ExternalLink, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon } from 'lucide-react';
+import { showToast } from '@/components/ui/toast';
+import { X, ExternalLink, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube } from 'lucide-react';
 
 interface ClientDetails {
   id: string;
@@ -123,6 +124,50 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleTestMetaAccess = async (adAccountId: string) => {
+    try {
+      console.log('[Meta Test] Testing API access for ad account:', adAccountId);
+      
+      const response = await fetch('/api/test/meta-access', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientId: clientId,
+          adAccountId: adAccountId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const campaignList = data.campaigns.length > 0 
+          ? data.campaigns.join(', ')
+          : 'No campaigns found';
+        
+        showToast({
+          type: 'success',
+          title: 'Meta API Test Successful',
+          message: `Successfully fetched campaigns: ${campaignList}`
+        });
+      } else {
+        showToast({
+          type: 'error',
+          title: 'Meta API Test Failed',
+          message: data.error || 'Unknown error occurred'
+        });
+      }
+    } catch (error) {
+      console.error('[Meta Test] Error:', error);
+      showToast({
+        type: 'error',
+        title: 'Meta API Test Failed',
+        message: 'Network error or server unavailable'
+      });
+    }
   };
 
   const getStatusVariant = (status: string) => {
@@ -354,14 +399,27 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   <span className="text-sm font-medium">{asset.name}</span>
                                   <span className="text-xs text-gray-500 ml-2 capitalize">({asset.type})</span>
                                 </div>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs"
-                                  onClick={() => console.log(`Open ${asset.name} in ${connection.platform}`)}
-                                >
-                                  Open in {connection.platform === 'meta' ? 'Meta' : connection.platform === 'google' ? 'Google' : connection.platform}
-                                </Button>
+                                <div className="flex space-x-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs"
+                                    onClick={() => console.log(`Open ${asset.name} in ${connection.platform}`)}
+                                  >
+                                    Open in {connection.platform === 'meta' ? 'Meta' : connection.platform === 'google' ? 'Google' : connection.platform}
+                                  </Button>
+                                  {connection.platform === 'meta' && asset.type === 'ad_account' && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-xs"
+                                      onClick={() => handleTestMetaAccess(asset.id)}
+                                    >
+                                      <TestTube className="h-3 w-3 mr-1" />
+                                      Test API
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
