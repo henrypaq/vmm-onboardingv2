@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient as supabaseCreateClient, type SupabaseClient } from '@supabase/supabase-js';
 
 let cachedClient: SupabaseClient | null = null;
 
@@ -18,7 +18,8 @@ export function getSupabaseAdmin(): SupabaseClient {
     throw new Error('Supabase configuration missing. See server logs for details.');
   }
 
-  cachedClient = createClient(supabaseUrl, supabaseServiceKey, {
+  // IMPORTANT: use the aliased factory to avoid name clashes with the helper exported below
+  cachedClient = supabaseCreateClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
