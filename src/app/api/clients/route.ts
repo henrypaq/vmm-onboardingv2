@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getClients, createClient } from '@/lib/db/database';
+import { getClients, createClient as createClientRecord } from '@/lib/db/database';
 
 export async function GET() {
   try {
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = await createClient({
+    const client = await createClientRecord({
       ...clientData,
       status: 'active',
     });

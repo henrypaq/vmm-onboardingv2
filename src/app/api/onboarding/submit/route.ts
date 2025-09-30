@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient, updateClient, upsertClientPlatformConnection, getOnboardingRequestByLinkId } from '@/lib/db/database';
+import { createOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient as createClientRecord, updateClient, upsertClientPlatformConnection, getOnboardingRequestByLinkId } from '@/lib/db/database';
 
 export async function POST(request: NextRequest) {
   try {
@@ -269,7 +269,7 @@ export async function POST(request: NextRequest) {
             last_onboarding_at: new Date().toISOString()
           };
           console.log(`[Onboarding] Client data to insert:`, clientData);
-          const newClient = await createClient(clientData);
+          const newClient = await createClientRecord(clientData);
           clientId = newClient.id;
           console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${adminId}`, newClient);
         }
