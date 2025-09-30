@@ -24,6 +24,7 @@ export default function AdminSettingsPage() {
   const platforms = getAllPlatforms();
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   // Fetch platform connections from API
   const fetchConnections = async () => {
@@ -41,6 +42,7 @@ export default function AdminSettingsPage() {
       setConnectedPlatforms([]);
     } finally {
       setLoading(false);
+      setHasLoadedOnce(true);
     }
   };
 
@@ -50,38 +52,24 @@ export default function AdminSettingsPage() {
   };
 
   useEffect(() => {
-    fetchConnections();
+    // First visit → load once
+    if (!hasLoadedOnce) {
+      fetchConnections();
+    }
 
-    // Check for OAuth callback success and refresh connections
+    // If redirected from OAuth success, do a single refresh then clear URL params
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('connected') && urlParams.get('success')) {
-      const platform = urlParams.get('connected');
-      const username = urlParams.get('username');
-      console.log(`OAuth success for ${platform} as ${username}`);
-      
-      // Refresh connections after successful OAuth
-      setTimeout(() => {
-        fetchConnections();
-      }, 1000);
-      
-      // Clean up URL parameters
+      fetchConnections();
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (urlParams.get('error')) {
       const error = urlParams.get('error');
       const platform = urlParams.get('platform');
       const message = urlParams.get('message');
       console.error(`OAuth error for ${platform}: ${error}`);
-      
-      if (error === 'oauth_not_configured') {
-        alert(`OAuth Configuration Error for ${platform}: ${message || 'OAuth not configured'}`);
-      } else {
-        alert(`OAuth error for ${platform}: ${error}`);
-      }
-      
-      // Clean up URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+  }, [hasLoadedOnce]);
 
   const getPlatformIcon = (platformId: string) => {
     switch (platformId) {
