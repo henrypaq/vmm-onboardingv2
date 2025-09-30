@@ -126,45 +126,70 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
     });
   };
 
-  const handleTestMetaAccess = async (adAccountId: string) => {
+  const handleTestApiAccess = async (platform: string, assetId: string, assetType: string) => {
     try {
-      console.log('[Meta Test] Testing API access for ad account:', adAccountId);
+      console.log(`[API Test] Testing ${platform} access for ${assetType}:`, assetId);
       
-      const response = await fetch('/api/test/meta-access', {
+      const endpoint = platform === 'meta' ? '/api/test/meta-access' : '/api/test/google-access';
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           clientId: clientId,
-          adAccountId: adAccountId,
+          platform: platform,
+          assetId: assetId,
+          assetType: assetType,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const campaignList = data.campaigns.length > 0 
-          ? data.campaigns.join(', ')
-          : 'No campaigns found';
+        let successMessage = data.message;
+        
+        // Add specific asset data to success message
+        if (data.assetData) {
+          if (platform === 'meta') {
+            if (assetType === 'ad_account' && data.assetData.campaigns) {
+              const campaignList = data.assetData.campaigns.length > 0 
+                ? data.assetData.campaigns.map((c: any) => c.name).join(', ')
+                : 'No campaigns found';
+              successMessage += ` - Campaigns: ${campaignList}`;
+            } else if (assetType === 'page' && data.assetData.name) {
+              successMessage += ` - Page: ${data.assetData.name} (${data.assetData.followersCount} followers)`;
+            } else if (assetType === 'catalog' && data.assetData.name) {
+              successMessage += ` - Catalog: ${data.assetData.name} (${data.assetData.productCount} products)`;
+            }
+          } else if (platform === 'google') {
+            if (assetType === 'analytics_property' && data.assetData.accounts) {
+              const accountList = data.assetData.accounts.map((a: any) => a.name).join(', ');
+              successMessage += ` - Accounts: ${accountList}`;
+            } else if (data.assetData.accountId) {
+              successMessage += ` - Account ID: ${data.assetData.accountId}`;
+            }
+          }
+        }
         
         showToast({
           type: 'success',
-          title: 'Meta API Test Successful',
-          message: `Successfully fetched campaigns: ${campaignList}`
+          title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} API Test Successful`,
+          message: successMessage
         });
       } else {
         showToast({
           type: 'error',
-          title: 'Meta API Test Failed',
+          title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} API Test Failed`,
           message: data.error || 'Unknown error occurred'
         });
       }
     } catch (error) {
-      console.error('[Meta Test] Error:', error);
+      console.error(`[${platform} Test] Error:`, error);
       showToast({
         type: 'error',
-        title: 'Meta API Test Failed',
+        title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} API Test Failed`,
         message: 'Network error or server unavailable'
       });
     }
@@ -408,17 +433,15 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   >
                                     Open in {connection.platform === 'meta' ? 'Meta' : connection.platform === 'google' ? 'Google' : connection.platform}
                                   </Button>
-                                  {connection.platform === 'meta' && asset.type === 'ad_account' && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="text-xs"
-                                      onClick={() => handleTestMetaAccess(asset.id)}
-                                    >
-                                      <TestTube className="h-3 w-3 mr-1" />
-                                      Test API
-                                    </Button>
-                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs"
+                                    onClick={() => handleTestApiAccess(connection.platform, asset.id, asset.type)}
+                                  >
+                                    <TestTube className="h-3 w-3 mr-1" />
+                                    Test API
+                                  </Button>
                                 </div>
                               </div>
                             ))}
