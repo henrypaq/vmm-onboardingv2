@@ -654,7 +654,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
               </CardContent>
             </Card>
           </div>
-        ) : (
+        ) : currentPlatform ? (
           // Platform Connection Step
           <div>
             <div className="text-center mb-8">
@@ -837,6 +837,26 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                     </div>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          // Fallback when currentPlatform is undefined
+          <div>
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Loading Platform...
+              </h2>
+              <p className="text-gray-600">
+                Please wait while we load the platform information.
+              </p>
+            </div>
+            <Card className="max-w-2xl mx-auto">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading platform data...</p>
+                </div>
               </CardContent>
             </Card>
           </div>
