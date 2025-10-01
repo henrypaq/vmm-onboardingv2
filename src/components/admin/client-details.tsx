@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { showToast } from '@/components/ui/toast';
-import { X, ExternalLink, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube } from 'lucide-react';
+import { X, ExternalLink, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
 
 interface ClientDetails {
   id: string;
@@ -72,6 +72,12 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   const [onboardingRequest, setOnboardingRequest] = useState<OnboardingRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // State for API test responses
+  const [apiTestResults, setApiTestResults] = useState<Record<string, any>>({});
+  const [apiTestLoading, setApiTestLoading] = useState<Record<string, boolean>>({});
+  const [apiTestExpanded, setApiTestExpanded] = useState<Record<string, boolean>>({});
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
 
   const fetchClientDetails = async () => {
     try {
@@ -127,10 +133,15 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   };
 
   const handleTestApiAccess = async (platform: string, assetId: string, assetType: string) => {
+    const testKey = `${platform}-${assetId}-${assetType}`;
+    
     try {
       console.log(`[API Test] Testing ${platform} access for ${assetType}:`, assetId);
       
-      const endpoint = platform === 'meta' ? '/api/test/meta-access' : '/api/test/google-access';
+      // Set loading state
+      setApiTestLoading(prev => ({ ...prev, [testKey]: true }));
+      
+      const endpoint = platform === 'meta' ? '/api/meta/test-api' : '/api/test/google-access';
       
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -139,7 +150,6 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
         },
         body: JSON.stringify({
           clientId: clientId,
-          platform: platform,
           assetId: assetId,
           assetType: assetType,
         }),
@@ -147,36 +157,17 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
 
       const data = await response.json();
 
+      // Store the result
+      setApiTestResults(prev => ({ ...prev, [testKey]: data }));
+      
+      // Auto-expand the result panel
+      setApiTestExpanded(prev => ({ ...prev, [testKey]: true }));
+
       if (response.ok && data.success) {
-        let successMessage = data.message;
-        
-        // Add specific asset data to success message
-        if (data.assetData) {
-          if (platform === 'meta') {
-            if (assetType === 'ad_account' && data.assetData.campaigns) {
-              const campaignList = data.assetData.campaigns.length > 0 
-                ? data.assetData.campaigns.map((c: any) => c.name).join(', ')
-                : 'No campaigns found';
-              successMessage += ` - Campaigns: ${campaignList}`;
-            } else if (assetType === 'page' && data.assetData.name) {
-              successMessage += ` - Page: ${data.assetData.name} (${data.assetData.followersCount} followers)`;
-            } else if (assetType === 'catalog' && data.assetData.name) {
-              successMessage += ` - Catalog: ${data.assetData.name} (${data.assetData.productCount} products)`;
-            }
-          } else if (platform === 'google') {
-            if (assetType === 'analytics_property' && data.assetData.accounts) {
-              const accountList = data.assetData.accounts.map((a: any) => a.name).join(', ');
-              successMessage += ` - Accounts: ${accountList}`;
-            } else if (data.assetData.accountId) {
-              successMessage += ` - Account ID: ${data.assetData.accountId}`;
-            }
-          }
-        }
-        
         showToast({
           type: 'success',
           title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} API Test Successful`,
-          message: successMessage
+          message: data.description || 'API call completed successfully'
         });
       } else {
         showToast({
@@ -187,12 +178,48 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       }
     } catch (error) {
       console.error(`[${platform} Test] Error:`, error);
+      const errorResult = {
+        success: false,
+        error: 'Network error or server unavailable',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      };
+      setApiTestResults(prev => ({ ...prev, [testKey]: errorResult }));
+      setApiTestExpanded(prev => ({ ...prev, [testKey]: true }));
+      
       showToast({
         type: 'error',
         title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} API Test Failed`,
         message: 'Network error or server unavailable'
       });
+    } finally {
+      // Clear loading state
+      setApiTestLoading(prev => ({ ...prev, [testKey]: false }));
     }
+  };
+
+  const handleCopyJson = async (testKey: string, jsonData: any) => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(jsonData, null, 2));
+      setCopiedStates(prev => ({ ...prev, [testKey]: true }));
+      setTimeout(() => {
+        setCopiedStates(prev => ({ ...prev, [testKey]: false }));
+      }, 2000);
+      showToast({
+        type: 'success',
+        title: 'Copied to Clipboard',
+        message: 'JSON response copied to clipboard'
+      });
+    } catch (error) {
+      showToast({
+        type: 'error',
+        title: 'Copy Failed',
+        message: 'Failed to copy JSON to clipboard'
+      });
+    }
+  };
+
+  const toggleApiTestExpanded = (testKey: string) => {
+    setApiTestExpanded(prev => ({ ...prev, [testKey]: !prev[testKey] }));
   };
 
   const getStatusVariant = (status: string) => {
@@ -418,33 +445,127 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                         <div className="mt-3">
                           <label className="text-sm font-medium text-gray-500">Available Assets</label>
                           <div className="mt-1 space-y-2">
-                            {onboardingRequest.platform_connections[connection.platform].assets.map((asset: Asset, index: number) => (
-                              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
-                                <div>
-                                  <span className="text-sm font-medium">{asset.name}</span>
-                                  <span className="text-xs text-gray-500 ml-2 capitalize">({asset.type})</span>
+                            {onboardingRequest.platform_connections[connection.platform].assets.map((asset: Asset, index: number) => {
+                              const testKey = `${connection.platform}-${asset.id}-${asset.type}`;
+                              const isLoading = apiTestLoading[testKey];
+                              const result = apiTestResults[testKey];
+                              const isExpanded = apiTestExpanded[testKey];
+                              const isCopied = copiedStates[testKey];
+
+                              return (
+                                <div key={index} className="space-y-2">
+                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                                    <div>
+                                      <span className="text-sm font-medium">{asset.name}</span>
+                                      <span className="text-xs text-gray-500 ml-2 capitalize">({asset.type})</span>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-xs"
+                                        onClick={() => console.log(`Open ${asset.name} in ${connection.platform}`)}
+                                      >
+                                        Open in {connection.platform === 'meta' ? 'Meta' : connection.platform === 'google' ? 'Google' : connection.platform}
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-xs"
+                                        onClick={() => handleTestApiAccess(connection.platform, asset.id, asset.type)}
+                                        disabled={isLoading}
+                                      >
+                                        {isLoading ? (
+                                          <div className="w-3 h-3 border border-gray-600 border-t-transparent rounded-full animate-spin mr-1" />
+                                        ) : (
+                                          <TestTube className="h-3 w-3 mr-1" />
+                                        )}
+                                        {isLoading ? 'Testing...' : 'Test API'}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* API Test Results Panel */}
+                                  {result && (
+                                    <div className="border rounded-md bg-white">
+                                      <div 
+                                        className="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-50"
+                                        onClick={() => toggleApiTestExpanded(testKey)}
+                                      >
+                                        <div className="flex items-center space-x-2">
+                                          {isExpanded ? (
+                                            <ChevronDown className="h-4 w-4 text-gray-500" />
+                                          ) : (
+                                            <ChevronRight className="h-4 w-4 text-gray-500" />
+                                          )}
+                                          <span className="text-sm font-medium">
+                                            API Response {result.success ? '✅' : '❌'}
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            ({result.description || `${connection.platform} ${asset.type}`})
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          {result.rawJson && (
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-6 px-2 text-xs"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleCopyJson(testKey, result.rawJson || result);
+                                              }}
+                                            >
+                                              {isCopied ? (
+                                                <Check className="h-3 w-3" />
+                                              ) : (
+                                                <Copy className="h-3 w-3" />
+                                              )}
+                                            </Button>
+                                          )}
+                                        </div>
+                                      </div>
+                                      
+                                      {isExpanded && (
+                                        <div className="border-t p-3 bg-gray-50">
+                                          {result.success ? (
+                                            <div>
+                                              <div className="mb-2">
+                                                <span className="text-xs font-medium text-green-700">API URL:</span>
+                                                <code className="ml-2 text-xs bg-white px-2 py-1 rounded border">
+                                                  {result.apiUrl || 'N/A'}
+                                                </code>
+                                              </div>
+                                              <div>
+                                                <span className="text-xs font-medium text-gray-700">Raw JSON Response:</span>
+                                                <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-60">
+                                                  {JSON.stringify(result.rawJson || result, null, 2)}
+                                                </pre>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div>
+                                              <div className="mb-2">
+                                                <span className="text-xs font-medium text-red-700">Error:</span>
+                                                <span className="ml-2 text-xs text-red-600">{result.error}</span>
+                                              </div>
+                                              {result.details && (
+                                                <div>
+                                                  <span className="text-xs font-medium text-gray-700">Details:</span>
+                                                  <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-40">
+                                                    {JSON.stringify(result.details, null, 2)}
+                                                  </pre>
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
-                                <div className="flex space-x-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-xs"
-                                    onClick={() => console.log(`Open ${asset.name} in ${connection.platform}`)}
-                                  >
-                                    Open in {connection.platform === 'meta' ? 'Meta' : connection.platform === 'google' ? 'Google' : connection.platform}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-xs"
-                                    onClick={() => handleTestApiAccess(connection.platform, asset.id, asset.type)}
-                                  >
-                                    <TestTube className="h-3 w-3 mr-1" />
-                                    Test API
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}
