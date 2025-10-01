@@ -33,38 +33,51 @@ export async function POST(request: NextRequest) {
     // Make the appropriate Graph API call based on asset type
     let apiUrl: string;
     let description: string;
+    let humanReadableLabel: string;
 
     switch (assetType) {
       case 'ad_account':
         // Try campaigns first, fallback to account info
         apiUrl = `https://graph.facebook.com/v19.0/${assetId}/campaigns?limit=3&access_token=${connection.access_token}`;
         description = `Ad Account Campaigns for ${assetId}`;
+        humanReadableLabel = `Ad Account Campaigns (ads_management) – This confirms we can fetch and manage ad campaigns for the client's Ad Account.`;
         break;
       
       case 'page':
         apiUrl = `https://graph.facebook.com/v19.0/${assetId}?fields=name,id,fan_count&access_token=${connection.access_token}`;
         description = `Page Info for ${assetId}`;
+        humanReadableLabel = `Page Info (pages_show_list) – This confirms we can fetch the client's Page name, id, and fan count.`;
         break;
       
       case 'instagram_account':
         apiUrl = `https://graph.facebook.com/v19.0/${assetId}?fields=username,followers_count&access_token=${connection.access_token}`;
         description = `Instagram Account Info for ${assetId}`;
+        humanReadableLabel = `Instagram Account Info (instagram_basic) – This confirms we can access the client's Instagram account username and follower count.`;
         break;
       
       case 'catalog':
         apiUrl = `https://graph.facebook.com/v19.0/${assetId}?fields=name,id&access_token=${connection.access_token}`;
         description = `Catalog Info for ${assetId}`;
+        humanReadableLabel = `Catalog Info (catalog_management) – This confirms we can access the client's product catalog information.`;
         break;
       
       case 'business_dataset':
         apiUrl = `https://graph.facebook.com/v19.0/${assetId}?fields=name,verification_status&access_token=${connection.access_token}`;
         description = `Business Manager Info for ${assetId}`;
+        humanReadableLabel = `Business Manager Info (business_management) – This confirms we can access the client's Business Manager data and verification status.`;
+        break;
+      
+      case 'page_posts':
+        apiUrl = `https://graph.facebook.com/v19.0/${assetId}/posts?limit=3&fields=id,message,created_time&access_token=${connection.access_token}`;
+        description = `Page Posts for ${assetId}`;
+        humanReadableLabel = `Page Posts (pages_manage_posts) – This confirms the app can fetch and manage posts on the client's Page.`;
         break;
       
       default:
         // Generic fallback
         apiUrl = `https://graph.facebook.com/v19.0/${assetId}?fields=name,id&access_token=${connection.access_token}`;
         description = `Generic Asset Info for ${assetId}`;
+        humanReadableLabel = `Generic Asset Info – Basic asset information access test.`;
     }
 
     console.log(`[Meta Test API] Making request to: ${apiUrl.replace(connection.access_token, '[TOKEN]')}`);
@@ -84,6 +97,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({
             success: true,
             description: `Ad Account Info for ${assetId} (campaigns not accessible)`,
+            humanReadableLabel: `Ad Account Info (ads_management) – This confirms we can access the client's Ad Account basic information.`,
             assetType,
             assetId,
             rawJson: fallbackData,
@@ -108,6 +122,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       description,
+      humanReadableLabel,
       assetType,
       assetId,
       rawJson: data,

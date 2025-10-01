@@ -222,6 +222,97 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
     setApiTestExpanded(prev => ({ ...prev, [testKey]: !prev[testKey] }));
   };
 
+  const renderApiTestResult = (testKey: string, result: any, assetType: string) => {
+    const isExpanded = apiTestExpanded[testKey];
+    const isCopied = copiedStates[testKey];
+    
+    return (
+      <div key={testKey} className="border rounded-md bg-white mb-2">
+        <div 
+          className="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-50"
+          onClick={() => toggleApiTestExpanded(testKey)}
+        >
+          <div className="flex items-center space-x-2">
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            )}
+            <span className="text-sm font-medium">
+              API Response {result.success ? '✅' : '❌'}
+            </span>
+            <span className="text-xs text-gray-500">
+              ({result.description || assetType})
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            {result.rawJson && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopyJson(testKey, result.rawJson || result);
+                }}
+              >
+                {isCopied ? (
+                  <Check className="h-3 w-3" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        {isExpanded && (
+          <div className="border-t p-3 bg-gray-50">
+            {result.success ? (
+              <div>
+                <div className="mb-2">
+                  <span className="text-xs font-medium text-green-700">API URL:</span>
+                  <code className="ml-2 text-xs bg-white px-2 py-1 rounded border">
+                    {result.apiUrl || 'N/A'}
+                  </code>
+                </div>
+                {result.humanReadableLabel && (
+                  <div className="mb-3">
+                    <span className="text-xs font-medium text-blue-700">Scope Test:</span>
+                    <p className="mt-1 text-xs text-blue-800 bg-blue-50 p-2 rounded border">
+                      {result.humanReadableLabel}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <span className="text-xs font-medium text-gray-700">Raw JSON Response:</span>
+                  <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-60">
+                    {JSON.stringify(result.rawJson || result, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="mb-2">
+                  <span className="text-xs font-medium text-red-700">Error:</span>
+                  <span className="ml-2 text-xs text-red-600">{result.error}</span>
+                </div>
+                {result.details && (
+                  <div>
+                    <span className="text-xs font-medium text-gray-700">Details:</span>
+                    <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-40">
+                      {JSON.stringify(result.details, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const getStatusVariant = (status: string) => {
     switch (status) {
       case 'active':
@@ -447,7 +538,9 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                           <div className="mt-1 space-y-2">
                             {onboardingRequest.platform_connections[connection.platform].assets.map((asset: Asset, index: number) => {
                               const testKey = `${connection.platform}-${asset.id}-${asset.type}`;
+                              const pagePostsTestKey = `${connection.platform}-${asset.id}-page_posts`;
                               const isLoading = apiTestLoading[testKey];
+                              const isPagePostsLoading = apiTestLoading[pagePostsTestKey];
                               const result = apiTestResults[testKey];
                               const isExpanded = apiTestExpanded[testKey];
                               const isCopied = copiedStates[testKey];
@@ -482,87 +575,31 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                         )}
                                         {isLoading ? 'Testing...' : 'Test API'}
                                       </Button>
+                                      {/* Additional test for Pages - posts management */}
+                                      {connection.platform === 'meta' && asset.type === 'page' && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="text-xs"
+                                          onClick={() => handleTestApiAccess(connection.platform, asset.id, 'page_posts')}
+                                          disabled={isPagePostsLoading}
+                                        >
+                                          {isPagePostsLoading ? (
+                                            <div className="w-3 h-3 border border-gray-600 border-t-transparent rounded-full animate-spin mr-1" />
+                                          ) : (
+                                            <TestTube className="h-3 w-3 mr-1" />
+                                          )}
+                                          {isPagePostsLoading ? 'Testing...' : 'Test Posts'}
+                                        </Button>
+                                      )}
                                     </div>
                                   </div>
                                   
                                   {/* API Test Results Panel */}
-                                  {result && (
-                                    <div className="border rounded-md bg-white">
-                                      <div 
-                                        className="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-50"
-                                        onClick={() => toggleApiTestExpanded(testKey)}
-                                      >
-                                        <div className="flex items-center space-x-2">
-                                          {isExpanded ? (
-                                            <ChevronDown className="h-4 w-4 text-gray-500" />
-                                          ) : (
-                                            <ChevronRight className="h-4 w-4 text-gray-500" />
-                                          )}
-                                          <span className="text-sm font-medium">
-                                            API Response {result.success ? '✅' : '❌'}
-                                          </span>
-                                          <span className="text-xs text-gray-500">
-                                            ({result.description || `${connection.platform} ${asset.type}`})
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                          {result.rawJson && (
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              className="h-6 px-2 text-xs"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleCopyJson(testKey, result.rawJson || result);
-                                              }}
-                                            >
-                                              {isCopied ? (
-                                                <Check className="h-3 w-3" />
-                                              ) : (
-                                                <Copy className="h-3 w-3" />
-                                              )}
-                                            </Button>
-                                          )}
-                                        </div>
-                                      </div>
-                                      
-                                      {isExpanded && (
-                                        <div className="border-t p-3 bg-gray-50">
-                                          {result.success ? (
-                                            <div>
-                                              <div className="mb-2">
-                                                <span className="text-xs font-medium text-green-700">API URL:</span>
-                                                <code className="ml-2 text-xs bg-white px-2 py-1 rounded border">
-                                                  {result.apiUrl || 'N/A'}
-                                                </code>
-                                              </div>
-                                              <div>
-                                                <span className="text-xs font-medium text-gray-700">Raw JSON Response:</span>
-                                                <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-60">
-                                                  {JSON.stringify(result.rawJson || result, null, 2)}
-                                                </pre>
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <div>
-                                              <div className="mb-2">
-                                                <span className="text-xs font-medium text-red-700">Error:</span>
-                                                <span className="ml-2 text-xs text-red-600">{result.error}</span>
-                                              </div>
-                                              {result.details && (
-                                                <div>
-                                                  <span className="text-xs font-medium text-gray-700">Details:</span>
-                                                  <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-40">
-                                                    {JSON.stringify(result.details, null, 2)}
-                                                  </pre>
-                                                </div>
-                                              )}
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
+                                  <div className="space-y-2">
+                                    {result && renderApiTestResult(testKey, result, asset.type)}
+                                    {apiTestResults[pagePostsTestKey] && renderApiTestResult(pagePostsTestKey, apiTestResults[pagePostsTestKey], 'page_posts')}
+                                  </div>
                                 </div>
                               );
                             })}
