@@ -82,8 +82,34 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Meta Test API] Making request to: ${apiUrl.replace(connection.access_token, '[TOKEN]')}`);
 
+    // For page posts, we need to get a page access token first
+    let finalApiUrl = apiUrl;
+    if (assetType === 'page_posts') {
+      try {
+        const pageTokenUrl = `https://graph.facebook.com/v19.0/${assetId}?fields=access_token&access_token=${connection.access_token}`;
+        console.log(`[Meta Test API] Getting page token from: ${pageTokenUrl.replace(connection.access_token, '[TOKEN]')}`);
+        
+        const pageTokenResponse = await fetch(pageTokenUrl);
+        if (pageTokenResponse.ok) {
+          const pageTokenData = await pageTokenResponse.json();
+          if (pageTokenData.access_token) {
+            // Use the page access token for posts
+            finalApiUrl = `https://graph.facebook.com/v19.0/${assetId}/posts?limit=3&fields=id,message,created_time&access_token=${pageTokenData.access_token}`;
+            console.log(`[Meta Test API] Using page token for posts: ${finalApiUrl.replace(pageTokenData.access_token, '[PAGE_TOKEN]')}`);
+            humanReadableLabel = `Page Posts (pages_manage_posts) – This confirms the app can fetch and manage posts on the client's Page using page access token.`;
+          } else {
+            console.warn('[Meta Test API] No page access token in response, using user token');
+          }
+        } else {
+          console.warn('[Meta Test API] Failed to get page access token, using user token');
+        }
+      } catch (error) {
+        console.warn('[Meta Test API] Error getting page token, using user token:', error);
+      }
+    }
+
     // Make the API call
-    const response = await fetch(apiUrl);
+    const response = await fetch(finalApiUrl);
     
     if (!response.ok) {
       // If campaigns call failed for ad account, try account info instead
@@ -126,7 +152,7 @@ export async function POST(request: NextRequest) {
       assetType,
       assetId,
       rawJson: data,
-      apiUrl: apiUrl.replace(connection.access_token, '[TOKEN]')
+      apiUrl: finalApiUrl.replace(/access_token=[^&]+/, 'access_token=[TOKEN]')
     });
 
   } catch (error) {
