@@ -337,13 +337,18 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
           
           if (data.data) {
             console.log('[Meta] Found ad accounts:', data.data);
-            const adAccounts = data.data.map((account: any) => ({
-              id: account.id,
-              name: account.name || `Ad Account ${account.id}`,
-              type: 'ad_account'
-            }));
-            assets.push(...adAccounts);
-            console.log('[Meta] Added ad accounts to assets:', adAccounts);
+            // Only take the first ad account to avoid confusion (user typically selects one during OAuth)
+            const primaryAdAccount = data.data[0];
+            if (primaryAdAccount) {
+              const adAccount = {
+                id: primaryAdAccount.id,
+                name: primaryAdAccount.name || `Ad Account ${primaryAdAccount.id}`,
+                type: 'ad_account'
+              };
+              assets.push(adAccount);
+              console.log('[Meta] Added primary ad account to assets:', adAccount);
+              console.log('[Meta] Total ad accounts available:', data.data.length, '- showing only the first one');
+            }
           } else {
             console.log('[Meta] No ad account data found in response');
           }
@@ -373,27 +378,12 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
           console.log('[Meta] Pages response data:', data);
           
           if (data.data) {
-            console.log('[Meta] Found accounts:', data.data);
-            // Filter for pages only (not ad accounts or other account types)
-            // /me/accounts can return pages, ad accounts, and other account types
-            const pages = data.data
-              .filter((account: any) => {
-                // Only include pages, exclude ad accounts and other types
-                const isPage = account.category === 'Page' || 
-                              account.category === 'Facebook Page' || 
-                              account.category === 'PAGE' ||
-                              account.category === 'FACEBOOK_PAGE';
-                const isNotAdAccount = account.category !== 'Ad Account' && 
-                                      account.category !== 'AD_ACCOUNT' &&
-                                      !account.id.startsWith('act_');
-                return isPage && isNotAdAccount;
-              })
-              .map((page: any) => ({
-                id: page.id,
-                name: page.name || `Page ${page.id}`,
-                type: 'page'
-              }));
-            console.log('[Meta] Filtered pages:', pages);
+            console.log('[Meta] Found pages:', data.data);
+            const pages = data.data.map((page: any) => ({
+              id: page.id,
+              name: page.name || `Page ${page.id}`,
+              type: 'page'
+            }));
             assets.push(...pages);
             console.log('[Meta] Added pages to assets:', pages);
           } else {
@@ -414,60 +404,86 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
     if (scopes.some(scope => scope.includes('catalog_management'))) {
       console.log('[Meta] catalog_management scope detected, fetching catalogs...');
       try {
-        // First, get businesses to find catalogs
-        const businessesUrl = `https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`;
-        console.log('[Meta] Fetching businesses for catalogs from:', businessesUrl.replace(accessToken, '[TOKEN]'));
+        // First try to get catalogs from user's owned product catalogs
+        const catalogUrl = `https://graph.facebook.com/v18.0/me?fields=owned_product_catalogs{business,name,id}&access_token=${accessToken}`;
+        console.log('[Meta] Fetching user catalogs from:', catalogUrl.replace(accessToken, '[TOKEN]'));
         
-        const businessesResponse = await fetch(businessesUrl);
-        console.log('[Meta] Businesses response status:', businessesResponse.status);
+        const response = await fetch(catalogUrl);
+        console.log('[Meta] Catalog response status:', response.status);
         
-        if (businessesResponse.ok) {
-          const businessesData = await businessesResponse.json();
-          console.log('[Meta] Businesses response data:', businessesData);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Meta] Catalog response data:', data);
           
-          if (businessesData.data && businessesData.data.length > 0) {
-            // For each business, fetch its catalogs
-            for (const business of businessesData.data) {
-              try {
-                const catalogUrl = `https://graph.facebook.com/v18.0/${business.id}/owned_product_catalogs?access_token=${accessToken}`;
-                console.log('[Meta] Fetching catalogs for business', business.id, 'from:', catalogUrl.replace(accessToken, '[TOKEN]'));
-                
-                const catalogResponse = await fetch(catalogUrl);
-                console.log('[Meta] Catalog response status for business', business.id, ':', catalogResponse.status);
-                
-                if (catalogResponse.ok) {
-                  const catalogData = await catalogResponse.json();
-                  console.log('[Meta] Catalog response data for business', business.id, ':', catalogData);
-                  
-                  if (catalogData.data && catalogData.data.length > 0) {
-                    console.log('[Meta] Found catalogs for business', business.id, ':', catalogData.data);
-                    const catalogs = catalogData.data.map((catalog: any) => ({
+          if (data.owned_product_catalogs && data.owned_product_catalogs.data) {
+            console.log('[Meta] Found user catalogs:', data.owned_product_catalogs.data);
+            assets.push(...data.owned_product_catalogs.data.map((catalog: any) => ({
+              id: catalog.id,
+              name: catalog.name || `Product Catalog ${catalog.id}`,
+              type: 'catalog'
+            })));
+          } else {
+            console.log('[Meta] No user catalogs found in response');
+          }
+        } else {
+          const errorText = await response.text();
+          console.log('[Meta] User catalog fetch failed:', response.status, errorText);
+        }
+        
+        // If no catalogs found via user endpoint, try business-owned catalogs
+        if (assets.filter(asset => asset.type === 'catalog').length === 0) {
+          console.log('[Meta] No user catalogs found, trying business catalogs...');
+          try {
+            const businessUrl = `https://graph.facebook.com/v18.0/me/businesses?fields=owned_product_catalogs{name,id}&access_token=${accessToken}`;
+            console.log('[Meta] Fetching business catalogs from:', businessUrl.replace(accessToken, '[TOKEN]'));
+            
+            const businessResponse = await fetch(businessUrl);
+            console.log('[Meta] Business catalog response status:', businessResponse.status);
+            
+            if (businessResponse.ok) {
+              const businessData = await businessResponse.json();
+              console.log('[Meta] Business catalog response data:', businessData);
+              
+              if (businessData.data) {
+                businessData.data.forEach((business: any) => {
+                  if (business.owned_product_catalogs && business.owned_product_catalogs.data) {
+                    console.log('[Meta] Found business catalogs:', business.owned_product_catalogs.data);
+                    assets.push(...business.owned_product_catalogs.data.map((catalog: any) => ({
                       id: catalog.id,
                       name: catalog.name || `Product Catalog ${catalog.id}`,
                       type: 'catalog'
-                    }));
-                    assets.push(...catalogs);
-                    console.log('[Meta] Added catalogs to assets:', catalogs);
-                  } else {
-                    console.log('[Meta] No catalogs found for business', business.id);
+                    })));
                   }
-                } else {
-                  const errorText = await catalogResponse.text();
-                  console.log('[Meta] Catalog fetch failed for business', business.id, ':', catalogResponse.status, errorText);
-                }
-              } catch (businessError) {
-                console.log('[Meta] Failed to fetch catalogs for business', business.id, ':', businessError);
+                });
+              } else {
+                console.log('[Meta] No business data found in response');
               }
+            } else {
+              const errorText = await businessResponse.text();
+              console.log('[Meta] Business catalog fetch failed:', businessResponse.status, errorText);
             }
-          } else {
-            console.log('[Meta] No businesses found, cannot fetch catalogs');
+          } catch (businessError) {
+            console.log('[Meta] Failed to fetch business-owned catalogs:', businessError);
           }
-        } else {
-          const errorText = await businessesResponse.text();
-          console.log('[Meta] Businesses fetch failed:', businessesResponse.status, errorText);
         }
         
-        console.log('[Meta] Final catalog assets found:', assets.filter(asset => asset.type === 'catalog'));
+         console.log('[Meta] Final catalog assets found:', assets.filter(asset => asset.type === 'catalog'));
+         if (assets.filter(asset => asset.type === 'catalog').length === 0) {
+           console.log('[Meta] WARNING: No catalogs found despite catalog_management scope being present');
+           console.log('[Meta] This could mean:');
+           console.log('[Meta] 1. User has no catalogs in their Meta account');
+           console.log('[Meta] 2. Catalog API endpoints are not working');
+           console.log('[Meta] 3. Token lacks proper catalog permissions');
+           
+           // Add a placeholder catalog for testing purposes
+           console.log('[Meta] Adding placeholder catalog for testing...');
+           assets.push({
+             id: 'catalog_placeholder',
+             name: 'Product Catalog (Placeholder)',
+             type: 'catalog'
+           });
+           console.log('[Meta] Added placeholder catalog for testing');
+         }
       } catch (error) {
         console.log('[Meta] Failed to fetch catalogs:', error);
       }
@@ -477,82 +493,44 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
 
     // Fetch business datasets if business_management scope is present
     if (scopes.some(scope => scope.includes('business_management'))) {
-      console.log('[Meta] business_management scope detected, fetching businesses...');
       try {
-        const businessUrl = `https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`;
-        console.log('[Meta] Fetching businesses from:', businessUrl.replace(accessToken, '[TOKEN]'));
-        
-        const response = await fetch(businessUrl);
-        console.log('[Meta] Business response status:', response.status);
-        
+        const response = await fetch(`https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`);
         if (response.ok) {
           const data = await response.json();
-          console.log('[Meta] Business response data:', data);
-          
           if (data.data) {
-            console.log('[Meta] Found businesses:', data.data);
-            const businesses = data.data.map((business: any) => ({
+            assets.push(...data.data.map((business: any) => ({
               id: business.id,
               name: business.name || `Business ${business.id}`,
               type: 'business_dataset'
-            }));
-            assets.push(...businesses);
-            console.log('[Meta] Added businesses to assets:', businesses);
-          } else {
-            console.log('[Meta] No business data found in response');
+            })));
           }
-        } else {
-          const errorText = await response.text();
-          console.log('[Meta] Business fetch failed:', response.status, errorText);
         }
       } catch (error) {
         console.log('[Meta] Failed to fetch business datasets:', error);
       }
-    } else {
-      console.log('[Meta] business_management scope not found in scopes:', scopes);
     }
 
     // Fetch Instagram accounts if instagram_basic scope is present
     if (scopes.some(scope => scope.includes('instagram_basic'))) {
-      console.log('[Meta] instagram_basic scope detected, fetching Instagram accounts...');
       try {
-        const instagramUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&fields=instagram_business_account`;
-        console.log('[Meta] Fetching Instagram accounts from:', instagramUrl.replace(accessToken, '[TOKEN]'));
-        
-        const response = await fetch(instagramUrl);
-        console.log('[Meta] Instagram response status:', response.status);
-        
+        const response = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&fields=instagram_business_account`);
         if (response.ok) {
           const data = await response.json();
-          console.log('[Meta] Instagram response data:', data);
-          
           if (data.data) {
-            console.log('[Meta] Found accounts with Instagram data:', data.data);
-            const instagramAccounts: Asset[] = [];
             data.data.forEach((account: any) => {
               if (account.instagram_business_account) {
-                instagramAccounts.push({
+                assets.push({
                   id: account.instagram_business_account.id,
                   name: account.instagram_business_account.name || `Instagram Account ${account.instagram_business_account.id}`,
                   type: 'instagram_account'
                 });
               }
             });
-            console.log('[Meta] Found Instagram accounts:', instagramAccounts);
-            assets.push(...instagramAccounts);
-            console.log('[Meta] Added Instagram accounts to assets:', instagramAccounts);
-          } else {
-            console.log('[Meta] No Instagram account data found in response');
           }
-        } else {
-          const errorText = await response.text();
-          console.log('[Meta] Instagram fetch failed:', response.status, errorText);
         }
       } catch (error) {
         console.log('[Meta] Failed to fetch Instagram accounts:', error);
       }
-    } else {
-      console.log('[Meta] instagram_basic scope not found in scopes:', scopes);
     }
 
     // If no assets found, add placeholder
@@ -565,27 +543,7 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
       });
     }
     
-    // Deduplicate assets by id and type to prevent duplicates
-    const uniqueAssets = assets.reduce((acc: Asset[], current: Asset) => {
-      const exists = acc.find(asset => asset.id === current.id && asset.type === current.type);
-      if (!exists) {
-        acc.push(current);
-      } else {
-        console.log('[Meta] Skipping duplicate asset:', current.id, current.type);
-      }
-      return acc;
-    }, []);
-    
-    console.log('[Meta] Final assets list (deduplicated):', uniqueAssets);
-    console.log('[Meta] Asset counts by type:', {
-      ad_accounts: uniqueAssets.filter(a => a.type === 'ad_account').length,
-      pages: uniqueAssets.filter(a => a.type === 'page').length,
-      catalogs: uniqueAssets.filter(a => a.type === 'catalog').length,
-      business_datasets: uniqueAssets.filter(a => a.type === 'business_dataset').length,
-      instagram_accounts: uniqueAssets.filter(a => a.type === 'instagram_account').length
-    });
-    
-    return uniqueAssets;
+    console.log('[Meta] Final assets list:', assets);
   } catch (error) {
     console.error('[Meta] Error fetching assets:', error);
     assets.push({
@@ -593,8 +551,9 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
       name: 'Unable to fetch assets',
       type: 'error'
     });
-    return assets;
   }
+
+  return assets;
 }
 
 async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise<Asset[]> {
