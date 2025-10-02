@@ -78,6 +78,53 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   const [apiTestLoading, setApiTestLoading] = useState<Record<string, boolean>>({});
   const [apiTestExpanded, setApiTestExpanded] = useState<Record<string, boolean>>({});
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
+  const [isDebuggingPages, setIsDebuggingPages] = useState(false);
+
+  const debugPages = async () => {
+    try {
+      setIsDebuggingPages(true);
+      console.log('[Client Details] Debugging pages for client:', clientId);
+      
+      // Get the client's access token from platform connections
+      const metaConnection = platformConnections.find(conn => conn.platform === 'meta');
+      if (!metaConnection) {
+        throw new Error('No Meta connection found for this client');
+      }
+      
+      const response = await fetch('/api/debug/pages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: metaConnection.access_token,
+          scopes: metaConnection.scopes
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Debug failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('[Client Details] Pages debug result:', result);
+      
+      // Show results in alert for now
+      const summary = result.results.summary;
+      alert(`Pages Debug Results:
+      
+Primary Method: ${summary.primaryPagesFound} pages found
+Fallback Method: ${summary.fallbackPagesFound} pages found
+Total: ${summary.totalPagesFound} pages found
+
+Check console for detailed results.`);
+      
+    } catch (error) {
+      console.error('[Client Details] Error debugging pages:', error);
+      alert(`Error debugging pages: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsDebuggingPages(false);
+    }
+  };
 
   const fetchClientDetails = async () => {
     try {
@@ -395,9 +442,15 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
             <h2 className="text-2xl font-bold text-gray-900">Client Details</h2>
             <p className="text-gray-600">Complete information about this client</p>
           </div>
-          <Button onClick={onClose} variant="ghost" size="icon">
-            <X className="h-6 w-6" />
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button onClick={debugPages} variant="outline" disabled={isDebuggingPages}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isDebuggingPages ? 'animate-spin' : ''}`} />
+              Debug Pages
+            </Button>
+            <Button onClick={onClose} variant="ghost" size="icon">
+              <X className="h-6 w-6" />
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
