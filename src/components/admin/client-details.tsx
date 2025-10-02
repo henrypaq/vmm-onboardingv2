@@ -81,6 +81,56 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   const [isDebuggingPages, setIsDebuggingPages] = useState(false);
   const [isGettingToken, setIsGettingToken] = useState(false);
   const [isComprehensiveDebugging, setIsComprehensiveDebugging] = useState(false);
+  const [isTestingFetchAssets, setIsTestingFetchAssets] = useState(false);
+
+  const testFetchAssets = async () => {
+    try {
+      setIsTestingFetchAssets(true);
+      console.log('[Client Details] Testing fetchPlatformAssets for client:', clientId);
+      
+      // Get the client's access token from platform connections
+      const metaConnection = platformConnections.find(conn => conn.platform === 'meta');
+      if (!metaConnection) {
+        throw new Error('No Meta connection found for this client');
+      }
+      
+      const response = await fetch('/api/debug/test-fetch-assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: metaConnection.access_token,
+          scopes: metaConnection.scopes
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Test fetch assets failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('[Client Details] Test fetch assets result:', result);
+      
+      // Show results in alert for now
+      const breakdown = result.assetBreakdown;
+      alert(`Test Fetch Assets Results:
+
+Ad Accounts: ${breakdown.ad_accounts}
+Pages: ${breakdown.pages}
+Catalogs: ${breakdown.catalogs}
+Business Datasets: ${breakdown.business_datasets}
+Instagram Accounts: ${breakdown.instagram_accounts}
+Total: ${breakdown.total}
+
+Check console for detailed results.`);
+      
+    } catch (error) {
+      console.error('[Client Details] Error testing fetch assets:', error);
+      alert(`Error testing fetch assets: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsTestingFetchAssets(false);
+    }
+  };
 
   const comprehensiveDebugPages = async () => {
     try {
@@ -534,6 +584,10 @@ Check console for detailed results.`);
             <p className="text-gray-600">Complete information about this client</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Button onClick={testFetchAssets} variant="outline" disabled={isTestingFetchAssets}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isTestingFetchAssets ? 'animate-spin' : ''}`} />
+              Test Fetch
+            </Button>
             <Button onClick={comprehensiveDebugPages} variant="outline" disabled={isComprehensiveDebugging}>
               <RefreshCw className={`h-4 w-4 mr-2 ${isComprehensiveDebugging ? 'animate-spin' : ''}`} />
               Full Debug
