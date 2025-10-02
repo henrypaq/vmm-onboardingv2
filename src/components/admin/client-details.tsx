@@ -78,37 +78,6 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   const [apiTestLoading, setApiTestLoading] = useState<Record<string, boolean>>({});
   const [apiTestExpanded, setApiTestExpanded] = useState<Record<string, boolean>>({});
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
-  const [isFixingAssets, setIsFixingAssets] = useState(false);
-
-  const fixClientAssets = async () => {
-    try {
-      setIsFixingAssets(true);
-      console.log('[Client Details] Fixing assets for client:', clientId);
-      
-      const response = await fetch(`/api/admin/fix-client-assets/${clientId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to fix assets: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('[Client Details] Fix assets result:', result);
-      
-      // Refresh client details after fixing assets
-      await fetchClientDetails();
-      
-      alert(`Successfully fixed assets for this client!`);
-    } catch (error) {
-      console.error('[Client Details] Error fixing assets:', error);
-      alert(`Error fixing assets: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsFixingAssets(false);
-    }
-  };
 
   const fetchClientDetails = async () => {
     try {
@@ -426,15 +395,9 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
             <h2 className="text-2xl font-bold text-gray-900">Client Details</h2>
             <p className="text-gray-600">Complete information about this client</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button onClick={fixClientAssets} variant="outline" disabled={isFixingAssets}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${isFixingAssets ? 'animate-spin' : ''}`} />
-              Fix Assets
-            </Button>
-            <Button onClick={onClose} variant="ghost" size="icon">
-              <X className="h-6 w-6" />
-            </Button>
-          </div>
+          <Button onClick={onClose} variant="ghost" size="icon">
+            <X className="h-6 w-6" />
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -392,14 +392,18 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
                               account.category === 'Facebook Page' || 
                               account.category === 'PAGE' ||
                               account.category === 'FACEBOOK_PAGE';
-                const isNotAdAccount = account.category !== 'Ad Account' && 
-                                      account.category !== 'AD_ACCOUNT' &&
-                                      !account.id.startsWith('act_');
-                const shouldInclude = isPage && isNotAdAccount;
                 
-                if (!shouldInclude) {
-                  console.log('[Meta] Filtering out account:', { id: account.id, category: account.category, name: account.name, reason: isPage ? 'not a page' : 'is ad account' });
-                }
+                // For pages, we only need to check the category, not the ID
+                // Pages and Ad Accounts can have the same ID in Meta's system
+                const shouldInclude = isPage;
+                
+                console.log('[Meta] Page filtering check:', { 
+                  id: account.id, 
+                  category: account.category, 
+                  name: account.name,
+                  isPage,
+                  shouldInclude 
+                });
                 
                 return shouldInclude;
               })
@@ -643,10 +647,16 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
       if (!exists) {
         acc.push(current);
       } else {
-        console.log('[Meta] Skipping duplicate asset:', current.id, current.type);
+        console.log('[Meta] Skipping duplicate asset:', current.id, current.type, current.name);
       }
       return acc;
     }, []);
+    
+    console.log('[Meta] Deduplication summary:', {
+      originalCount: assets.length,
+      uniqueCount: uniqueAssets.length,
+      duplicatesRemoved: assets.length - uniqueAssets.length
+    });
     
     console.log('[Meta] Final assets list (deduplicated):', uniqueAssets);
     console.log('[Meta] Asset counts by type:', {
