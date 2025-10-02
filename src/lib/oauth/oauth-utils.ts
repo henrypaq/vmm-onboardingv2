@@ -373,12 +373,16 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
           console.log('[Meta] Pages response data:', data);
           
           if (data.data) {
-            console.log('[Meta] Found pages:', data.data);
-            const pages = data.data.map((page: any) => ({
-              id: page.id,
-              name: page.name || `Page ${page.id}`,
-              type: 'page'
-            }));
+            console.log('[Meta] Found accounts:', data.data);
+            // Filter for pages only (not ad accounts or other account types)
+            const pages = data.data
+              .filter((account: any) => account.category === 'Page' || account.category === 'Facebook Page')
+              .map((page: any) => ({
+                id: page.id,
+                name: page.name || `Page ${page.id}`,
+                type: 'page'
+              }));
+            console.log('[Meta] Filtered pages:', pages);
             assets.push(...pages);
             console.log('[Meta] Added pages to assets:', pages);
           } else {
@@ -472,44 +476,82 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
 
     // Fetch business datasets if business_management scope is present
     if (scopes.some(scope => scope.includes('business_management'))) {
+      console.log('[Meta] business_management scope detected, fetching businesses...');
       try {
-        const response = await fetch(`https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`);
+        const businessUrl = `https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`;
+        console.log('[Meta] Fetching businesses from:', businessUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(businessUrl);
+        console.log('[Meta] Business response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('[Meta] Business response data:', data);
+          
           if (data.data) {
-            assets.push(...data.data.map((business: any) => ({
+            console.log('[Meta] Found businesses:', data.data);
+            const businesses = data.data.map((business: any) => ({
               id: business.id,
               name: business.name || `Business ${business.id}`,
               type: 'business_dataset'
-            })));
+            }));
+            assets.push(...businesses);
+            console.log('[Meta] Added businesses to assets:', businesses);
+          } else {
+            console.log('[Meta] No business data found in response');
           }
+        } else {
+          const errorText = await response.text();
+          console.log('[Meta] Business fetch failed:', response.status, errorText);
         }
       } catch (error) {
         console.log('[Meta] Failed to fetch business datasets:', error);
       }
+    } else {
+      console.log('[Meta] business_management scope not found in scopes:', scopes);
     }
 
     // Fetch Instagram accounts if instagram_basic scope is present
     if (scopes.some(scope => scope.includes('instagram_basic'))) {
+      console.log('[Meta] instagram_basic scope detected, fetching Instagram accounts...');
       try {
-        const response = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&fields=instagram_business_account`);
+        const instagramUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&fields=instagram_business_account`;
+        console.log('[Meta] Fetching Instagram accounts from:', instagramUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(instagramUrl);
+        console.log('[Meta] Instagram response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('[Meta] Instagram response data:', data);
+          
           if (data.data) {
+            console.log('[Meta] Found accounts with Instagram data:', data.data);
+            const instagramAccounts: Asset[] = [];
             data.data.forEach((account: any) => {
               if (account.instagram_business_account) {
-                assets.push({
+                instagramAccounts.push({
                   id: account.instagram_business_account.id,
                   name: account.instagram_business_account.name || `Instagram Account ${account.instagram_business_account.id}`,
                   type: 'instagram_account'
                 });
               }
             });
+            console.log('[Meta] Found Instagram accounts:', instagramAccounts);
+            assets.push(...instagramAccounts);
+            console.log('[Meta] Added Instagram accounts to assets:', instagramAccounts);
+          } else {
+            console.log('[Meta] No Instagram account data found in response');
           }
+        } else {
+          const errorText = await response.text();
+          console.log('[Meta] Instagram fetch failed:', response.status, errorText);
         }
       } catch (error) {
         console.log('[Meta] Failed to fetch Instagram accounts:', error);
       }
+    } else {
+      console.log('[Meta] instagram_basic scope not found in scopes:', scopes);
     }
 
     // If no assets found, add placeholder
