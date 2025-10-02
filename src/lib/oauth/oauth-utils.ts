@@ -323,40 +323,76 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
   try {
     // Fetch ad accounts if ads_management scope is present
     if (scopes.some(scope => scope.includes('ads_management') || scope.includes('ads_read'))) {
+      console.log('[Meta] ads_management scope detected, fetching ad accounts...');
       try {
-        const response = await fetch(`https://graph.facebook.com/v18.0/me/adaccounts?access_token=${accessToken}`);
+        const adAccountUrl = `https://graph.facebook.com/v18.0/me/adaccounts?access_token=${accessToken}`;
+        console.log('[Meta] Fetching ad accounts from:', adAccountUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(adAccountUrl);
+        console.log('[Meta] Ad account response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('[Meta] Ad account response data:', data);
+          
           if (data.data) {
-            assets.push(...data.data.map((account: any) => ({
+            console.log('[Meta] Found ad accounts:', data.data);
+            const adAccounts = data.data.map((account: any) => ({
               id: account.id,
               name: account.name || `Ad Account ${account.id}`,
               type: 'ad_account'
-            })));
+            }));
+            assets.push(...adAccounts);
+            console.log('[Meta] Added ad accounts to assets:', adAccounts);
+          } else {
+            console.log('[Meta] No ad account data found in response');
           }
+        } else {
+          const errorText = await response.text();
+          console.log('[Meta] Ad account fetch failed:', response.status, errorText);
         }
       } catch (error) {
         console.log('[Meta] Failed to fetch ad accounts:', error);
       }
+    } else {
+      console.log('[Meta] ads_management scope not found in scopes:', scopes);
     }
 
     // Fetch pages if pages_* scopes are present
     if (scopes.some(scope => scope.includes('pages_'))) {
+      console.log('[Meta] pages_* scope detected, fetching pages...');
       try {
-        const response = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
+        const pagesUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`;
+        console.log('[Meta] Fetching pages from:', pagesUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(pagesUrl);
+        console.log('[Meta] Pages response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('[Meta] Pages response data:', data);
+          
           if (data.data) {
-            assets.push(...data.data.map((page: any) => ({
+            console.log('[Meta] Found pages:', data.data);
+            const pages = data.data.map((page: any) => ({
               id: page.id,
               name: page.name || `Page ${page.id}`,
               type: 'page'
-            })));
+            }));
+            assets.push(...pages);
+            console.log('[Meta] Added pages to assets:', pages);
+          } else {
+            console.log('[Meta] No page data found in response');
           }
+        } else {
+          const errorText = await response.text();
+          console.log('[Meta] Pages fetch failed:', response.status, errorText);
         }
       } catch (error) {
         console.log('[Meta] Failed to fetch pages:', error);
       }
+    } else {
+      console.log('[Meta] pages_* scope not found in scopes:', scopes);
     }
 
     // Fetch catalogs if catalog_management scope is present
