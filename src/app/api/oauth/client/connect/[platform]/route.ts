@@ -100,16 +100,8 @@ export async function GET(
       let assets = [];
       try {
         console.log(`[ClientOAuth] Fetching assets for ${platform}...`);
-        console.log(`[ClientOAuth] Resolved scopes for ${platform}:`, resolvedScopes);
         assets = await fetchPlatformAssets(platform, tokenResponse.access_token, resolvedScopes);
         console.log(`[ClientOAuth] Fetched ${assets.length} assets for ${platform}:`, assets);
-        console.log(`[ClientOAuth] Asset breakdown for ${platform}:`, {
-          ad_accounts: assets.filter(a => a.type === 'ad_account').length,
-          pages: assets.filter(a => a.type === 'page').length,
-          catalogs: assets.filter(a => a.type === 'catalog').length,
-          business_datasets: assets.filter(a => a.type === 'business_dataset').length,
-          instagram_accounts: assets.filter(a => a.type === 'instagram_account').length
-        });
       } catch (error) {
         console.warn(`[ClientOAuth] Failed to fetch assets for ${platform}:`, error);
         // Continue without assets

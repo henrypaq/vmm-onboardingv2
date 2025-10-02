@@ -315,86 +315,6 @@ export async function fetchPlatformAssets(
   }
 }
 
-// Helper function to parse granular scopes and extract Page IDs
-async function parseGranularScopesForPages(accessToken: string): Promise<string[]> {
-  try {
-    console.log('[Meta] Parsing granular scopes for Page IDs...');
-    
-    // Get token info with granular scopes
-    const tokenInfoUrl = `https://graph.facebook.com/v18.0/oauth/access_token_info?access_token=${accessToken}`;
-    console.log('[Meta] Fetching token info from:', tokenInfoUrl.replace(accessToken, '[TOKEN]'));
-    
-    const response = await fetch(tokenInfoUrl);
-    console.log('[Meta] Token info response status:', response.status);
-    
-    if (response.ok) {
-      const tokenInfo = await response.json();
-      console.log('[Meta] Token info response:', tokenInfo);
-      
-      // Extract Page IDs from granular scopes
-      const pageIds: string[] = [];
-      
-      if (tokenInfo.granular_scopes && Array.isArray(tokenInfo.granular_scopes)) {
-        tokenInfo.granular_scopes.forEach((scope: any) => {
-          if (scope.scope === 'pages_show_list' || 
-              scope.scope === 'pages_read_engagement' || 
-              scope.scope === 'pages_manage_posts') {
-            if (scope.target_ids && Array.isArray(scope.target_ids)) {
-              scope.target_ids.forEach((targetId: string) => {
-                // Target IDs for pages are typically numeric (Page IDs)
-                if (/^\d+$/.test(targetId)) {
-                  pageIds.push(targetId);
-                }
-              });
-            }
-          }
-        });
-      }
-      
-      console.log('[Meta] Extracted Page IDs from granular scopes:', pageIds);
-      return [...new Set(pageIds)]; // Remove duplicates
-    } else {
-      const errorText = await response.text();
-      console.log('[Meta] Token info fetch failed:', response.status, errorText);
-      return [];
-    }
-  } catch (error) {
-    console.log('[Meta] Error parsing granular scopes:', error);
-    return [];
-  }
-}
-
-// Helper function to query Page details directly by ID
-async function fetchPageDetails(pageId: string, accessToken: string): Promise<Asset | null> {
-  try {
-    console.log(`[Meta] Fetching details for Page ID: ${pageId}`);
-    
-    const pageUrl = `https://graph.facebook.com/v18.0/${pageId}?fields=id,name,fan_count&access_token=${accessToken}`;
-    console.log(`[Meta] Fetching page from:`, pageUrl.replace(accessToken, '[TOKEN]'));
-    
-    const response = await fetch(pageUrl);
-    console.log(`[Meta] Page ${pageId} response status:`, response.status);
-    
-    if (response.ok) {
-      const pageData = await response.json();
-      console.log(`[Meta] Page ${pageId} data:`, pageData);
-      
-      return {
-        id: pageData.id,
-        name: pageData.name || `Page ${pageData.id}`,
-        type: 'page'
-      };
-    } else {
-      const errorText = await response.text();
-      console.log(`[Meta] Page ${pageId} fetch failed:`, response.status, errorText);
-      return null;
-    }
-  } catch (error) {
-    console.log(`[Meta] Error fetching page ${pageId}:`, error);
-    return null;
-  }
-}
-
 async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<Asset[]> {
   const assets: Asset[] = [];
   
@@ -417,23 +337,13 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
           
           if (data.data) {
             console.log('[Meta] Found ad accounts:', data.data);
-            console.log('[Meta] Ad account count from API:', data.data.length);
-            console.log('[Meta] Ad account IDs:', data.data.map((a: any) => a.id));
-            console.log('[Meta] Ad account names:', data.data.map((a: any) => a.name));
-            
-            // Limit to only one ad account to avoid confusion (user selects one during OAuth)
-            // Take the first ad account as it's usually the primary/default
-            const adAccounts = data.data.slice(0, 1).map((account: any) => ({
+            const adAccounts = data.data.map((account: any) => ({
               id: account.id,
               name: account.name || `Ad Account ${account.id}`,
               type: 'ad_account'
             }));
-            
-            console.log('[Meta] Processed ad accounts (limited to 1):', adAccounts);
-            console.log('[Meta] Total ad accounts available:', data.data.length, '- showing only the first one');
             assets.push(...adAccounts);
             console.log('[Meta] Added ad accounts to assets:', adAccounts);
-            console.log('[Meta] Current total assets count:', assets.length);
           } else {
             console.log('[Meta] No ad account data found in response');
           }
@@ -449,20 +359,11 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
     }
 
     // Fetch pages if pages_* scopes are present
-    const hasPagesScopes = scopes.some(scope => scope.includes('pages_'));
-    const pagesScopes = scopes.filter(scope => scope.includes('pages_'));
-    console.log('[Meta] Pages scope check:', { 
-      allScopes: scopes, 
-      pagesScopes: pagesScopes,
-      hasPagesScopes 
-    });
-    
-    if (hasPagesScopes) {
+    if (scopes.some(scope => scope.includes('pages_'))) {
       console.log('[Meta] pages_* scope detected, fetching pages...');
       try {
-        // Use v20.0 specifically for pages - Meta deprecated /me/accounts in v21.0+
-        const pagesUrl = `https://graph.facebook.com/v20.0/me/accounts?fields=id,name,fan_count,perms&access_token=${accessToken}`;
-        console.log('[Meta] Fetching pages from (v20.0):', pagesUrl.replace(accessToken, '[TOKEN]'));
+        const pagesUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`;
+        console.log('[Meta] Fetching pages from:', pagesUrl.replace(accessToken, '[TOKEN]'));
         
         const response = await fetch(pagesUrl);
         console.log('[Meta] Pages response status:', response.status);
@@ -473,8 +374,6 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
           
           if (data.data) {
             console.log('[Meta] Found accounts:', data.data);
-            console.log('[Meta] Account categories:', data.data.map((a: any) => ({ id: a.id, category: a.category, name: a.name })));
-            
             // Filter for pages only (not ad accounts or other account types)
             // /me/accounts can return pages, ad accounts, and other account types
             const pages = data.data
@@ -484,20 +383,10 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
                               account.category === 'Facebook Page' || 
                               account.category === 'PAGE' ||
                               account.category === 'FACEBOOK_PAGE';
-                
-                // For pages, we only need to check the category, not the ID
-                // Pages and Ad Accounts can have the same ID in Meta's system
-                const shouldInclude = isPage;
-                
-                console.log('[Meta] Page filtering check:', { 
-                  id: account.id, 
-                  category: account.category, 
-                  name: account.name,
-                  isPage,
-                  shouldInclude 
-                });
-                
-                return shouldInclude;
+                const isNotAdAccount = account.category !== 'Ad Account' && 
+                                      account.category !== 'AD_ACCOUNT' &&
+                                      !account.id.startsWith('act_');
+                return isPage && isNotAdAccount;
               })
               .map((page: any) => ({
                 id: page.id,
@@ -505,172 +394,78 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
                 type: 'page'
               }));
             console.log('[Meta] Filtered pages:', pages);
-            console.log('[Meta] Pages count after filtering:', pages.length);
-            
-            if (pages.length > 0) {
-              assets.push(...pages);
-              console.log('[Meta] Added pages to assets:', pages);
-            } else {
-              console.log('[Meta] No pages found after filtering - checking all account types:');
-              data.data.forEach((account: any) => {
-                console.log('[Meta] Account details:', {
-                  id: account.id,
-                  category: account.category,
-                  name: account.name,
-                  subcategory: account.subcategory
-                });
-              });
-            }
+            assets.push(...pages);
+            console.log('[Meta] Added pages to assets:', pages);
           } else {
             console.log('[Meta] No page data found in response');
           }
         } else {
           const errorText = await response.text();
           console.log('[Meta] Pages fetch failed:', response.status, errorText);
-          console.log('[Meta] FAILED URL (v20.0):', pagesUrl.replace(accessToken, '[TOKEN]'));
-          
-          // Enhanced error logging for debugging
-          try {
-            const errorData = JSON.parse(errorText);
-            console.log('[Meta] API Error Details:', {
-              error: errorData.error,
-              code: errorData.error?.code,
-              message: errorData.error?.message,
-              type: errorData.error?.type
-            });
-          } catch (parseError) {
-            console.log('[Meta] Raw error response (not JSON):', errorText);
-          }
-          
-          // Check if token has correct granular scopes
-          console.log('[Meta] Checking token granular scopes for pages...');
-          try {
-            const tokenInfoUrl = `https://graph.facebook.com/v18.0/oauth/access_token_info?access_token=${accessToken}`;
-            const tokenResponse = await fetch(tokenInfoUrl);
-            if (tokenResponse.ok) {
-              const tokenData = await tokenResponse.json();
-              const pagesScopesInToken = tokenData.granular_scopes?.filter((scope: any) => 
-                scope.scope && scope.scope.includes('pages_')
-              ) || [];
-              console.log('[Meta] Pages scopes found in token:', pagesScopesInToken);
-            }
-          } catch (tokenError) {
-            console.log('[Meta] Failed to check token granular scopes:', tokenError);
-          }
         }
       } catch (error) {
         console.log('[Meta] Failed to fetch pages:', error);
-      }
-      
-      // Fallback: try granular scopes parsing if no pages found
-      if (assets.filter(a => a.type === 'page').length === 0) {
-        console.log('[Meta] No pages found via /me/accounts, trying granular scopes fallback...');
-        
-        try {
-          // Step 1: Parse granular scopes to get Page IDs
-          const pageIds = await parseGranularScopesForPages(accessToken);
-          
-          if (pageIds.length > 0) {
-            console.log(`[Meta] Found ${pageIds.length} Page IDs in granular scopes, fetching details...`);
-            
-            // Step 2: Query each Page ID directly
-            const granularPages: Asset[] = [];
-            for (const pageId of pageIds) {
-              const pageAsset = await fetchPageDetails(pageId, accessToken);
-              if (pageAsset) {
-                granularPages.push(pageAsset);
-                console.log(`[Meta] Successfully fetched page: ${pageAsset.name} (${pageAsset.id})`);
-              }
-            }
-            
-            if (granularPages.length > 0) {
-              assets.push(...granularPages);
-              console.log('[Meta] Added granular scope pages to assets:', granularPages);
-            } else {
-              console.log('[Meta] No valid pages found from granular scopes');
-            }
-          } else {
-            console.log('[Meta] No Page IDs found in granular scopes, trying direct /me endpoint...');
-            
-            // Step 3: Final fallback - try direct /me endpoint (also use v20.0)
-            const directPagesUrl = `https://graph.facebook.com/v20.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
-            console.log('[Meta] Fetching pages from direct endpoint (v20.0):', directPagesUrl.replace(accessToken, '[TOKEN]'));
-            
-            const directResponse = await fetch(directPagesUrl);
-            console.log('[Meta] Direct pages response status:', directResponse.status);
-            
-            if (directResponse.ok) {
-              const directData = await directResponse.json();
-              console.log('[Meta] Direct pages response data:', directData);
-              
-              if (directData.accounts && directData.accounts.data) {
-                const directPages = directData.accounts.data
-                  .filter((account: any) => account.category === 'Page')
-                  .map((page: any) => ({
-                    id: page.id,
-                    name: page.name || `Page ${page.id}`,
-                    type: 'page'
-                  }));
-                
-                console.log('[Meta] Direct pages found:', directPages);
-                if (directPages.length > 0) {
-                  assets.push(...directPages);
-                  console.log('[Meta] Added direct pages to assets:', directPages);
-                }
-              }
-            } else {
-              const errorText = await directResponse.text();
-              console.log('[Meta] Direct pages fetch failed:', directResponse.status, errorText);
-            }
-          }
-        } catch (fallbackError) {
-          console.log('[Meta] Failed to fetch pages via granular scopes fallback:', fallbackError);
-        }
-      } else {
-        console.log('[Meta] Pages found via /me/accounts, skipping granular scopes fallback');
       }
     } else {
       console.log('[Meta] pages_* scope not found in scopes:', scopes);
     }
 
-    // Unified business data fetching - fetch businesses once and extract both catalogs and business datasets
-    const needsBusinessData = scopes.some(scope => scope.includes('catalog_management') || scope.includes('business_management'));
-    
-    if (needsBusinessData) {
-      console.log('[Meta] Business data needed for catalogs and/or business datasets, fetching businesses...');
+    // Fetch catalogs if catalog_management scope is present
+    if (scopes.some(scope => scope.includes('catalog_management'))) {
+      console.log('[Meta] catalog_management scope detected, fetching catalogs...');
       try {
-        const businessUrl = `https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`;
-        console.log('[Meta] Fetching businesses from:', businessUrl.replace(accessToken, '[TOKEN]'));
+        let catalogsFound = false;
         
-        const businessResponse = await fetch(businessUrl);
-        console.log('[Meta] Business response status:', businessResponse.status);
-        
-        if (businessResponse.ok) {
-          const businessData = await businessResponse.json();
-          console.log('[Meta] Business response data:', businessData);
+        // Method 1: Try direct user-owned catalogs first
+        console.log('[Meta] Method 1: Trying direct user-owned catalogs...');
+        try {
+          const userCatalogUrl = `https://graph.facebook.com/v18.0/me?fields=owned_product_catalogs{id,name}&access_token=${accessToken}`;
+          console.log('[Meta] Fetching user catalogs from:', userCatalogUrl.replace(accessToken, '[TOKEN]'));
           
-          if (businessData.data && businessData.data.length > 0) {
-            console.log('[Meta] Found businesses:', businessData.data);
+          const userCatalogResponse = await fetch(userCatalogUrl);
+          console.log('[Meta] User catalog response status:', userCatalogResponse.status);
+          
+          if (userCatalogResponse.ok) {
+            const userCatalogData = await userCatalogResponse.json();
+            console.log('[Meta] User catalog response data:', userCatalogData);
             
-            // Extract business datasets if business_management scope is present
-            if (scopes.some(scope => scope.includes('business_management'))) {
-              console.log('[Meta] Extracting business datasets from businesses...');
-              const businessDatasets = businessData.data.map((business: any) => ({
-                id: business.id,
-                name: business.name || `Business ${business.id}`,
-                type: 'business_dataset'
+            if (userCatalogData.owned_product_catalogs && userCatalogData.owned_product_catalogs.data && userCatalogData.owned_product_catalogs.data.length > 0) {
+              console.log('[Meta] Found user-owned catalogs:', userCatalogData.owned_product_catalogs.data);
+              const userCatalogs = userCatalogData.owned_product_catalogs.data.map((catalog: any) => ({
+                id: catalog.id,
+                name: catalog.name || `Product Catalog ${catalog.id}`,
+                type: 'catalog'
               }));
-              assets.push(...businessDatasets);
-              console.log('[Meta] Added business datasets to assets:', businessDatasets);
+              assets.push(...userCatalogs);
+              catalogsFound = true;
+              console.log('[Meta] Added user catalogs to assets:', userCatalogs);
+            } else {
+              console.log('[Meta] No user-owned catalogs found');
             }
+          } else {
+            const errorText = await userCatalogResponse.text();
+            console.log('[Meta] User catalog fetch failed:', userCatalogResponse.status, errorText);
+          }
+        } catch (userError) {
+          console.log('[Meta] User catalog fetch error:', userError);
+        }
+        
+        // Method 2: Try business-owned catalogs if no user catalogs found
+        if (!catalogsFound) {
+          console.log('[Meta] Method 2: Trying business-owned catalogs...');
+          const businessesUrl = `https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`;
+          console.log('[Meta] Fetching businesses for catalogs from:', businessesUrl.replace(accessToken, '[TOKEN]'));
+          
+          const businessesResponse = await fetch(businessesUrl);
+          console.log('[Meta] Businesses response status:', businessesResponse.status);
+          
+          if (businessesResponse.ok) {
+            const businessesData = await businessesResponse.json();
+            console.log('[Meta] Businesses response data:', businessesData);
             
-            // Extract catalogs if catalog_management scope is present
-            if (scopes.some(scope => scope.includes('catalog_management'))) {
-              console.log('[Meta] Extracting catalogs from businesses...');
-              let catalogsFound = false;
-              
-              // Try to fetch catalogs from each business
-              for (const business of businessData.data) {
+            if (businessesData.data && businessesData.data.length > 0) {
+              // For each business, fetch its catalogs
+              for (const business of businessesData.data) {
                 try {
                   const catalogUrl = `https://graph.facebook.com/v18.0/${business.id}/owned_product_catalogs?access_token=${accessToken}`;
                   console.log('[Meta] Fetching catalogs for business', business.id, 'from:', catalogUrl.replace(accessToken, '[TOKEN]'));
@@ -703,93 +498,111 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
                   console.log('[Meta] Failed to fetch catalogs for business', business.id, ':', businessError);
                 }
               }
-              
-              // If no business catalogs found, try other methods
-              if (!catalogsFound) {
-                console.log('[Meta] No business catalogs found, trying alternative methods...');
-                
-                // Method 1: Try direct user-owned catalogs
-                try {
-                  const userCatalogUrl = `https://graph.facebook.com/v18.0/me?fields=owned_product_catalogs{id,name}&access_token=${accessToken}`;
-                  console.log('[Meta] Fetching user catalogs from:', userCatalogUrl.replace(accessToken, '[TOKEN]'));
-                  
-                  const userCatalogResponse = await fetch(userCatalogUrl);
-                  console.log('[Meta] User catalog response status:', userCatalogResponse.status);
-                  
-                  if (userCatalogResponse.ok) {
-                    const userCatalogData = await userCatalogResponse.json();
-                    console.log('[Meta] User catalog response data:', userCatalogData);
-                    
-                    if (userCatalogData.owned_product_catalogs && userCatalogData.owned_product_catalogs.data && userCatalogData.owned_product_catalogs.data.length > 0) {
-                      console.log('[Meta] Found user-owned catalogs:', userCatalogData.owned_product_catalogs.data);
-                      const userCatalogs = userCatalogData.owned_product_catalogs.data.map((catalog: any) => ({
-                        id: catalog.id,
-                        name: catalog.name || `Product Catalog ${catalog.id}`,
-                        type: 'catalog'
-                      }));
-                      assets.push(...userCatalogs);
-                      catalogsFound = true;
-                      console.log('[Meta] Added user catalogs to assets:', userCatalogs);
-                    }
-                  }
-                } catch (userError) {
-                  console.log('[Meta] User catalog fetch error:', userError);
-                }
-                
-                // Method 2: Try catalogs via /me/accounts
-                if (!catalogsFound) {
-                  try {
-                    const accountsCatalogUrl = `https://graph.facebook.com/v18.0/me/accounts?fields=owned_product_catalogs{id,name}&access_token=${accessToken}`;
-                    console.log('[Meta] Fetching catalogs via accounts from:', accountsCatalogUrl.replace(accessToken, '[TOKEN]'));
-                    
-                    const accountsCatalogResponse = await fetch(accountsCatalogUrl);
-                    console.log('[Meta] Accounts catalog response status:', accountsCatalogResponse.status);
-                    
-                    if (accountsCatalogResponse.ok) {
-                      const accountsCatalogData = await accountsCatalogResponse.json();
-                      console.log('[Meta] Accounts catalog response data:', accountsCatalogData);
-                      
-                      if (accountsCatalogData.data && accountsCatalogData.data.length > 0) {
-                        const catalogsFromAccounts = [];
-                        accountsCatalogData.data.forEach((account: any) => {
-                          if (account.owned_product_catalogs && account.owned_product_catalogs.data && account.owned_product_catalogs.data.length > 0) {
-                            console.log('[Meta] Found catalogs in account', account.id, ':', account.owned_product_catalogs.data);
-                            catalogsFromAccounts.push(...account.owned_product_catalogs.data.map((catalog: any) => ({
-                              id: catalog.id,
-                              name: catalog.name || `Product Catalog ${catalog.id}`,
-                              type: 'catalog'
-                            })));
-                          }
-                        });
-                        
-                        if (catalogsFromAccounts.length > 0) {
-                          assets.push(...catalogsFromAccounts);
-                          catalogsFound = true;
-                          console.log('[Meta] Added catalogs from accounts to assets:', catalogsFromAccounts);
-                        }
-                      }
-                    }
-                  } catch (accountsError) {
-                    console.log('[Meta] Accounts catalog fetch error:', accountsError);
-                  }
-                }
-              }
-              
-              console.log('[Meta] Final catalog assets found:', assets.filter(asset => asset.type === 'catalog'));
-              if (!catalogsFound) {
-                console.log('[Meta] WARNING: No catalogs found despite catalog_management scope being present');
-              }
+            } else {
+              console.log('[Meta] No businesses found, cannot fetch catalogs');
             }
+          } else {
+            const errorText = await businessesResponse.text();
+            console.log('[Meta] Businesses fetch failed:', businessesResponse.status, errorText);
+          }
+        }
+        
+        // Method 3: Try fetching catalogs via /me/accounts with catalog fields as last resort
+        if (!catalogsFound) {
+          console.log('[Meta] Method 3: Trying catalogs via /me/accounts...');
+          try {
+            const accountsCatalogUrl = `https://graph.facebook.com/v18.0/me/accounts?fields=owned_product_catalogs{id,name}&access_token=${accessToken}`;
+            console.log('[Meta] Fetching catalogs via accounts from:', accountsCatalogUrl.replace(accessToken, '[TOKEN]'));
+            
+            const accountsCatalogResponse = await fetch(accountsCatalogUrl);
+            console.log('[Meta] Accounts catalog response status:', accountsCatalogResponse.status);
+            
+            if (accountsCatalogResponse.ok) {
+              const accountsCatalogData = await accountsCatalogResponse.json();
+              console.log('[Meta] Accounts catalog response data:', accountsCatalogData);
+              
+              if (accountsCatalogData.data && accountsCatalogData.data.length > 0) {
+                const catalogsFromAccounts = [];
+                accountsCatalogData.data.forEach((account: any) => {
+                  if (account.owned_product_catalogs && account.owned_product_catalogs.data && account.owned_product_catalogs.data.length > 0) {
+                    console.log('[Meta] Found catalogs in account', account.id, ':', account.owned_product_catalogs.data);
+                    catalogsFromAccounts.push(...account.owned_product_catalogs.data.map((catalog: any) => ({
+                      id: catalog.id,
+                      name: catalog.name || `Product Catalog ${catalog.id}`,
+                      type: 'catalog'
+                    })));
+                  }
+                });
+                
+                if (catalogsFromAccounts.length > 0) {
+                  assets.push(...catalogsFromAccounts);
+                  catalogsFound = true;
+                  console.log('[Meta] Added catalogs from accounts to assets:', catalogsFromAccounts);
+                } else {
+                  console.log('[Meta] No catalogs found in any accounts');
+                }
+              } else {
+                console.log('[Meta] No accounts found for catalog search');
+              }
+            } else {
+              const errorText = await accountsCatalogResponse.text();
+              console.log('[Meta] Accounts catalog fetch failed:', accountsCatalogResponse.status, errorText);
+            }
+          } catch (accountsError) {
+            console.log('[Meta] Accounts catalog fetch error:', accountsError);
+          }
+        }
+        
+        console.log('[Meta] Final catalog assets found:', assets.filter(asset => asset.type === 'catalog'));
+        if (!catalogsFound) {
+          console.log('[Meta] WARNING: No catalogs found despite catalog_management scope being present');
+          console.log('[Meta] This could mean:');
+          console.log('[Meta] 1. User has no catalogs');
+          console.log('[Meta] 2. Catalogs are not accessible with current permissions');
+          console.log('[Meta] 3. API endpoint is incorrect');
+        }
+      } catch (error) {
+        console.log('[Meta] Failed to fetch catalogs:', error);
+      }
+    } else {
+      console.log('[Meta] catalog_management scope not found in scopes:', scopes);
+    }
+
+    // Fetch business datasets if business_management scope is present
+    if (scopes.some(scope => scope.includes('business_management'))) {
+      console.log('[Meta] business_management scope detected, fetching businesses...');
+      try {
+        const businessUrl = `https://graph.facebook.com/v18.0/me/businesses?access_token=${accessToken}`;
+        console.log('[Meta] Fetching businesses from:', businessUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(businessUrl);
+        console.log('[Meta] Business response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Meta] Business response data:', data);
+          
+          if (data.data) {
+            console.log('[Meta] Found businesses:', data.data);
+            const businesses = data.data.map((business: any) => ({
+              id: business.id,
+              name: business.name || `Business ${business.id}`,
+              type: 'business_dataset'
+            }));
+            assets.push(...businesses);
+            console.log('[Meta] Added businesses to assets:', businesses);
           } else {
             console.log('[Meta] No business data found in response');
           }
         } else {
-          const errorText = await businessResponse.text();
-          console.log('[Meta] Business fetch failed:', businessResponse.status, errorText);
+          const errorText = await response.text();
+          console.log('[Meta] Business fetch failed:', response.status, errorText);
         }
       } catch (error) {
-        console.log('[Meta] Failed to fetch business data:', error);
+        console.log('[Meta] Failed to fetch business datasets:', error);
       }
+    } else {
+      console.log('[Meta] business_management scope not found in scopes:', scopes);
     }
 
     // Fetch Instagram accounts if instagram_basic scope is present
@@ -813,7 +626,7 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
               if (account.instagram_business_account) {
                 instagramAccounts.push({
                   id: account.instagram_business_account.id,
-                  name: account.instagram_business_account.name || account.instagram_business_account.username || 'Instagram Account',
+                  name: account.instagram_business_account.name || `Instagram Account ${account.instagram_business_account.id}`,
                   type: 'instagram_account'
                 });
               }
@@ -851,16 +664,10 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
       if (!exists) {
         acc.push(current);
       } else {
-        console.log('[Meta] Skipping duplicate asset:', current.id, current.type, current.name);
+        console.log('[Meta] Skipping duplicate asset:', current.id, current.type);
       }
       return acc;
     }, []);
-    
-    console.log('[Meta] Deduplication summary:', {
-      originalCount: assets.length,
-      uniqueCount: uniqueAssets.length,
-      duplicatesRemoved: assets.length - uniqueAssets.length
-    });
     
     console.log('[Meta] Final assets list (deduplicated):', uniqueAssets);
     console.log('[Meta] Asset counts by type:', {
