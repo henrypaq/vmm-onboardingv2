@@ -370,7 +370,12 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
 
     // Fetch pages if pages_* scopes are present
     const hasPagesScopes = scopes.some(scope => scope.includes('pages_'));
-    console.log('[Meta] Pages scope check:', { scopes, hasPagesScopes });
+    const pagesScopes = scopes.filter(scope => scope.includes('pages_'));
+    console.log('[Meta] Pages scope check:', { 
+      allScopes: scopes, 
+      pagesScopes: pagesScopes,
+      hasPagesScopes 
+    });
     
     if (hasPagesScopes) {
       console.log('[Meta] pages_* scope detected, fetching pages...');
@@ -419,8 +424,22 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
                 type: 'page'
               }));
             console.log('[Meta] Filtered pages:', pages);
-            assets.push(...pages);
-            console.log('[Meta] Added pages to assets:', pages);
+            console.log('[Meta] Pages count after filtering:', pages.length);
+            
+            if (pages.length > 0) {
+              assets.push(...pages);
+              console.log('[Meta] Added pages to assets:', pages);
+            } else {
+              console.log('[Meta] No pages found after filtering - checking all account types:');
+              data.data.forEach((account: any) => {
+                console.log('[Meta] Account details:', {
+                  id: account.id,
+                  category: account.category,
+                  name: account.name,
+                  subcategory: account.subcategory
+                });
+              });
+            }
           } else {
             console.log('[Meta] No page data found in response');
           }
@@ -430,6 +449,44 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
         }
       } catch (error) {
         console.log('[Meta] Failed to fetch pages:', error);
+      }
+      
+      // Fallback: try fetching pages directly if no pages found
+      if (assets.filter(a => a.type === 'page').length === 0) {
+        console.log('[Meta] No pages found via /me/accounts, trying direct pages endpoint...');
+        try {
+          const directPagesUrl = `https://graph.facebook.com/v18.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
+          console.log('[Meta] Fetching pages from direct endpoint:', directPagesUrl.replace(accessToken, '[TOKEN]'));
+          
+          const directResponse = await fetch(directPagesUrl);
+          console.log('[Meta] Direct pages response status:', directResponse.status);
+          
+          if (directResponse.ok) {
+            const directData = await directResponse.json();
+            console.log('[Meta] Direct pages response data:', directData);
+            
+            if (directData.accounts && directData.accounts.data) {
+              const directPages = directData.accounts.data
+                .filter((account: any) => account.category === 'Page')
+                .map((page: any) => ({
+                  id: page.id,
+                  name: page.name || `Page ${page.id}`,
+                  type: 'page'
+                }));
+              
+              console.log('[Meta] Direct pages found:', directPages);
+              if (directPages.length > 0) {
+                assets.push(...directPages);
+                console.log('[Meta] Added direct pages to assets:', directPages);
+              }
+            }
+          } else {
+            const errorText = await directResponse.text();
+            console.log('[Meta] Direct pages fetch failed:', directResponse.status, errorText);
+          }
+        } catch (directError) {
+          console.log('[Meta] Failed to fetch direct pages:', directError);
+        }
       }
     } else {
       console.log('[Meta] pages_* scope not found in scopes:', scopes);
