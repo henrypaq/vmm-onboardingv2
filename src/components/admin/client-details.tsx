@@ -83,6 +83,62 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   const [isComprehensiveDebugging, setIsComprehensiveDebugging] = useState(false);
   const [isTestingFetchAssets, setIsTestingFetchAssets] = useState(false);
   const [isTestingPagesOnly, setIsTestingPagesOnly] = useState(false);
+  const [isTestingMetaEndpoints, setIsTestingMetaEndpoints] = useState(false);
+
+  const testMetaEndpoints = async () => {
+    try {
+      setIsTestingMetaEndpoints(true);
+      console.log('[Client Details] Testing all Meta API versions for client:', clientId);
+      
+      // Get the client's access token from platform connections
+      const metaConnection = platformConnections.find(conn => conn.platform === 'meta');
+      if (!metaConnection) {
+        throw new Error('No Meta connection found for this client');
+      }
+      
+      const response = await fetch('/api/debug/test-meta-endpoints', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: metaConnection.access_token
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Test Meta endpoints failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('[Client Details] Test Meta endpoints result:', result);
+      
+      // Show results in alert for now
+      const summary = result.results.summary;
+      const workingVersions = summary.workingVersions.join(', ');
+      alert(`Meta API Version Test Results:
+
+Token Valid: ${summary.tokenValid ? 'Yes' : 'No'}
+Working Versions: ${workingVersions || 'None'}
+
+Pages Found:
+v18.0: ${summary.v18Pages}
+v20.0: ${summary.v20Pages}
+v21.0: ${summary.v21Pages}
+v22.0: ${summary.v22Pages}
+v23.0: ${summary.v23Pages}
+
+Granular Scopes Page IDs: ${summary.granularScopesPageIds}
+Direct Page Query: ${summary.directPageQuerySuccess ? 'Success' : 'Failed'}
+
+Check console for detailed results.`);
+      
+    } catch (error) {
+      console.error('[Client Details] Error testing Meta endpoints:', error);
+      alert(`Error testing Meta endpoints: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsTestingMetaEndpoints(false);
+    }
+  };
 
   const testPagesOnly = async () => {
     try {
@@ -631,6 +687,10 @@ Check console for detailed results.`);
             <p className="text-gray-600">Complete information about this client</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Button onClick={testMetaEndpoints} variant="outline" disabled={isTestingMetaEndpoints}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isTestingMetaEndpoints ? 'animate-spin' : ''}`} />
+              Test API Versions
+            </Button>
             <Button onClick={testPagesOnly} variant="outline" disabled={isTestingPagesOnly}>
               <RefreshCw className={`h-4 w-4 mr-2 ${isTestingPagesOnly ? 'animate-spin' : ''}`} />
               Test Pages
