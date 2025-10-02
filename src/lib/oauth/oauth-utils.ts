@@ -460,8 +460,9 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
     if (hasPagesScopes) {
       console.log('[Meta] pages_* scope detected, fetching pages...');
       try {
-        const pagesUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`;
-        console.log('[Meta] Fetching pages from:', pagesUrl.replace(accessToken, '[TOKEN]'));
+        // Use v20.0 specifically for pages - Meta deprecated /me/accounts in v21.0+
+        const pagesUrl = `https://graph.facebook.com/v20.0/me/accounts?fields=id,name,fan_count,perms&access_token=${accessToken}`;
+        console.log('[Meta] Fetching pages from (v20.0):', pagesUrl.replace(accessToken, '[TOKEN]'));
         
         const response = await fetch(pagesUrl);
         console.log('[Meta] Pages response status:', response.status);
@@ -526,6 +527,36 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
         } else {
           const errorText = await response.text();
           console.log('[Meta] Pages fetch failed:', response.status, errorText);
+          console.log('[Meta] FAILED URL (v20.0):', pagesUrl.replace(accessToken, '[TOKEN]'));
+          
+          // Enhanced error logging for debugging
+          try {
+            const errorData = JSON.parse(errorText);
+            console.log('[Meta] API Error Details:', {
+              error: errorData.error,
+              code: errorData.error?.code,
+              message: errorData.error?.message,
+              type: errorData.error?.type
+            });
+          } catch (parseError) {
+            console.log('[Meta] Raw error response (not JSON):', errorText);
+          }
+          
+          // Check if token has correct granular scopes
+          console.log('[Meta] Checking token granular scopes for pages...');
+          try {
+            const tokenInfoUrl = `https://graph.facebook.com/v18.0/oauth/access_token_info?access_token=${accessToken}`;
+            const tokenResponse = await fetch(tokenInfoUrl);
+            if (tokenResponse.ok) {
+              const tokenData = await tokenResponse.json();
+              const pagesScopesInToken = tokenData.granular_scopes?.filter((scope: any) => 
+                scope.scope && scope.scope.includes('pages_')
+              ) || [];
+              console.log('[Meta] Pages scopes found in token:', pagesScopesInToken);
+            }
+          } catch (tokenError) {
+            console.log('[Meta] Failed to check token granular scopes:', tokenError);
+          }
         }
       } catch (error) {
         console.log('[Meta] Failed to fetch pages:', error);
@@ -561,9 +592,9 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
           } else {
             console.log('[Meta] No Page IDs found in granular scopes, trying direct /me endpoint...');
             
-            // Step 3: Final fallback - try direct /me endpoint
-            const directPagesUrl = `https://graph.facebook.com/v18.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
-            console.log('[Meta] Fetching pages from direct endpoint:', directPagesUrl.replace(accessToken, '[TOKEN]'));
+            // Step 3: Final fallback - try direct /me endpoint (also use v20.0)
+            const directPagesUrl = `https://graph.facebook.com/v20.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
+            console.log('[Meta] Fetching pages from direct endpoint (v20.0):', directPagesUrl.replace(accessToken, '[TOKEN]'));
             
             const directResponse = await fetch(directPagesUrl);
             console.log('[Meta] Direct pages response status:', directResponse.status);

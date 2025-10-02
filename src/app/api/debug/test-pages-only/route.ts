@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
       summary: {}
     };
 
-    // Method 1: /me/accounts (primary method)
+    // Method 1: /me/accounts (primary method) - use v20.0 for pages
     try {
-      const pagesUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`;
-      console.log('[Test Pages Only] Method 1: Fetching from /me/accounts...');
+      const pagesUrl = `https://graph.facebook.com/v20.0/me/accounts?fields=id,name,fan_count,perms&access_token=${accessToken}`;
+      console.log('[Test Pages Only] Method 1: Fetching from /me/accounts (v20.0)...');
       
       const response = await fetch(pagesUrl);
       results.method1_me_accounts = {
@@ -123,10 +123,10 @@ export async function POST(request: NextRequest) {
       results.method2_granular_scopes.error = error instanceof Error ? error.message : 'Unknown error';
     }
 
-    // Method 3: Direct /me endpoint
+    // Method 3: Direct /me endpoint (also use v20.0)
     try {
-      console.log('[Test Pages Only] Method 3: Direct /me endpoint...');
-      const directUrl = `https://graph.facebook.com/v18.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
+      console.log('[Test Pages Only] Method 3: Direct /me endpoint (v20.0)...');
+      const directUrl = `https://graph.facebook.com/v20.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
       
       const directResponse = await fetch(directUrl);
       results.method3_direct_me = {
