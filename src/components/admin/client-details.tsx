@@ -536,7 +536,18 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                         <div className="mt-3">
                           <label className="text-sm font-medium text-gray-500">Available Assets</label>
                           <div className="mt-1 space-y-2">
-                            {onboardingRequest.platform_connections[connection.platform].assets.map((asset: Asset, index: number) => {
+                            {(() => {
+                              const assets = onboardingRequest.platform_connections[connection.platform].assets;
+                              console.log(`[Client Details] ${connection.platform} assets:`, assets);
+                              console.log(`[Client Details] Asset count by type:`, {
+                                ad_accounts: assets.filter((a: Asset) => a.type === 'ad_account').length,
+                                pages: assets.filter((a: Asset) => a.type === 'page').length,
+                                catalogs: assets.filter((a: Asset) => a.type === 'catalog').length,
+                                business_datasets: assets.filter((a: Asset) => a.type === 'business_dataset').length,
+                                instagram_accounts: assets.filter((a: Asset) => a.type === 'instagram_account').length
+                              });
+                              return assets;
+                            })().map((asset: Asset, index: number) => {
                               const testKey = `${connection.platform}-${asset.id}-${asset.type}`;
                               const pagePostsTestKey = `${connection.platform}-${asset.id}-page_posts`;
                               const isLoading = apiTestLoading[testKey];
