@@ -341,13 +341,16 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
             console.log('[Meta] Ad account IDs:', data.data.map((a: any) => a.id));
             console.log('[Meta] Ad account names:', data.data.map((a: any) => a.name));
             
-            const adAccounts = data.data.map((account: any) => ({
+            // Limit to only one ad account to avoid confusion (user selects one during OAuth)
+            // Take the first ad account as it's usually the primary/default
+            const adAccounts = data.data.slice(0, 1).map((account: any) => ({
               id: account.id,
               name: account.name || `Ad Account ${account.id}`,
               type: 'ad_account'
             }));
             
-            console.log('[Meta] Processed ad accounts:', adAccounts);
+            console.log('[Meta] Processed ad accounts (limited to 1):', adAccounts);
+            console.log('[Meta] Total ad accounts available:', data.data.length, '- showing only the first one');
             assets.push(...adAccounts);
             console.log('[Meta] Added ad accounts to assets:', adAccounts);
             console.log('[Meta] Current total assets count:', assets.length);
@@ -366,7 +369,10 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
     }
 
     // Fetch pages if pages_* scopes are present
-    if (scopes.some(scope => scope.includes('pages_'))) {
+    const hasPagesScopes = scopes.some(scope => scope.includes('pages_'));
+    console.log('[Meta] Pages scope check:', { scopes, hasPagesScopes });
+    
+    if (hasPagesScopes) {
       console.log('[Meta] pages_* scope detected, fetching pages...');
       try {
         const pagesUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`;
