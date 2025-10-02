@@ -79,6 +79,44 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   const [apiTestExpanded, setApiTestExpanded] = useState<Record<string, boolean>>({});
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
   const [isDebuggingPages, setIsDebuggingPages] = useState(false);
+  const [isGettingToken, setIsGettingToken] = useState(false);
+
+  const getToken = async () => {
+    try {
+      setIsGettingToken(true);
+      console.log('[Client Details] Getting token for client:', clientId);
+      
+      const response = await fetch(`/api/debug/get-token/${clientId}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to get token: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('[Client Details] Token result:', result);
+      
+      // Show token in alert for easy copying
+      alert(`Access Token for Meta API Testing:
+
+${result.token}
+
+Token Info:
+- Platform: ${result.platform}
+- User ID: ${result.platformUserId}
+- Username: ${result.platformUsername}
+- Scopes: ${result.scopes?.join(', ')}
+- Expires: ${result.tokenExpiresAt}
+
+Copy the token above and test it with Meta's API directly.`);
+      
+    } catch (error) {
+      console.error('[Client Details] Error getting token:', error);
+      alert(`Error getting token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsGettingToken(false);
+    }
+  };
 
   const debugPages = async () => {
     try {
@@ -445,6 +483,10 @@ Check console for detailed results.`);
             <p className="text-gray-600">Complete information about this client</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Button onClick={getToken} variant="outline" disabled={isGettingToken}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isGettingToken ? 'animate-spin' : ''}`} />
+              Get Token
+            </Button>
             <Button onClick={debugPages} variant="outline" disabled={isDebuggingPages}>
               <RefreshCw className={`h-4 w-4 mr-2 ${isDebuggingPages ? 'animate-spin' : ''}`} />
               Debug Pages
