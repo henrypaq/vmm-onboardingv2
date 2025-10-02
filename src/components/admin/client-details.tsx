@@ -82,6 +82,53 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   const [isGettingToken, setIsGettingToken] = useState(false);
   const [isComprehensiveDebugging, setIsComprehensiveDebugging] = useState(false);
   const [isTestingFetchAssets, setIsTestingFetchAssets] = useState(false);
+  const [isTestingPagesOnly, setIsTestingPagesOnly] = useState(false);
+
+  const testPagesOnly = async () => {
+    try {
+      setIsTestingPagesOnly(true);
+      console.log('[Client Details] Testing pages-only methods for client:', clientId);
+      
+      // Get the client's access token from platform connections
+      const metaConnection = platformConnections.find(conn => conn.platform === 'meta');
+      if (!metaConnection) {
+        throw new Error('No Meta connection found for this client');
+      }
+      
+      const response = await fetch('/api/debug/test-pages-only', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: metaConnection.access_token
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Test pages only failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('[Client Details] Test pages only result:', result);
+      
+      // Show results in alert for now
+      const summary = result.results.summary;
+      alert(`Pages-Only Test Results:
+
+Method 1 (/me/accounts): ${summary.method1Pages} pages
+Method 2 (Granular Scopes): ${summary.method2Pages} pages  
+Method 3 (Direct /me): ${summary.method3Pages} pages
+Total Pages Found: ${summary.totalPagesFound}
+
+Check console for detailed results.`);
+      
+    } catch (error) {
+      console.error('[Client Details] Error testing pages only:', error);
+      alert(`Error testing pages only: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsTestingPagesOnly(false);
+    }
+  };
 
   const testFetchAssets = async () => {
     try {
@@ -584,6 +631,10 @@ Check console for detailed results.`);
             <p className="text-gray-600">Complete information about this client</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Button onClick={testPagesOnly} variant="outline" disabled={isTestingPagesOnly}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isTestingPagesOnly ? 'animate-spin' : ''}`} />
+              Test Pages
+            </Button>
             <Button onClick={testFetchAssets} variant="outline" disabled={isTestingFetchAssets}>
               <RefreshCw className={`h-4 w-4 mr-2 ${isTestingFetchAssets ? 'animate-spin' : ''}`} />
               Test Fetch
