@@ -337,13 +337,20 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
           
           if (data.data) {
             console.log('[Meta] Found ad accounts:', data.data);
+            console.log('[Meta] Ad account count from API:', data.data.length);
+            console.log('[Meta] Ad account IDs:', data.data.map((a: any) => a.id));
+            console.log('[Meta] Ad account names:', data.data.map((a: any) => a.name));
+            
             const adAccounts = data.data.map((account: any) => ({
               id: account.id,
               name: account.name || `Ad Account ${account.id}`,
               type: 'ad_account'
             }));
+            
+            console.log('[Meta] Processed ad accounts:', adAccounts);
             assets.push(...adAccounts);
             console.log('[Meta] Added ad accounts to assets:', adAccounts);
+            console.log('[Meta] Current total assets count:', assets.length);
           } else {
             console.log('[Meta] No ad account data found in response');
           }
@@ -374,6 +381,8 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
           
           if (data.data) {
             console.log('[Meta] Found accounts:', data.data);
+            console.log('[Meta] Account categories:', data.data.map((a: any) => ({ id: a.id, category: a.category, name: a.name })));
+            
             // Filter for pages only (not ad accounts or other account types)
             // /me/accounts can return pages, ad accounts, and other account types
             const pages = data.data
@@ -386,7 +395,13 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
                 const isNotAdAccount = account.category !== 'Ad Account' && 
                                       account.category !== 'AD_ACCOUNT' &&
                                       !account.id.startsWith('act_');
-                return isPage && isNotAdAccount;
+                const shouldInclude = isPage && isNotAdAccount;
+                
+                if (!shouldInclude) {
+                  console.log('[Meta] Filtering out account:', { id: account.id, category: account.category, name: account.name, reason: isPage ? 'not a page' : 'is ad account' });
+                }
+                
+                return shouldInclude;
               })
               .map((page: any) => ({
                 id: page.id,
@@ -590,7 +605,7 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
               if (account.instagram_business_account) {
                 instagramAccounts.push({
                   id: account.instagram_business_account.id,
-                  name: account.instagram_business_account.name || `Instagram Account ${account.instagram_business_account.id}`,
+                  name: account.instagram_business_account.name || account.instagram_business_account.username || 'Instagram Account',
                   type: 'instagram_account'
                 });
               }
