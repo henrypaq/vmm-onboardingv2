@@ -37,7 +37,32 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // 2. Try primary method: /me/accounts
+    // 2. Test token validity first
+    try {
+      const tokenTestUrl = `https://graph.facebook.com/v18.0/me?access_token=${accessToken}`;
+      console.log('[Debug Pages] Testing token validity:', tokenTestUrl.replace(accessToken, '[TOKEN]'));
+      
+      const tokenResponse = await fetch(tokenTestUrl);
+      results.tokenTest = {
+        status: tokenResponse.status,
+        valid: tokenResponse.ok
+      };
+      
+      if (tokenResponse.ok) {
+        const tokenData = await tokenResponse.json();
+        results.tokenTest.userInfo = {
+          id: tokenData.id,
+          name: tokenData.name
+        };
+      } else {
+        const errorText = await tokenResponse.text();
+        results.tokenTest.error = errorText;
+      }
+    } catch (error) {
+      results.tokenTest.error = error instanceof Error ? error.message : 'Unknown error';
+    }
+
+    // 3. Try primary method: /me/accounts
     try {
       const pagesUrl = `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`;
       console.log('[Debug Pages] Fetching from primary endpoint:', pagesUrl.replace(accessToken, '[TOKEN]'));
@@ -82,7 +107,7 @@ export async function POST(request: NextRequest) {
       results.primaryMethod.error = error instanceof Error ? error.message : 'Unknown error';
     }
 
-    // 3. Try fallback method: /me?fields=accounts
+    // 4. Try fallback method: /me?fields=accounts
     try {
       const directPagesUrl = `https://graph.facebook.com/v18.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
       console.log('[Debug Pages] Fetching from fallback endpoint:', directPagesUrl.replace(accessToken, '[TOKEN]'));
@@ -120,7 +145,7 @@ export async function POST(request: NextRequest) {
       results.fallbackMethod.error = error instanceof Error ? error.message : 'Unknown error';
     }
 
-    // 4. Summary
+    // 5. Summary
     results.summary = {
       primaryPagesFound: results.primaryMethod.filteredPages?.length || 0,
       fallbackPagesFound: results.fallbackMethod.filteredPages?.length || 0,

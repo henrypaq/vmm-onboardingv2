@@ -110,8 +110,10 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       
       // Show results in alert for now
       const summary = result.results.summary;
+      const tokenTest = result.results.tokenTest;
       alert(`Pages Debug Results:
-      
+
+Token Valid: ${tokenTest?.valid ? 'Yes' : 'No'} (Status: ${tokenTest?.status})
 Primary Method: ${summary.primaryPagesFound} pages found
 Fallback Method: ${summary.fallbackPagesFound} pages found
 Total: ${summary.totalPagesFound} pages found
