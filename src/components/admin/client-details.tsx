@@ -80,6 +80,56 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
   const [isDebuggingPages, setIsDebuggingPages] = useState(false);
   const [isGettingToken, setIsGettingToken] = useState(false);
+  const [isComprehensiveDebugging, setIsComprehensiveDebugging] = useState(false);
+
+  const comprehensiveDebugPages = async () => {
+    try {
+      setIsComprehensiveDebugging(true);
+      console.log('[Client Details] Comprehensive debugging pages for client:', clientId);
+      
+      // Get the client's access token from platform connections
+      const metaConnection = platformConnections.find(conn => conn.platform === 'meta');
+      if (!metaConnection) {
+        throw new Error('No Meta connection found for this client');
+      }
+      
+      const response = await fetch('/api/debug/comprehensive-pages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: metaConnection.access_token,
+          scopes: metaConnection.scopes
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Comprehensive debug failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('[Client Details] Comprehensive debug result:', result);
+      
+      // Show results in alert for now
+      const summary = result.results.summary;
+      alert(`Comprehensive Pages Debug Results:
+
+Token Valid: ${summary.tokenValid ? 'Yes' : 'No'}
+Has Pages Scopes: ${summary.hasPagesScopes ? 'Yes' : 'No'}
+Primary Method Pages: ${summary.primaryMethodPages}
+Granular Scopes Found: ${summary.granularScopesFound}
+Direct Page Query Success: ${summary.directPageQuerySuccess ? 'Yes' : 'No'}
+Total Pages Found: ${summary.totalPagesFound}
+
+Check console for detailed results.`);
+      
+    } catch (error) {
+      console.error('[Client Details] Error comprehensive debugging pages:', error);
+      alert(`Error comprehensive debugging pages: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsComprehensiveDebugging(false);
+    }
+  };
 
   const getToken = async () => {
     try {
@@ -484,6 +534,10 @@ Check console for detailed results.`);
             <p className="text-gray-600">Complete information about this client</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Button onClick={comprehensiveDebugPages} variant="outline" disabled={isComprehensiveDebugging}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isComprehensiveDebugging ? 'animate-spin' : ''}`} />
+              Full Debug
+            </Button>
             <Button onClick={getToken} variant="outline" disabled={isGettingToken}>
               <RefreshCw className={`h-4 w-4 mr-2 ${isGettingToken ? 'animate-spin' : ''}`} />
               Get Token
