@@ -550,7 +550,9 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   <div className="flex items-center justify-between p-2 bg-gray-50 rounded border">
                                     <div>
                                       <span className="text-sm font-medium">{asset.name}</span>
-                                      <span className="text-xs text-gray-500 ml-2 capitalize">({asset.type})</span>
+                                      <span className="text-xs text-gray-500 ml-2 capitalize">
+                                        ({asset.type === 'catalog' ? 'Product Catalog' : asset.type === 'ad_account' ? 'Ad Account' : asset.type === 'page' ? 'Page' : asset.type === 'business_dataset' ? 'Business Manager' : asset.type === 'instagram_account' ? 'Instagram Account' : asset.type})
+                                      </span>
                                     </div>
                                     <div className="flex space-x-2">
                                       <Button

@@ -73,6 +73,12 @@ export async function POST(request: NextRequest) {
         humanReadableLabel = `Page Posts (pages_manage_posts) – This confirms the app can fetch and manage posts on the client's Page.`;
         break;
       
+      case 'catalog':
+        apiUrl = `https://graph.facebook.com/v19.0/${assetId}?fields=name,product_count&access_token=${connection.access_token}`;
+        description = `Catalog Info for ${assetId}`;
+        humanReadableLabel = `Product Catalog (catalog_management) – This confirms we can access the client's product catalog name and product count.`;
+        break;
+      
       default:
         // Generic fallback
         apiUrl = `https://graph.facebook.com/v19.0/${assetId}?fields=name,id&access_token=${connection.access_token}`;

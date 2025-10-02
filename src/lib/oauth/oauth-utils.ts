@@ -360,15 +360,39 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
     // Fetch catalogs if catalog_management scope is present
     if (scopes.some(scope => scope.includes('catalog_management'))) {
       try {
-        const response = await fetch(`https://graph.facebook.com/v18.0/me/catalogs?access_token=${accessToken}`);
+        // First try to get catalogs from user's owned product catalogs
+        const response = await fetch(`https://graph.facebook.com/v18.0/me?fields=owned_product_catalogs{business,name,id}&access_token=${accessToken}`);
         if (response.ok) {
           const data = await response.json();
-          if (data.data) {
-            assets.push(...data.data.map((catalog: any) => ({
+          if (data.owned_product_catalogs && data.owned_product_catalogs.data) {
+            assets.push(...data.owned_product_catalogs.data.map((catalog: any) => ({
               id: catalog.id,
-              name: catalog.name || `Catalog ${catalog.id}`,
+              name: catalog.name || `Product Catalog ${catalog.id}`,
               type: 'catalog'
             })));
+          }
+        }
+        
+        // If no catalogs found via user endpoint, try business-owned catalogs
+        if (assets.filter(asset => asset.type === 'catalog').length === 0) {
+          try {
+            const businessResponse = await fetch(`https://graph.facebook.com/v18.0/me/businesses?fields=owned_product_catalogs{name,id}&access_token=${accessToken}`);
+            if (businessResponse.ok) {
+              const businessData = await businessResponse.json();
+              if (businessData.data) {
+                businessData.data.forEach((business: any) => {
+                  if (business.owned_product_catalogs && business.owned_product_catalogs.data) {
+                    assets.push(...business.owned_product_catalogs.data.map((catalog: any) => ({
+                      id: catalog.id,
+                      name: catalog.name || `Product Catalog ${catalog.id}`,
+                      type: 'catalog'
+                    })));
+                  }
+                });
+              }
+            }
+          } catch (businessError) {
+            console.log('[Meta] Failed to fetch business-owned catalogs:', businessError);
           }
         }
       } catch (error) {
