@@ -153,6 +153,7 @@ Copy the token above and test it with Meta's API directly.`);
 
 Token Valid: ${tokenTest?.valid ? 'Yes' : 'No'} (Status: ${tokenTest?.status})
 Primary Method: ${summary.primaryPagesFound} pages found
+Granular Scopes: ${summary.granularScopesPagesFound} pages found
 Fallback Method: ${summary.fallbackPagesFound} pages found
 Total: ${summary.totalPagesFound} pages found
 

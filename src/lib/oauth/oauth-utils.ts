@@ -315,6 +315,86 @@ export async function fetchPlatformAssets(
   }
 }
 
+// Helper function to parse granular scopes and extract Page IDs
+async function parseGranularScopesForPages(accessToken: string): Promise<string[]> {
+  try {
+    console.log('[Meta] Parsing granular scopes for Page IDs...');
+    
+    // Get token info with granular scopes
+    const tokenInfoUrl = `https://graph.facebook.com/v18.0/oauth/access_token_info?access_token=${accessToken}`;
+    console.log('[Meta] Fetching token info from:', tokenInfoUrl.replace(accessToken, '[TOKEN]'));
+    
+    const response = await fetch(tokenInfoUrl);
+    console.log('[Meta] Token info response status:', response.status);
+    
+    if (response.ok) {
+      const tokenInfo = await response.json();
+      console.log('[Meta] Token info response:', tokenInfo);
+      
+      // Extract Page IDs from granular scopes
+      const pageIds: string[] = [];
+      
+      if (tokenInfo.granular_scopes && Array.isArray(tokenInfo.granular_scopes)) {
+        tokenInfo.granular_scopes.forEach((scope: any) => {
+          if (scope.scope === 'pages_show_list' || 
+              scope.scope === 'pages_read_engagement' || 
+              scope.scope === 'pages_manage_posts') {
+            if (scope.target_ids && Array.isArray(scope.target_ids)) {
+              scope.target_ids.forEach((targetId: string) => {
+                // Target IDs for pages are typically numeric (Page IDs)
+                if (/^\d+$/.test(targetId)) {
+                  pageIds.push(targetId);
+                }
+              });
+            }
+          }
+        });
+      }
+      
+      console.log('[Meta] Extracted Page IDs from granular scopes:', pageIds);
+      return [...new Set(pageIds)]; // Remove duplicates
+    } else {
+      const errorText = await response.text();
+      console.log('[Meta] Token info fetch failed:', response.status, errorText);
+      return [];
+    }
+  } catch (error) {
+    console.log('[Meta] Error parsing granular scopes:', error);
+    return [];
+  }
+}
+
+// Helper function to query Page details directly by ID
+async function fetchPageDetails(pageId: string, accessToken: string): Promise<Asset | null> {
+  try {
+    console.log(`[Meta] Fetching details for Page ID: ${pageId}`);
+    
+    const pageUrl = `https://graph.facebook.com/v18.0/${pageId}?fields=id,name,fan_count&access_token=${accessToken}`;
+    console.log(`[Meta] Fetching page from:`, pageUrl.replace(accessToken, '[TOKEN]'));
+    
+    const response = await fetch(pageUrl);
+    console.log(`[Meta] Page ${pageId} response status:`, response.status);
+    
+    if (response.ok) {
+      const pageData = await response.json();
+      console.log(`[Meta] Page ${pageId} data:`, pageData);
+      
+      return {
+        id: pageData.id,
+        name: pageData.name || `Page ${pageData.id}`,
+        type: 'page'
+      };
+    } else {
+      const errorText = await response.text();
+      console.log(`[Meta] Page ${pageId} fetch failed:`, response.status, errorText);
+      return null;
+    }
+  } catch (error) {
+    console.log(`[Meta] Error fetching page ${pageId}:`, error);
+    return null;
+  }
+}
+
 async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<Asset[]> {
   const assets: Asset[] = [];
   
@@ -451,42 +531,72 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
         console.log('[Meta] Failed to fetch pages:', error);
       }
       
-      // Fallback: try fetching pages directly if no pages found
+      // Fallback: try granular scopes parsing if no pages found
       if (assets.filter(a => a.type === 'page').length === 0) {
-        console.log('[Meta] No pages found via /me/accounts, trying direct pages endpoint...');
+        console.log('[Meta] No pages found via /me/accounts, trying granular scopes fallback...');
+        
         try {
-          const directPagesUrl = `https://graph.facebook.com/v18.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
-          console.log('[Meta] Fetching pages from direct endpoint:', directPagesUrl.replace(accessToken, '[TOKEN]'));
+          // Step 1: Parse granular scopes to get Page IDs
+          const pageIds = await parseGranularScopesForPages(accessToken);
           
-          const directResponse = await fetch(directPagesUrl);
-          console.log('[Meta] Direct pages response status:', directResponse.status);
-          
-          if (directResponse.ok) {
-            const directData = await directResponse.json();
-            console.log('[Meta] Direct pages response data:', directData);
+          if (pageIds.length > 0) {
+            console.log(`[Meta] Found ${pageIds.length} Page IDs in granular scopes, fetching details...`);
             
-            if (directData.accounts && directData.accounts.data) {
-              const directPages = directData.accounts.data
-                .filter((account: any) => account.category === 'Page')
-                .map((page: any) => ({
-                  id: page.id,
-                  name: page.name || `Page ${page.id}`,
-                  type: 'page'
-                }));
-              
-              console.log('[Meta] Direct pages found:', directPages);
-              if (directPages.length > 0) {
-                assets.push(...directPages);
-                console.log('[Meta] Added direct pages to assets:', directPages);
+            // Step 2: Query each Page ID directly
+            const granularPages: Asset[] = [];
+            for (const pageId of pageIds) {
+              const pageAsset = await fetchPageDetails(pageId, accessToken);
+              if (pageAsset) {
+                granularPages.push(pageAsset);
+                console.log(`[Meta] Successfully fetched page: ${pageAsset.name} (${pageAsset.id})`);
               }
             }
+            
+            if (granularPages.length > 0) {
+              assets.push(...granularPages);
+              console.log('[Meta] Added granular scope pages to assets:', granularPages);
+            } else {
+              console.log('[Meta] No valid pages found from granular scopes');
+            }
           } else {
-            const errorText = await directResponse.text();
-            console.log('[Meta] Direct pages fetch failed:', directResponse.status, errorText);
+            console.log('[Meta] No Page IDs found in granular scopes, trying direct /me endpoint...');
+            
+            // Step 3: Final fallback - try direct /me endpoint
+            const directPagesUrl = `https://graph.facebook.com/v18.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
+            console.log('[Meta] Fetching pages from direct endpoint:', directPagesUrl.replace(accessToken, '[TOKEN]'));
+            
+            const directResponse = await fetch(directPagesUrl);
+            console.log('[Meta] Direct pages response status:', directResponse.status);
+            
+            if (directResponse.ok) {
+              const directData = await directResponse.json();
+              console.log('[Meta] Direct pages response data:', directData);
+              
+              if (directData.accounts && directData.accounts.data) {
+                const directPages = directData.accounts.data
+                  .filter((account: any) => account.category === 'Page')
+                  .map((page: any) => ({
+                    id: page.id,
+                    name: page.name || `Page ${page.id}`,
+                    type: 'page'
+                  }));
+                
+                console.log('[Meta] Direct pages found:', directPages);
+                if (directPages.length > 0) {
+                  assets.push(...directPages);
+                  console.log('[Meta] Added direct pages to assets:', directPages);
+                }
+              }
+            } else {
+              const errorText = await directResponse.text();
+              console.log('[Meta] Direct pages fetch failed:', directResponse.status, errorText);
+            }
           }
-        } catch (directError) {
-          console.log('[Meta] Failed to fetch direct pages:', directError);
+        } catch (fallbackError) {
+          console.log('[Meta] Failed to fetch pages via granular scopes fallback:', fallbackError);
         }
+      } else {
+        console.log('[Meta] Pages found via /me/accounts, skipping granular scopes fallback');
       }
     } else {
       console.log('[Meta] pages_* scope not found in scopes:', scopes);

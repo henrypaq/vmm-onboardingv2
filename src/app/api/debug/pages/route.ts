@@ -107,7 +107,74 @@ export async function POST(request: NextRequest) {
       results.primaryMethod.error = error instanceof Error ? error.message : 'Unknown error';
     }
 
-    // 4. Try fallback method: /me?fields=accounts
+    // 4. Try granular scopes method
+    try {
+      console.log('[Debug Pages] Trying granular scopes method...');
+      
+      // Get token info with granular scopes
+      const tokenInfoUrl = `https://graph.facebook.com/v18.0/oauth/access_token_info?access_token=${accessToken}`;
+      const tokenInfoResponse = await fetch(tokenInfoUrl);
+      
+      results.granularScopesMethod = {
+        status: tokenInfoResponse.status,
+        tokenInfoUrl: tokenInfoUrl.replace(accessToken, '[TOKEN]')
+      };
+      
+      if (tokenInfoResponse.ok) {
+        const tokenInfo = await tokenInfoResponse.json();
+        results.granularScopesMethod.tokenInfo = tokenInfo;
+        
+        // Extract Page IDs from granular scopes
+        const pageIds: string[] = [];
+        if (tokenInfo.granular_scopes && Array.isArray(tokenInfo.granular_scopes)) {
+          tokenInfo.granular_scopes.forEach((scope: any) => {
+            if (scope.scope === 'pages_show_list' || 
+                scope.scope === 'pages_read_engagement' || 
+                scope.scope === 'pages_manage_posts') {
+              if (scope.target_ids && Array.isArray(scope.target_ids)) {
+                scope.target_ids.forEach((targetId: string) => {
+                  if (/^\d+$/.test(targetId)) {
+                    pageIds.push(targetId);
+                  }
+                });
+              }
+            }
+          });
+        }
+        
+        results.granularScopesMethod.pageIds = [...new Set(pageIds)];
+        
+        // Try to fetch page details for each ID
+        const granularPages: any[] = [];
+        for (const pageId of pageIds) {
+          try {
+            const pageUrl = `https://graph.facebook.com/v18.0/${pageId}?fields=id,name,fan_count&access_token=${accessToken}`;
+            const pageResponse = await fetch(pageUrl);
+            
+            if (pageResponse.ok) {
+              const pageData = await pageResponse.json();
+              granularPages.push({
+                id: pageData.id,
+                name: pageData.name || `Page ${pageData.id}`,
+                category: 'Page'
+              });
+            }
+          } catch (error) {
+            console.log(`[Debug Pages] Error fetching page ${pageId}:`, error);
+          }
+        }
+        
+        results.granularScopesMethod.pages = granularPages;
+        console.log('[Debug Pages] Granular scopes method results:', results.granularScopesMethod);
+      } else {
+        const errorText = await tokenInfoResponse.text();
+        results.granularScopesMethod.error = errorText;
+      }
+    } catch (error) {
+      results.granularScopesMethod.error = error instanceof Error ? error.message : 'Unknown error';
+    }
+
+    // 5. Try fallback method: /me?fields=accounts
     try {
       const directPagesUrl = `https://graph.facebook.com/v18.0/me?fields=accounts{id,name,category}&access_token=${accessToken}`;
       console.log('[Debug Pages] Fetching from fallback endpoint:', directPagesUrl.replace(accessToken, '[TOKEN]'));
@@ -145,11 +212,14 @@ export async function POST(request: NextRequest) {
       results.fallbackMethod.error = error instanceof Error ? error.message : 'Unknown error';
     }
 
-    // 5. Summary
+    // 6. Summary
     results.summary = {
       primaryPagesFound: results.primaryMethod.filteredPages?.length || 0,
+      granularScopesPagesFound: results.granularScopesMethod?.pages?.length || 0,
       fallbackPagesFound: results.fallbackMethod.filteredPages?.length || 0,
-      totalPagesFound: (results.primaryMethod.filteredPages?.length || 0) + (results.fallbackMethod.filteredPages?.length || 0)
+      totalPagesFound: (results.primaryMethod.filteredPages?.length || 0) + 
+                      (results.granularScopesMethod?.pages?.length || 0) + 
+                      (results.fallbackMethod.filteredPages?.length || 0)
     };
 
     console.log('[Debug Pages] Final results:', results);
