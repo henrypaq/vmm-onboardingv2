@@ -31,6 +31,36 @@ export default function ClientsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [isFixingAssets, setIsFixingAssets] = useState(false);
+
+  const fixAssets = async () => {
+    try {
+      setIsFixingAssets(true);
+      console.log('[Admin Clients] Fixing assets...');
+      
+      const response = await fetch('/api/admin/fix-assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fix assets: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('[Admin Clients] Fix assets result:', result);
+      
+      // Refresh clients after fixing assets
+      await fetchClients();
+      
+      alert(`Successfully fixed assets for ${result.fixedCount} requests!`);
+    } catch (error) {
+      console.error('[Admin Clients] Error fixing assets:', error);
+      alert(`Error fixing assets: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsFixingAssets(false);
+    }
+  };
 
   const fetchClients = async () => {
     try {
@@ -129,6 +159,10 @@ export default function ClientsPage() {
           <Button onClick={fetchClients} variant="outline" disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
+          </Button>
+          <Button onClick={fixAssets} variant="outline" disabled={isFixingAssets}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFixingAssets ? 'animate-spin' : ''}`} />
+            Fix Assets
           </Button>
           <Button onClick={handleTestClientCreation} variant="outline">
             Test Client Creation
