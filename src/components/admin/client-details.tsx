@@ -143,16 +143,21 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       
       const endpoint = platform === 'meta' ? '/api/meta/test-api' : '/api/oauth/test/google';
       
+      const requestBody = {
+        clientId: clientId,
+        platform: platform,
+        assetId: assetId,
+        assetType: assetType,
+      };
+      
+      console.log(`[API Test] Request body:`, requestBody);
+      
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          clientId: clientId,
-          assetId: assetId,
-          assetType: assetType,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -531,16 +536,16 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                         </div>
                       )}
 
-                      {/* Display assets from onboarding request if available */}
+                      {/* Display assets from client platform connection if available */}
                       {(() => {
-                        const assets = onboardingRequest?.platform_connections?.[connection.platform]?.assets;
-                        console.log(`[Client Details] ${connection.platform} assets:`, assets);
+                        const assets = connection.assets;
+                        console.log(`[Client Details] ${connection.platform} assets from connection:`, assets);
                         return assets && assets.length > 0;
                       })() ? (
                         <div className="mt-3">
                           <label className="text-sm font-medium text-gray-500">Available Assets</label>
                           <div className="mt-1 space-y-2">
-                            {onboardingRequest.platform_connections[connection.platform].assets.map((asset: Asset, index: number) => {
+                            {connection.assets.map((asset: Asset, index: number) => {
                               const testKey = `${connection.platform}-${asset.id}-${asset.type}`;
                               const pagePostsTestKey = `${connection.platform}-${asset.id}-page_posts`;
                               const isLoading = apiTestLoading[testKey];

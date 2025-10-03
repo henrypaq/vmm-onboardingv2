@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
           refresh_token: refreshToken,
           token_expires_at: tokenExpiresAt,
           scopes: scopes || [],
+          assets: assets || [], // Store assets in client_platform_connections
           is_active: true,
         });
       }

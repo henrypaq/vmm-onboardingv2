@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
     let apiUrl: string;
     let summary: string;
 
-    // If no assetId/assetType provided, fallback to userinfo
-    if (!assetId || !assetType) {
-      console.log('[Google Test API] No asset specified, using userinfo fallback');
+    // If no assetId/assetType provided, or assetType is 'basic', fallback to userinfo
+    if (!assetId || !assetType || assetType === 'basic') {
+      console.log('[Google Test API] No asset specified or basic profile test, using userinfo fallback');
       apiUrl = 'https://openidconnect.googleapis.com/v1/userinfo';
       summary = 'Basic profile information from Google account';
       

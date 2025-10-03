@@ -63,6 +63,7 @@ export interface ClientPlatformConnection {
   refresh_token?: string;
   token_expires_at?: string;
   scopes: string[];
+  assets?: any[]; // JSONB array of assets
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -658,6 +659,7 @@ export async function upsertClientPlatformConnectionByStableId(params: Omit<Clie
         refresh_token: params.refresh_token,
         token_expires_at: params.token_expires_at,
         scopes: params.scopes,
+        assets: params.assets,
         is_active: params.is_active,
         updated_at: new Date().toISOString(),
       })
