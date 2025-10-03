@@ -459,33 +459,46 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
       console.log('[Google Asset Discovery] Search Console API EXCEPTION:', error);
     }
 
-    // 4. Business Profile Locations
+    // 4. Business Profile Accounts
     try {
-      console.log('[Google Asset Discovery] Fetching Business Profile locations...');
-      const businessUrl = 'https://mybusinessbusinessinformation.googleapis.com/v1/locations?readMask=name,storeCode,websiteUri';
+      console.log('[Google Asset Discovery] ===========================================');
+      console.log('[Google Asset Discovery] 4. BUSINESS PROFILE ACCOUNTS API CALL');
+      console.log('[Google Asset Discovery] URL: https://mybusinessaccountmanagement.googleapis.com/v1/accounts');
+      const businessUrl = 'https://mybusinessaccountmanagement.googleapis.com/v1/accounts';
       const businessResponse = await fetch(businessUrl, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       
+      console.log('[Google Asset Discovery] Business Profile response status:', businessResponse.status);
+      
       if (businessResponse.ok) {
         const data = await businessResponse.json();
-        console.log('[Google Asset Discovery] Business Profile response:', data);
+        console.log('[Google Asset Discovery] Business Profile SUCCESS - Full response:', JSON.stringify(data, null, 2));
         
-        if (data.locations && data.locations.length > 0) {
-          data.locations.forEach((location: any) => {
-            assets.push({
-              id: location.name.replace('locations/', ''),
-              name: location.title || `Business Profile ${location.name.replace('locations/', '')}`,
-              type: 'business_profile_location'
-            });
+        if (data.accounts && data.accounts.length > 0) {
+          console.log('[Google Asset Discovery] Processing', data.accounts.length, 'Business Profile accounts...');
+          data.accounts.forEach((account: any, index: number) => {
+            console.log(`[Google Asset Discovery] Business Profile Account ${index + 1}:`, account);
+            const asset = {
+              id: account.name.replace('accounts/', ''),
+              name: account.accountName || `Business Profile Account ${account.name.replace('accounts/', '')}`,
+              type: 'business_account'
+            };
+            assets.push(asset);
+            console.log('[Google Asset Discovery] Added Business Profile asset:', asset);
           });
-          console.log('[Google Asset Discovery] Found Business Profile locations:', assets.filter(a => a.type === 'business_profile_location'));
+          console.log('[Google Asset Discovery] Total Business Profile assets found:', assets.filter(a => a.type === 'business_account').length);
+        } else {
+          console.log('[Google Asset Discovery] No Business Profile accounts found in response');
         }
       } else {
-        console.log('[Google Asset Discovery] Business Profile fetch failed:', businessResponse.status);
+        const errorText = await businessResponse.text();
+        console.log('[Google Asset Discovery] Business Profile API FAILED:');
+        console.log('[Google Asset Discovery] Status:', businessResponse.status);
+        console.log('[Google Asset Discovery] Error:', errorText);
       }
     } catch (error) {
-      console.log('[Google Asset Discovery] Business Profile error:', error);
+      console.log('[Google Asset Discovery] Business Profile API EXCEPTION:', error);
     }
 
     // 5. Merchant Center Accounts

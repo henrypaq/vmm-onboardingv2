@@ -568,6 +568,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                           asset.type === 'analytics_property' ? 'Analytics (GA4 Property)' :
                                           asset.type === 'business_profile' ? 'Business Profile' :
                                           asset.type === 'business_profile_location' ? 'Business Profile Location' :
+                                          asset.type === 'business_account' ? 'Business Profile Account' :
                                           asset.type === 'tag_manager' ? 'Tag Manager' :
                                           asset.type === 'tagmanager_account' ? 'Tag Manager Account' :
                                           asset.type === 'search_console' ? 'Search Console' :
@@ -596,6 +597,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                                 break;
                                               case 'business_profile':
                                               case 'business_profile_location':
+                                              case 'business_account':
                                                 googleUrl = 'https://business.google.com/';
                                                 break;
                                               case 'tag_manager':

@@ -222,6 +222,48 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      case 'business_account': {
+        apiUrl = 'https://mybusinessaccountmanagement.googleapis.com/v1/accounts';
+        summary = 'Business Profile accounts';
+        
+        try {
+          const response = await fetch(apiUrl, {
+            headers: { 'Authorization': `Bearer ${connection.access_token}` }
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            return NextResponse.json({
+              ok: false,
+              apiUrl,
+              json: { error: errorText, status: response.status },
+              summary: `Failed to fetch Business Profile accounts: ${response.status}`
+            });
+          }
+
+          const data = await response.json();
+          const matchingAccount = data.accounts?.find((account: any) => 
+            account.name.replace('accounts/', '') === assetId
+          );
+          
+          return NextResponse.json({
+            ok: true,
+            apiUrl,
+            json: matchingAccount || data,
+            summary: matchingAccount
+              ? `Business Profile Account: ${matchingAccount.accountName || assetId}`
+              : `Found ${data.accounts?.length || 0} Business Profile accounts`
+          });
+        } catch (error) {
+          return NextResponse.json({
+            ok: false,
+            apiUrl,
+            json: { error: error instanceof Error ? error.message : 'Unknown error' },
+            summary: 'Failed to fetch Business Profile account data'
+          });
+        }
+      }
+
       case 'tagmanager_account': {
         apiUrl = 'https://www.googleapis.com/tagmanager/v2/accounts';
         summary = 'Tag Manager accounts and containers';
