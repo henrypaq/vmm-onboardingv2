@@ -318,101 +318,145 @@ export async function fetchPlatformAssets(
 export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]> {
   const assets: Asset[] = [];
   
+  console.log('[Google Asset Discovery] ===========================================');
   console.log('[Google Asset Discovery] Starting Google asset discovery...');
+  console.log('[Google Asset Discovery] Access token (first 20 chars):', accessToken.substring(0, 20) + '...');
   
   try {
     // 1. Analytics (GA4) - Account Summaries
     try {
-      console.log('[Google Asset Discovery] Fetching Analytics account summaries...');
+      console.log('[Google Asset Discovery] ===========================================');
+      console.log('[Google Asset Discovery] 1. ANALYTICS API CALL');
+      console.log('[Google Asset Discovery] URL: https://analyticsadmin.googleapis.com/v1/accountSummaries');
       const analyticsUrl = 'https://analyticsadmin.googleapis.com/v1/accountSummaries';
       const analyticsResponse = await fetch(analyticsUrl, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       
       console.log('[Google Asset Discovery] Analytics response status:', analyticsResponse.status);
+      console.log('[Google Asset Discovery] Analytics response headers:', Object.fromEntries(analyticsResponse.headers.entries()));
       
       if (analyticsResponse.ok) {
         const data = await analyticsResponse.json();
-        console.log('[Google Asset Discovery] Analytics response:', data);
+        console.log('[Google Asset Discovery] Analytics SUCCESS - Full response:', JSON.stringify(data, null, 2));
         
         if (data.accountSummaries && data.accountSummaries.length > 0) {
-          data.accountSummaries.forEach((summary: any) => {
-            summary.propertySummaries?.forEach((property: any) => {
-              assets.push({
-                id: property.property.replace('properties/', ''),
-                name: property.displayName || `Analytics Property ${property.property.replace('properties/', '')}`,
-                type: 'analytics_property'
+          console.log('[Google Asset Discovery] Processing', data.accountSummaries.length, 'account summaries...');
+          data.accountSummaries.forEach((summary: any, index: number) => {
+            console.log(`[Google Asset Discovery] Account ${index + 1}:`, summary);
+            if (summary.propertySummaries && summary.propertySummaries.length > 0) {
+              summary.propertySummaries.forEach((property: any, propIndex: number) => {
+                console.log(`[Google Asset Discovery] Property ${propIndex + 1}:`, property);
+                const asset = {
+                  id: property.property.replace('properties/', ''),
+                  name: property.displayName || `Analytics Property ${property.property.replace('properties/', '')}`,
+                  type: 'analytics_property'
+                };
+                assets.push(asset);
+                console.log('[Google Asset Discovery] Added Analytics asset:', asset);
               });
-            });
+            } else {
+              console.log(`[Google Asset Discovery] Account ${index + 1} has no properties`);
+            }
           });
-          console.log('[Google Asset Discovery] Found Analytics properties:', assets.filter(a => a.type === 'analytics_property'));
+          console.log('[Google Asset Discovery] Total Analytics assets found:', assets.filter(a => a.type === 'analytics_property').length);
         } else {
-          console.log('[Google Asset Discovery] No Analytics properties found in response');
+          console.log('[Google Asset Discovery] No Analytics account summaries found in response');
         }
       } else {
         const errorText = await analyticsResponse.text();
-        console.log('[Google Asset Discovery] Analytics fetch failed:', analyticsResponse.status, errorText);
+        console.log('[Google Asset Discovery] Analytics API FAILED:');
+        console.log('[Google Asset Discovery] Status:', analyticsResponse.status);
+        console.log('[Google Asset Discovery] Error:', errorText);
       }
     } catch (error) {
-      console.log('[Google Asset Discovery] Analytics error:', error);
+      console.log('[Google Asset Discovery] Analytics API EXCEPTION:', error);
     }
 
     // 2. Tag Manager Accounts
     try {
-      console.log('[Google Asset Discovery] Fetching Tag Manager accounts...');
+      console.log('[Google Asset Discovery] ===========================================');
+      console.log('[Google Asset Discovery] 2. TAG MANAGER API CALL');
+      console.log('[Google Asset Discovery] URL: https://www.googleapis.com/tagmanager/v2/accounts');
       const tagmanagerUrl = 'https://www.googleapis.com/tagmanager/v2/accounts';
       const tagmanagerResponse = await fetch(tagmanagerUrl, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       
+      console.log('[Google Asset Discovery] Tag Manager response status:', tagmanagerResponse.status);
+      console.log('[Google Asset Discovery] Tag Manager response headers:', Object.fromEntries(tagmanagerResponse.headers.entries()));
+      
       if (tagmanagerResponse.ok) {
         const data = await tagmanagerResponse.json();
-        console.log('[Google Asset Discovery] Tag Manager response:', data);
+        console.log('[Google Asset Discovery] Tag Manager SUCCESS - Full response:', JSON.stringify(data, null, 2));
         
         if (data.account && data.account.length > 0) {
-          data.account.forEach((account: any) => {
-            assets.push({
+          console.log('[Google Asset Discovery] Processing', data.account.length, 'Tag Manager accounts...');
+          data.account.forEach((account: any, index: number) => {
+            console.log(`[Google Asset Discovery] Tag Manager Account ${index + 1}:`, account);
+            const asset = {
               id: account.accountId,
               name: account.name || `Tag Manager Account ${account.accountId}`,
               type: 'tagmanager_account'
-            });
+            };
+            assets.push(asset);
+            console.log('[Google Asset Discovery] Added Tag Manager asset:', asset);
           });
-          console.log('[Google Asset Discovery] Found Tag Manager accounts:', assets.filter(a => a.type === 'tagmanager_account'));
+          console.log('[Google Asset Discovery] Total Tag Manager assets found:', assets.filter(a => a.type === 'tagmanager_account').length);
+        } else {
+          console.log('[Google Asset Discovery] No Tag Manager accounts found in response');
         }
       } else {
-        console.log('[Google Asset Discovery] Tag Manager fetch failed:', tagmanagerResponse.status);
+        const errorText = await tagmanagerResponse.text();
+        console.log('[Google Asset Discovery] Tag Manager API FAILED:');
+        console.log('[Google Asset Discovery] Status:', tagmanagerResponse.status);
+        console.log('[Google Asset Discovery] Error:', errorText);
       }
     } catch (error) {
-      console.log('[Google Asset Discovery] Tag Manager error:', error);
+      console.log('[Google Asset Discovery] Tag Manager API EXCEPTION:', error);
     }
 
     // 3. Search Console Sites
     try {
-      console.log('[Google Asset Discovery] Fetching Search Console sites...');
+      console.log('[Google Asset Discovery] ===========================================');
+      console.log('[Google Asset Discovery] 3. SEARCH CONSOLE API CALL');
+      console.log('[Google Asset Discovery] URL: https://www.googleapis.com/webmasters/v3/sites');
       const searchconsoleUrl = 'https://www.googleapis.com/webmasters/v3/sites';
       const searchconsoleResponse = await fetch(searchconsoleUrl, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       
+      console.log('[Google Asset Discovery] Search Console response status:', searchconsoleResponse.status);
+      console.log('[Google Asset Discovery] Search Console response headers:', Object.fromEntries(searchconsoleResponse.headers.entries()));
+      
       if (searchconsoleResponse.ok) {
         const data = await searchconsoleResponse.json();
-        console.log('[Google Asset Discovery] Search Console response:', data);
+        console.log('[Google Asset Discovery] Search Console SUCCESS - Full response:', JSON.stringify(data, null, 2));
         
         if (data.siteEntry && data.siteEntry.length > 0) {
-          data.siteEntry.forEach((site: any) => {
-            assets.push({
+          console.log('[Google Asset Discovery] Processing', data.siteEntry.length, 'Search Console sites...');
+          data.siteEntry.forEach((site: any, index: number) => {
+            console.log(`[Google Asset Discovery] Search Console Site ${index + 1}:`, site);
+            const asset = {
               id: site.siteUrl,
               name: site.siteUrl,
               type: 'searchconsole_site'
-            });
+            };
+            assets.push(asset);
+            console.log('[Google Asset Discovery] Added Search Console asset:', asset);
           });
-          console.log('[Google Asset Discovery] Found Search Console sites:', assets.filter(a => a.type === 'searchconsole_site'));
+          console.log('[Google Asset Discovery] Total Search Console assets found:', assets.filter(a => a.type === 'searchconsole_site').length);
+        } else {
+          console.log('[Google Asset Discovery] No Search Console sites found in response');
         }
       } else {
-        console.log('[Google Asset Discovery] Search Console fetch failed:', searchconsoleResponse.status);
+        const errorText = await searchconsoleResponse.text();
+        console.log('[Google Asset Discovery] Search Console API FAILED:');
+        console.log('[Google Asset Discovery] Status:', searchconsoleResponse.status);
+        console.log('[Google Asset Discovery] Error:', errorText);
       }
     } catch (error) {
-      console.log('[Google Asset Discovery] Search Console error:', error);
+      console.log('[Google Asset Discovery] Search Console API EXCEPTION:', error);
     }
 
     // 4. Business Profile Locations
@@ -512,11 +556,23 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
       console.log('[Google Asset Discovery] Google Ads error:', error);
     }
 
-    console.log('[Google Asset Discovery] Final discovered assets:', assets);
+    console.log('[Google Asset Discovery] ===========================================');
+    console.log('[Google Asset Discovery] FINAL SUMMARY');
+    console.log('[Google Asset Discovery] Total assets discovered:', assets.length);
+    
+    // Group assets by type for summary
+    const assetsByType = assets.reduce((acc, asset) => {
+      acc[asset.type] = (acc[asset.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    console.log('[Google Asset Discovery] Assets by type:', assetsByType);
+    console.log('[Google Asset Discovery] All discovered assets:', assets);
     
     // If no assets were discovered, add some test assets for debugging
     if (assets.length === 0) {
-      console.log('[Google Asset Discovery] No assets discovered, adding test assets for debugging...');
+      console.log('[Google Asset Discovery] ===========================================');
+      console.log('[Google Asset Discovery] NO ASSETS DISCOVERED - ADDING TEST ASSETS');
       assets.push(
         {
           id: 'test-analytics-123',
@@ -536,6 +592,10 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
       );
       console.log('[Google Asset Discovery] Added test assets:', assets);
     }
+    
+    console.log('[Google Asset Discovery] ===========================================');
+    console.log('[Google Asset Discovery] RETURNING ASSETS:', assets);
+    console.log('[Google Asset Discovery] ===========================================');
     
     return assets;
     

@@ -6,11 +6,13 @@ export async function POST(request: NextRequest) {
   try {
     const { token, platform, accessToken, refreshToken, tokenExpiresAt, scopes, platformUserId, platformUsername, client_email, client_name, company_name, assets } = await request.json();
     
-    console.log('[Store OAuth] Received data:', {
-      platform,
-      assetsCount: assets?.length || 0,
-      assets: assets?.map((a: any) => ({ id: a.id, name: a.name, type: a.type }))
-    });
+    console.log('[Store OAuth] ===========================================');
+    console.log('[Store OAuth] RECEIVED OAUTH DATA');
+    console.log('[Store OAuth] Platform:', platform);
+    console.log('[Store OAuth] Assets count:', assets?.length || 0);
+    console.log('[Store OAuth] Assets details:', assets?.map((a: any) => ({ id: a.id, name: a.name, type: a.type })));
+    console.log('[Store OAuth] Full assets array:', assets);
+    console.log('[Store OAuth] ===========================================');
     
     if (!token || !platform || !accessToken) {
       return NextResponse.json(
@@ -94,6 +96,14 @@ export async function POST(request: NextRequest) {
       }
 
       if (clientId && platformUserId) {
+        console.log('[Store OAuth] ===========================================');
+        console.log('[Store OAuth] STORING CLIENT PLATFORM CONNECTION');
+        console.log('[Store OAuth] Client ID:', clientId);
+        console.log('[Store OAuth] Platform:', platform);
+        console.log('[Store OAuth] Platform User ID:', platformUserId);
+        console.log('[Store OAuth] Assets to store:', assets);
+        console.log('[Store OAuth] ===========================================');
+        
         await upsertClientPlatformConnectionByStableId({
           client_id: clientId,
           platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
@@ -106,6 +116,8 @@ export async function POST(request: NextRequest) {
           assets: assets || [], // Store assets in client_platform_connections
           is_active: true,
         });
+        
+        console.log('[Store OAuth] Successfully stored client platform connection with assets');
       }
     } catch (e) {
       console.warn('[Store OAuth] Upsert to client_platform_connections failed (will not block flow):', e);
