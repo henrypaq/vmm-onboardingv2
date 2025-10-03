@@ -4,158 +4,156 @@ import { getSupabaseAdmin } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const { clientId, platform, assetId, assetType } = await request.json();
-    
-    if (!clientId || !platform || !assetId) {
+
+    if (!clientId || !platform || !assetId || !assetType) {
       return NextResponse.json(
-        { error: 'Client ID, platform, and asset ID are required' },
+        { error: 'Missing required parameters: clientId, platform, assetId, assetType' },
         { status: 400 }
       );
     }
 
     if (platform !== 'google') {
       return NextResponse.json(
-        { error: 'This endpoint only supports Google platform' },
+        { error: 'This endpoint only supports Google platform testing' },
         { status: 400 }
       );
     }
 
-    const supabase = getSupabaseAdmin();
+    console.log(`[Google Test API] Testing ${assetType} for client ${clientId}, asset ${assetId}`);
 
-    // Look up the client's Google connection
+    // Get client's Google connection
+    const supabase = getSupabaseAdmin();
     const { data: connection, error: connectionError } = await supabase
       .from('client_platform_connections')
-      .select('access_token, scopes, is_active')
+      .select('*')
       .eq('client_id', clientId)
       .eq('platform', 'google')
-      .eq('is_active', true)
       .single();
 
     if (connectionError || !connection) {
+      console.error('[Google Test API] Connection not found:', connectionError);
       return NextResponse.json(
-        { error: 'No active Google connection found for this client' },
+        { error: 'Google connection not found for this client' },
         { status: 404 }
       );
     }
 
-    // Test Google API access based on asset type
-    try {
-      let testResult;
-      
-      if (assetType === 'analytics_property') {
-        // Test Analytics Management API
-        testResult = await testGoogleAnalytics(connection.access_token, assetId);
-      } else if (assetType === 'ads_account') {
-        // Test Google Ads API (simulated for now)
-        testResult = await testGoogleAds(connection.access_token, assetId);
-      } else if (assetType === 'business_profile') {
-        // Test Business Profile API (simulated for now)
-        testResult = await testGoogleBusinessProfile(connection.access_token, assetId);
-      } else if (assetType === 'tag_manager') {
-        // Test Tag Manager API (simulated for now)
-        testResult = await testGoogleTagManager(connection.access_token, assetId);
-      } else if (assetType === 'search_console') {
-        // Test Search Console API (simulated for now)
-        testResult = await testGoogleSearchConsole(connection.access_token, assetId);
-      } else {
-        // Generic token validation
-        testResult = await testGoogleToken(connection.access_token);
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: `Successfully tested Google ${assetType || 'API'} access`,
-        assetData: testResult
-      });
-
-    } catch (apiError) {
-      console.error('[Google Test] API call failed:', apiError);
+    if (!connection.access_token) {
       return NextResponse.json(
-        { 
-          error: 'Failed to call Google API',
-          details: apiError instanceof Error ? apiError.message : 'Unknown error'
-        },
-        { status: 500 }
+        { error: 'No access token found for Google connection' },
+        { status: 400 }
       );
     }
 
+    let apiUrl: string;
+    let description: string;
+    let humanReadableLabel: string;
+
+    // Set up API call based on asset type
+    switch (assetType) {
+      case 'ads_account':
+        apiUrl = `https://googleads.googleapis.com/v14/customers/${assetId}/campaigns?access_token=${connection.access_token}&pageSize=5`;
+        description = `Google Ads Campaigns for account ${assetId}`;
+        humanReadableLabel = `Google Ads Campaigns (adwords) – This confirms we can fetch campaigns from the client's Google Ads account.`;
+        break;
+      
+      case 'analytics_property':
+        apiUrl = `https://analyticsadmin.googleapis.com/v1beta/properties/${assetId}?access_token=${connection.access_token}`;
+        description = `Analytics Property Info for ${assetId}`;
+        humanReadableLabel = `Analytics Property Info (analytics.readonly) – This confirms we can access the client's GA4 property details and configuration.`;
+        break;
+      
+      case 'business_profile':
+        apiUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${assetId}/locations?access_token=${connection.access_token}`;
+        description = `Business Profile Locations for ${assetId}`;
+        humanReadableLabel = `Business Profile Locations (business.manage) – This confirms we can access the client's business locations and profile information.`;
+        break;
+      
+      case 'tag_manager':
+        apiUrl = `https://tagmanager.googleapis.com/v2/accounts/${assetId}/containers?access_token=${connection.access_token}`;
+        description = `Tag Manager Containers for ${assetId}`;
+        humanReadableLabel = `Tag Manager Containers (tagmanager.readonly) – This confirms we can access the client's Tag Manager containers and configuration.`;
+        break;
+      
+      case 'search_console':
+        apiUrl = `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(assetId)}/searchAnalytics/query?access_token=${connection.access_token}`;
+        description = `Search Console Analytics for ${assetId}`;
+        humanReadableLabel = `Search Console Analytics (webmasters.readonly) – This confirms we can access search performance data for the client's website.`;
+        break;
+      
+      case 'merchant_center':
+        apiUrl = `https://shoppingcontent.googleapis.com/content/v2.1/${assetId}/products?access_token=${connection.access_token}&maxResults=5`;
+        description = `Merchant Center Products for ${assetId}`;
+        humanReadableLabel = `Merchant Center Products (content) – This confirms we can access the client's product catalog in Merchant Center.`;
+        break;
+      
+      default:
+        // Generic fallback
+        apiUrl = `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${connection.access_token}`;
+        description = `Google Token Info`;
+        humanReadableLabel = `Google Token Validation – Basic token validation and scope information.`;
+    }
+
+    console.log(`[Google Test API] Making request to: ${apiUrl.replace(connection.access_token, '[TOKEN]')}`);
+
+    // Make the API call
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      // If specific API call failed, try token validation as fallback
+      if (assetType !== 'generic') {
+        console.log('[Google Test API] Specific API failed, trying token validation fallback...');
+        const tokenUrl = `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${connection.access_token}`;
+        const tokenResponse = await fetch(tokenUrl);
+        
+        if (tokenResponse.ok) {
+          const tokenData = await tokenResponse.json();
+          return NextResponse.json({
+            success: true,
+            description: `Token validation (${assetType} API not accessible)`,
+            humanReadableLabel: `Token Validation – The specific ${assetType} API is not accessible, but the token is valid with scopes: ${tokenData.scope || 'unknown'}`,
+            assetType,
+            assetId,
+            rawJson: tokenData,
+            apiUrl: tokenUrl.replace(connection.access_token, '[TOKEN]')
+          });
+        }
+      }
+      
+      const errorText = await response.text();
+      console.error('[Google Test API] API call failed:', response.status, errorText);
+      return NextResponse.json({
+        success: false,
+        description,
+        humanReadableLabel: `Error testing ${assetType} – API call failed with status ${response.status}`,
+        assetType,
+        assetId,
+        rawJson: { error: errorText, status: response.status },
+        apiUrl: apiUrl.replace(connection.access_token, '[TOKEN]')
+      }, { status: response.status });
+    }
+
+    const data = await response.json();
+
+    return NextResponse.json({
+      success: true,
+      description,
+      humanReadableLabel,
+      assetType,
+      assetId,
+      rawJson: data,
+      apiUrl: apiUrl.replace(connection.access_token, '[TOKEN]')
+    });
+
   } catch (error) {
-    console.error('[Google Test] Server error:', error);
+    console.error('[Google Test API] Error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        success: false,
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
-}
-
-async function testGoogleToken(accessToken: string) {
-  // Test basic token validity
-  const response = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`);
-  
-  if (!response.ok) {
-    throw new Error('Invalid or expired Google access token');
-  }
-
-  const data = await response.json();
-  return {
-    accountId: data.user_id || 'Unknown',
-    email: data.email || 'Unknown',
-    scope: data.scope || 'Unknown'
-  };
-}
-
-async function testGoogleAnalytics(accessToken: string, propertyId: string) {
-  // Test Analytics Management API
-  const response = await fetch(`https://analytics.googleapis.com/analytics/v3/management/accounts?access_token=${accessToken}`);
-  
-  if (!response.ok) {
-    throw new Error('Analytics API access denied or invalid token');
-  }
-
-  const data = await response.json();
-  const accounts = data.items || [];
-  
-  return {
-    propertyId: propertyId,
-    accountCount: accounts.length,
-    accounts: accounts.slice(0, 2).map((account: any) => ({
-      id: account.id,
-      name: account.name
-    }))
-  };
-}
-
-async function testGoogleAds(accessToken: string, accountId: string) {
-  // For now, simulate Google Ads API test since it requires complex setup
-  return {
-    accountId: accountId,
-    message: 'Google Ads API test (simulated)',
-    status: 'Token valid, Ads API access confirmed'
-  };
-}
-
-async function testGoogleBusinessProfile(accessToken: string, locationId: string) {
-  // For now, simulate Business Profile API test
-  return {
-    locationId: locationId,
-    message: 'Google Business Profile API test (simulated)',
-    status: 'Token valid, Business Profile API access confirmed'
-  };
-}
-
-async function testGoogleTagManager(accessToken: string, containerId: string) {
-  // For now, simulate Tag Manager API test
-  return {
-    containerId: containerId,
-    message: 'Google Tag Manager API test (simulated)',
-    status: 'Token valid, Tag Manager API access confirmed'
-  };
-}
-
-async function testGoogleSearchConsole(accessToken: string, propertyId: string) {
-  // For now, simulate Search Console API test
-  return {
-    propertyId: propertyId,
-    message: 'Google Search Console API test (simulated)',
-    status: 'Token valid, Search Console API access confirmed'
-  };
 }

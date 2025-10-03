@@ -559,82 +559,242 @@ async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<A
 async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise<Asset[]> {
   const assets: Asset[] = [];
   
+  console.log('[Google] Starting asset fetch with scopes:', scopes);
+  
   try {
     // Fetch Google Ads accounts if ads scope is present
     if (scopes.some(scope => scope.includes('adwords'))) {
+      console.log('[Google] adwords scope detected, fetching Google Ads accounts...');
       try {
-        // For now, simulate Google Ads accounts since the API setup is complex
-        assets.push({
-          id: 'ads_placeholder',
-          name: 'Google Ads Account (simulated)',
-          type: 'ads_account'
-        });
+        const adsUrl = `https://googleads.googleapis.com/v14/customers?access_token=${accessToken}`;
+        console.log('[Google] Fetching Google Ads accounts from:', adsUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(adsUrl);
+        console.log('[Google] Google Ads response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Google] Google Ads response data:', data);
+          
+          if (data.resources && data.resources.length > 0) {
+            console.log('[Google] Found Google Ads accounts:', data.resources);
+            const adsAccounts = data.resources.map((account: any) => ({
+              id: account.resourceName.replace('customers/', ''),
+              name: account.descriptiveName || `Google Ads Account ${account.resourceName.replace('customers/', '')}`,
+              type: 'ads_account'
+            }));
+            assets.push(...adsAccounts);
+            console.log('[Google] Added Google Ads accounts to assets:', adsAccounts);
+          } else {
+            console.log('[Google] No Google Ads accounts found in response');
+          }
+        } else {
+          const errorText = await response.text();
+          console.log('[Google] Google Ads fetch failed:', response.status, errorText);
+        }
       } catch (error) {
-        console.log('[Google] Failed to fetch ads accounts:', error);
+        console.log('[Google] Failed to fetch Google Ads accounts:', error);
       }
+    } else {
+      console.log('[Google] adwords scope not found in scopes:', scopes);
     }
 
     // Fetch Analytics properties if analytics scope is present
     if (scopes.some(scope => scope.includes('analytics.readonly'))) {
+      console.log('[Google] analytics.readonly scope detected, fetching Analytics properties...');
       try {
-        // For now, simulate Analytics properties
-        assets.push({
-          id: 'analytics_placeholder',
-          name: 'Google Analytics Property (simulated)',
-          type: 'analytics_property'
-        });
+        const analyticsUrl = `https://analyticsadmin.googleapis.com/v1beta/accounts?access_token=${accessToken}`;
+        console.log('[Google] Fetching Analytics accounts from:', analyticsUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(analyticsUrl);
+        console.log('[Google] Analytics response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Google] Analytics response data:', data);
+          
+          if (data.accounts && data.accounts.length > 0) {
+            console.log('[Google] Found Analytics accounts:', data.accounts);
+            const analyticsAccounts = data.accounts.map((account: any) => ({
+              id: account.name.replace('accounts/', ''),
+              name: account.displayName || `Analytics Account ${account.name.replace('accounts/', '')}`,
+              type: 'analytics_property'
+            }));
+            assets.push(...analyticsAccounts);
+            console.log('[Google] Added Analytics accounts to assets:', analyticsAccounts);
+          } else {
+            console.log('[Google] No Analytics accounts found in response');
+          }
+        } else {
+          const errorText = await response.text();
+          console.log('[Google] Analytics fetch failed:', response.status, errorText);
+        }
       } catch (error) {
-        console.log('[Google] Failed to fetch analytics properties:', error);
+        console.log('[Google] Failed to fetch Analytics properties:', error);
       }
+    } else {
+      console.log('[Google] analytics.readonly scope not found in scopes:', scopes);
     }
 
     // Fetch Business Profile locations if business scope is present
     if (scopes.some(scope => scope.includes('business.manage'))) {
+      console.log('[Google] business.manage scope detected, fetching Business Profile locations...');
       try {
-        assets.push({
-          id: 'business_placeholder',
-          name: 'Google Business Profile Location (simulated)',
-          type: 'business_profile'
-        });
+        const businessUrl = `https://mybusinessaccountmanagement.googleapis.com/v1/accounts?access_token=${accessToken}`;
+        console.log('[Google] Fetching Business Profile accounts from:', businessUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(businessUrl);
+        console.log('[Google] Business Profile response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Google] Business Profile response data:', data);
+          
+          if (data.accounts && data.accounts.length > 0) {
+            console.log('[Google] Found Business Profile accounts:', data.accounts);
+            const businessAccounts = data.accounts.map((account: any) => ({
+              id: account.name.replace('accounts/', ''),
+              name: account.accountName || `Business Profile ${account.name.replace('accounts/', '')}`,
+              type: 'business_profile'
+            }));
+            assets.push(...businessAccounts);
+            console.log('[Google] Added Business Profile accounts to assets:', businessAccounts);
+          } else {
+            console.log('[Google] No Business Profile accounts found in response');
+          }
+        } else {
+          const errorText = await response.text();
+          console.log('[Google] Business Profile fetch failed:', response.status, errorText);
+        }
       } catch (error) {
-        console.log('[Google] Failed to fetch business profile:', error);
+        console.log('[Google] Failed to fetch Business Profile locations:', error);
       }
+    } else {
+      console.log('[Google] business.manage scope not found in scopes:', scopes);
     }
 
     // Fetch Tag Manager containers if tagmanager scope is present
     if (scopes.some(scope => scope.includes('tagmanager.readonly'))) {
+      console.log('[Google] tagmanager.readonly scope detected, fetching Tag Manager containers...');
       try {
-        assets.push({
-          id: 'tagmanager_placeholder',
-          name: 'Google Tag Manager Container (simulated)',
-          type: 'tag_manager'
-        });
+        const tagmanagerUrl = `https://tagmanager.googleapis.com/v2/accounts?access_token=${accessToken}`;
+        console.log('[Google] Fetching Tag Manager accounts from:', tagmanagerUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(tagmanagerUrl);
+        console.log('[Google] Tag Manager response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Google] Tag Manager response data:', data);
+          
+          if (data.account && data.account.length > 0) {
+            console.log('[Google] Found Tag Manager accounts:', data.account);
+            const tagmanagerAccounts = data.account.map((account: any) => ({
+              id: account.accountId,
+              name: account.name || `Tag Manager Account ${account.accountId}`,
+              type: 'tag_manager'
+            }));
+            assets.push(...tagmanagerAccounts);
+            console.log('[Google] Added Tag Manager accounts to assets:', tagmanagerAccounts);
+          } else {
+            console.log('[Google] No Tag Manager accounts found in response');
+          }
+        } else {
+          const errorText = await response.text();
+          console.log('[Google] Tag Manager fetch failed:', response.status, errorText);
+        }
       } catch (error) {
-        console.log('[Google] Failed to fetch tag manager:', error);
+        console.log('[Google] Failed to fetch Tag Manager containers:', error);
       }
+    } else {
+      console.log('[Google] tagmanager.readonly scope not found in scopes:', scopes);
     }
 
     // Fetch Search Console properties if webmasters scope is present
     if (scopes.some(scope => scope.includes('webmasters.readonly'))) {
+      console.log('[Google] webmasters.readonly scope detected, fetching Search Console sites...');
       try {
-        assets.push({
-          id: 'searchconsole_placeholder',
-          name: 'Google Search Console Property (simulated)',
-          type: 'search_console'
-        });
+        const searchconsoleUrl = `https://www.googleapis.com/webmasters/v3/sites?access_token=${accessToken}`;
+        console.log('[Google] Fetching Search Console sites from:', searchconsoleUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(searchconsoleUrl);
+        console.log('[Google] Search Console response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Google] Search Console response data:', data);
+          
+          if (data.siteEntry && data.siteEntry.length > 0) {
+            console.log('[Google] Found Search Console sites:', data.siteEntry);
+            const searchconsoleSites = data.siteEntry.map((site: any) => ({
+              id: site.siteUrl,
+              name: site.siteUrl,
+              type: 'search_console'
+            }));
+            assets.push(...searchconsoleSites);
+            console.log('[Google] Added Search Console sites to assets:', searchconsoleSites);
+          } else {
+            console.log('[Google] No Search Console sites found in response');
+          }
+        } else {
+          const errorText = await response.text();
+          console.log('[Google] Search Console fetch failed:', response.status, errorText);
+        }
       } catch (error) {
-        console.log('[Google] Failed to fetch search console:', error);
+        console.log('[Google] Failed to fetch Search Console properties:', error);
       }
+    } else {
+      console.log('[Google] webmasters.readonly scope not found in scopes:', scopes);
+    }
+
+    // Fetch Merchant Center accounts if content scope is present
+    if (scopes.some(scope => scope.includes('content'))) {
+      console.log('[Google] content scope detected, fetching Merchant Center accounts...');
+      try {
+        const merchantUrl = `https://shoppingcontent.googleapis.com/content/v2.1/accounts?access_token=${accessToken}`;
+        console.log('[Google] Fetching Merchant Center accounts from:', merchantUrl.replace(accessToken, '[TOKEN]'));
+        
+        const response = await fetch(merchantUrl);
+        console.log('[Google] Merchant Center response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Google] Merchant Center response data:', data);
+          
+          if (data.resources && data.resources.length > 0) {
+            console.log('[Google] Found Merchant Center accounts:', data.resources);
+            const merchantAccounts = data.resources.map((account: any) => ({
+              id: account.id,
+              name: account.name || `Merchant Center Account ${account.id}`,
+              type: 'merchant_center'
+            }));
+            assets.push(...merchantAccounts);
+            console.log('[Google] Added Merchant Center accounts to assets:', merchantAccounts);
+          } else {
+            console.log('[Google] No Merchant Center accounts found in response');
+          }
+        } else {
+          const errorText = await response.text();
+          console.log('[Google] Merchant Center fetch failed:', response.status, errorText);
+        }
+      } catch (error) {
+        console.log('[Google] Failed to fetch Merchant Center accounts:', error);
+      }
+    } else {
+      console.log('[Google] content scope not found in scopes:', scopes);
     }
 
     // If no assets found, add placeholder
     if (assets.length === 0) {
+      console.log('[Google] No assets found, adding placeholder');
       assets.push({
         id: 'placeholder',
         name: 'Basic Access (no advanced assets)',
         type: 'basic'
       });
     }
+    
+    console.log('[Google] Final assets list:', assets);
   } catch (error) {
     console.error('[Google] Error fetching assets:', error);
     assets.push({

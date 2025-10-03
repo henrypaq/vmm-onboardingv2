@@ -551,7 +551,17 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                     <div>
                                       <span className="text-sm font-medium">{asset.name}</span>
                                       <span className="text-xs text-gray-500 ml-2 capitalize">
-                                        ({asset.type === 'catalog' ? 'Product Catalog' : asset.type === 'ad_account' ? 'Ad Account' : asset.type === 'page' ? 'Page' : asset.type === 'business_dataset' ? 'Business Manager' : asset.type === 'instagram_account' ? 'Instagram Account' : asset.type})
+                                        ({asset.type === 'catalog' ? 'Product Catalog' : 
+                                          asset.type === 'ad_account' ? 'Ad Account' : 
+                                          asset.type === 'page' ? 'Page' : 
+                                          asset.type === 'business_dataset' ? 'Business Manager' : 
+                                          asset.type === 'instagram_account' ? 'Instagram Account' : 
+                                          asset.type === 'analytics_property' ? 'Analytics Property' :
+                                          asset.type === 'business_profile' ? 'Business Profile' :
+                                          asset.type === 'tag_manager' ? 'Tag Manager' :
+                                          asset.type === 'search_console' ? 'Search Console' :
+                                          asset.type === 'merchant_center' ? 'Merchant Center' :
+                                          asset.type})
                                       </span>
                                     </div>
                                     <div className="flex space-x-2">
@@ -559,7 +569,40 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                         size="sm"
                                         variant="outline"
                                         className="text-xs"
-                                        onClick={() => console.log(`Open ${asset.name} in ${connection.platform}`)}
+                                        onClick={() => {
+                                          if (connection.platform === 'google') {
+                                            // Open appropriate Google dashboard based on asset type
+                                            let googleUrl = '';
+                                            switch (asset.type) {
+                                              case 'ads_account':
+                                                googleUrl = `https://ads.google.com/aw/campaigns?campaignId=&accountId=${asset.id}`;
+                                                break;
+                                              case 'analytics_property':
+                                                googleUrl = `https://analytics.google.com/analytics/web/#/p${asset.id}`;
+                                                break;
+                                              case 'business_profile':
+                                                googleUrl = 'https://business.google.com/';
+                                                break;
+                                              case 'tag_manager':
+                                                googleUrl = `https://tagmanager.google.com/#/container/accounts/${asset.id}`;
+                                                break;
+                                              case 'search_console':
+                                                googleUrl = `https://search.google.com/search-console?resource_id=${encodeURIComponent(asset.id)}`;
+                                                break;
+                                              case 'merchant_center':
+                                                googleUrl = `https://merchants.google.com/mc/overview?a=${asset.id}`;
+                                                break;
+                                              default:
+                                                googleUrl = 'https://myaccount.google.com/';
+                                            }
+                                            window.open(googleUrl, '_blank');
+                                          } else if (connection.platform === 'meta') {
+                                            // Meta URLs would go here
+                                            console.log(`Open ${asset.name} in Meta`);
+                                          } else {
+                                            console.log(`Open ${asset.name} in ${connection.platform}`);
+                                          }
+                                        }}
                                       >
                                         Open in {connection.platform === 'meta' ? 'Meta' : connection.platform === 'google' ? 'Google' : connection.platform}
                                       </Button>

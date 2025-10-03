@@ -10,7 +10,8 @@ export const scopes = {
     "https://www.googleapis.com/auth/analytics.readonly": "Google Analytics Account - Read website and app analytics data",
     "https://www.googleapis.com/auth/business.manage": "Google Business Profile Location - Manage business listings and reviews",
     "https://www.googleapis.com/auth/tagmanager.readonly": "Google Tag Manager - Read tag configuration and data",
-    "https://www.googleapis.com/auth/webmasters.readonly": "Google Search Console - Read search performance and sitemap data"
+    "https://www.googleapis.com/auth/webmasters.readonly": "Google Search Console - Read search performance and sitemap data",
+    "https://www.googleapis.com/auth/content": "Google Merchant Center - Access product catalog and merchant data"
   },
   meta: {
     "ads_management": "Ad Accounts - Manage Facebook and Instagram ad campaigns",
@@ -38,7 +39,8 @@ export const availableScopes = {
     "https://www.googleapis.com/auth/analytics.readonly", 
     "https://www.googleapis.com/auth/business.manage",
     "https://www.googleapis.com/auth/tagmanager.readonly",
-    "https://www.googleapis.com/auth/webmasters.readonly"
+    "https://www.googleapis.com/auth/webmasters.readonly",
+    "https://www.googleapis.com/auth/content"
     // openid, email, profile are always included automatically
   ],
   meta: [
@@ -105,7 +107,8 @@ export function getGoogleServiceName(scope: string): string {
     'https://www.googleapis.com/auth/analytics.readonly': 'Google Analytics Account',
     'https://www.googleapis.com/auth/business.manage': 'Google Business Profile Location',
     'https://www.googleapis.com/auth/tagmanager.readonly': 'Google Tag Manager',
-    'https://www.googleapis.com/auth/webmasters.readonly': 'Google Search Console'
+    'https://www.googleapis.com/auth/webmasters.readonly': 'Google Search Console',
+    'https://www.googleapis.com/auth/content': 'Google Merchant Center'
   };
   return serviceMap[scope] || scope;
 }
