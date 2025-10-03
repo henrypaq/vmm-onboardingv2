@@ -545,7 +545,14 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                         <div className="mt-3">
                           <label className="text-sm font-medium text-gray-500">Available Assets</label>
                           <div className="mt-1 space-y-2">
-                            {connection.assets.map((asset: Asset, index: number) => {
+                            {(() => {
+                              console.log('GOOGLE_ASSETS_UI_INPUT', { 
+                                platform: connection.platform, 
+                                assets: connection.assets,
+                                assetCount: connection.assets?.length || 0
+                              });
+                              return connection.assets;
+                            })().map((asset: Asset, index: number) => {
                               const testKey = `${connection.platform}-${asset.id}-${asset.type}`;
                               const pagePostsTestKey = `${connection.platform}-${asset.id}-page_posts`;
                               const isLoading = apiTestLoading[testKey];

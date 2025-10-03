@@ -339,6 +339,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
       if (analyticsResponse.ok) {
         const data = await analyticsResponse.json();
         console.log('[Google Asset Discovery] Analytics SUCCESS - Full response:', JSON.stringify(data, null, 2));
+        console.log('GOOGLE_RAW_API_RESP', { api: 'analytics', url: analyticsUrl, response: data });
         
         if (data.accountSummaries && data.accountSummaries.length > 0) {
           console.log('[Google Asset Discovery] Processing', data.accountSummaries.length, 'account summaries...');
@@ -352,6 +353,14 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
                   name: property.displayName || `Analytics Property ${property.property.replace('properties/', '')}`,
                   type: 'analytics_property'
                 };
+                console.log('GOOGLE_ASSET_TO_SAVE', { 
+                  clientId: 'unknown', 
+                  platform: 'google', 
+                  assetId: asset.id, 
+                  assetType: asset.type, 
+                  displayName: asset.name, 
+                  metadata: { originalProperty: property } 
+                });
                 assets.push(asset);
                 console.log('[Google Asset Discovery] Added Analytics asset:', asset);
               });
@@ -389,6 +398,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
       if (tagmanagerResponse.ok) {
         const data = await tagmanagerResponse.json();
         console.log('[Google Asset Discovery] Tag Manager SUCCESS - Full response:', JSON.stringify(data, null, 2));
+        console.log('GOOGLE_RAW_API_RESP', { api: 'tagmanager', url: tagmanagerUrl, response: data });
         
         if (data.account && data.account.length > 0) {
           console.log('[Google Asset Discovery] Processing', data.account.length, 'Tag Manager accounts...');
@@ -399,6 +409,14 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
               name: account.name || `Tag Manager Account ${account.accountId}`,
               type: 'tagmanager_account'
             };
+            console.log('GOOGLE_ASSET_TO_SAVE', { 
+              clientId: 'unknown', 
+              platform: 'google', 
+              assetId: asset.id, 
+              assetType: asset.type, 
+              displayName: asset.name, 
+              metadata: { originalAccount: account } 
+            });
             assets.push(asset);
             console.log('[Google Asset Discovery] Added Tag Manager asset:', asset);
           });
@@ -432,6 +450,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
       if (searchconsoleResponse.ok) {
         const data = await searchconsoleResponse.json();
         console.log('[Google Asset Discovery] Search Console SUCCESS - Full response:', JSON.stringify(data, null, 2));
+        console.log('GOOGLE_RAW_API_RESP', { api: 'searchconsole', url: searchconsoleUrl, response: data });
         
         if (data.siteEntry && data.siteEntry.length > 0) {
           console.log('[Google Asset Discovery] Processing', data.siteEntry.length, 'Search Console sites...');
@@ -442,6 +461,14 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
               name: site.siteUrl,
               type: 'searchconsole_site'
             };
+            console.log('GOOGLE_ASSET_TO_SAVE', { 
+              clientId: 'unknown', 
+              platform: 'google', 
+              assetId: asset.id, 
+              assetType: asset.type, 
+              displayName: asset.name, 
+              metadata: { originalSite: site } 
+            });
             assets.push(asset);
             console.log('[Google Asset Discovery] Added Search Console asset:', asset);
           });
@@ -474,6 +501,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
       if (businessResponse.ok) {
         const data = await businessResponse.json();
         console.log('[Google Asset Discovery] Business Profile SUCCESS - Full response:', JSON.stringify(data, null, 2));
+        console.log('GOOGLE_RAW_API_RESP', { api: 'business_profile', url: businessUrl, response: data });
         
         if (data.accounts && data.accounts.length > 0) {
           console.log('[Google Asset Discovery] Processing', data.accounts.length, 'Business Profile accounts...');
@@ -484,6 +512,14 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
               name: account.accountName || `Business Profile Account ${account.name.replace('accounts/', '')}`,
               type: 'business_account'
             };
+            console.log('GOOGLE_ASSET_TO_SAVE', { 
+              clientId: 'unknown', 
+              platform: 'google', 
+              assetId: asset.id, 
+              assetType: asset.type, 
+              displayName: asset.name, 
+              metadata: { originalAccount: account } 
+            });
             assets.push(asset);
             console.log('[Google Asset Discovery] Added Business Profile asset:', asset);
           });
@@ -512,14 +548,24 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
       if (merchantResponse.ok) {
         const data = await merchantResponse.json();
         console.log('[Google Asset Discovery] Merchant Center response:', data);
+        console.log('GOOGLE_RAW_API_RESP', { api: 'merchant_center', url: merchantUrl, response: data });
         
         if (data.accountIdentifiers && data.accountIdentifiers.length > 0) {
           data.accountIdentifiers.forEach((account: any) => {
-            assets.push({
+            const asset = {
               id: account.merchantId,
               name: `Merchant Center Account ${account.merchantId}`,
               type: 'merchant_account'
+            };
+            console.log('GOOGLE_ASSET_TO_SAVE', { 
+              clientId: 'unknown', 
+              platform: 'google', 
+              assetId: asset.id, 
+              assetType: asset.type, 
+              displayName: asset.name, 
+              metadata: { originalAccount: account } 
             });
+            assets.push(asset);
           });
           console.log('[Google Asset Discovery] Found Merchant Center accounts:', assets.filter(a => a.type === 'merchant_account'));
         }
@@ -547,15 +593,25 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
         if (adsResponse.ok) {
           const data = await adsResponse.json();
           console.log('[Google Asset Discovery] Google Ads response:', data);
+          console.log('GOOGLE_RAW_API_RESP', { api: 'google_ads', url: adsUrl, response: data });
           
           if (data.resourceNames && data.resourceNames.length > 0) {
             data.resourceNames.forEach((resource: string) => {
               const customerId = resource.replace('customers/', '');
-              assets.push({
+              const asset = {
                 id: customerId,
                 name: `Google Ads Account ${customerId}`,
                 type: 'ads_account'
+              };
+              console.log('GOOGLE_ASSET_TO_SAVE', { 
+                clientId: 'unknown', 
+                platform: 'google', 
+                assetId: asset.id, 
+                assetType: asset.type, 
+                displayName: asset.name, 
+                metadata: { originalResource: resource } 
               });
+              assets.push(asset);
             });
             console.log('[Google Asset Discovery] Found Google Ads accounts:', assets.filter(a => a.type === 'ads_account'));
           }
