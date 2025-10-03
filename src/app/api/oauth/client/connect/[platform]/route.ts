@@ -15,13 +15,15 @@ export async function GET(
   const error = searchParams.get('error');
   const token = searchParams.get('token'); // Onboarding link token (may be absent if passed via state)
 
-  console.log('[ClientOAuth] Incoming request', {
-    platform,
-    hasCode: Boolean(code),
-    hasError: Boolean(error),
-    hasTokenQuery: Boolean(token),
-    hasState: Boolean(stateParam)
-  });
+  console.log('[ClientOAuth] ===========================================');
+  console.log('[ClientOAuth] OAUTH CALLBACK RECEIVED');
+  console.log('[ClientOAuth] Platform:', platform);
+  console.log('[ClientOAuth] Has code:', Boolean(code));
+  console.log('[ClientOAuth] Has error:', Boolean(error));
+  console.log('[ClientOAuth] Has token query:', Boolean(token));
+  console.log('[ClientOAuth] Has state:', Boolean(stateParam));
+  console.log('[ClientOAuth] Code (first 10 chars):', code ? `${code.substring(0, 10)}...` : 'null');
+  console.log('[ClientOAuth] ===========================================');
 
   // Handle OAuth callback
   if (code) {
@@ -99,19 +101,30 @@ export async function GET(
       // Fetch platform assets using the access token
       let assets = [];
       try {
-        console.log(`[ClientOAuth] Fetching assets for ${platform}...`);
+        console.log(`[ClientOAuth] ===========================================`);
+        console.log(`[ClientOAuth] STARTING ASSET DISCOVERY FOR ${platform.toUpperCase()}`);
+        console.log(`[ClientOAuth] Access token (first 20 chars): ${tokenResponse.access_token.substring(0, 20)}...`);
+        console.log(`[ClientOAuth] Resolved scopes:`, resolvedScopes);
         
         if (platform === 'google') {
+          console.log(`[ClientOAuth] Calling discoverGoogleAssets()...`);
           // Use the new Google asset discovery function
           assets = await discoverGoogleAssets(tokenResponse.access_token);
+          console.log(`[ClientOAuth] ===========================================`);
+          console.log(`[ClientOAuth] GOOGLE ASSET DISCOVERY COMPLETED`);
           console.log(`[ClientOAuth] Discovered ${assets.length} Google assets:`, assets);
+          console.log(`[ClientOAuth] ===========================================`);
         } else {
+          console.log(`[ClientOAuth] Calling fetchPlatformAssets() for ${platform}...`);
           // Use the existing asset fetching for other platforms
           assets = await fetchPlatformAssets(platform, tokenResponse.access_token, resolvedScopes);
           console.log(`[ClientOAuth] Fetched ${assets.length} assets for ${platform}:`, assets);
         }
       } catch (error) {
-        console.warn(`[ClientOAuth] Failed to fetch assets for ${platform}:`, error);
+        console.error(`[ClientOAuth] ===========================================`);
+        console.error(`[ClientOAuth] ASSET DISCOVERY FAILED FOR ${platform.toUpperCase()}`);
+        console.error(`[ClientOAuth] Error:`, error);
+        console.error(`[ClientOAuth] ===========================================`);
         // Continue without assets
       }
 
