@@ -532,7 +532,11 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       )}
 
                       {/* Display assets from onboarding request if available */}
-                      {onboardingRequest?.platform_connections?.[connection.platform]?.assets && onboardingRequest.platform_connections[connection.platform].assets.length > 0 ? (
+                      {(() => {
+                        const assets = onboardingRequest?.platform_connections?.[connection.platform]?.assets;
+                        console.log(`[Client Details] ${connection.platform} assets:`, assets);
+                        return assets && assets.length > 0;
+                      })() ? (
                         <div className="mt-3">
                           <label className="text-sm font-medium text-gray-500">Available Assets</label>
                           <div className="mt-1 space-y-2">

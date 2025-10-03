@@ -6,6 +6,12 @@ export async function POST(request: NextRequest) {
   try {
     const { token, platform, accessToken, refreshToken, tokenExpiresAt, scopes, platformUserId, platformUsername, client_email, client_name, company_name, assets } = await request.json();
     
+    console.log('[Store OAuth] Received data:', {
+      platform,
+      assetsCount: assets?.length || 0,
+      assets: assets?.map((a: any) => ({ id: a.id, name: a.name, type: a.type }))
+    });
+    
     if (!token || !platform || !accessToken) {
       return NextResponse.json(
         { error: 'Token, platform, and access token are required' },
