@@ -141,7 +141,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       // Set loading state
       setApiTestLoading(prev => ({ ...prev, [testKey]: true }));
       
-      const endpoint = platform === 'meta' ? '/api/meta/test-api' : '/api/test/google-access';
+      const endpoint = platform === 'meta' ? '/api/meta/test-api' : '/api/oauth/test/google';
       
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -239,21 +239,21 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
               <ChevronRight className="h-4 w-4 text-gray-500" />
             )}
             <span className="text-sm font-medium">
-              API Response {result.success ? '✅' : '❌'}
+              API Response {(result.success !== undefined ? result.success : result.ok) ? '✅' : '❌'}
             </span>
             <span className="text-xs text-gray-500">
-              ({result.description || assetType})
+              ({(result.description || result.summary || assetType)})
             </span>
           </div>
           <div className="flex items-center space-x-2">
-            {result.rawJson && (
+            {(result.rawJson || result.json) && (
               <Button
                 size="sm"
                 variant="ghost"
                 className="h-6 px-2 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleCopyJson(testKey, result.rawJson || result);
+                  handleCopyJson(testKey, result.rawJson || result.json || result);
                 }}
               >
                 {isCopied ? (
@@ -268,7 +268,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
         
         {isExpanded && (
           <div className="border-t p-3 bg-gray-50">
-            {result.success ? (
+            {(result.success !== undefined ? result.success : result.ok) ? (
               <div>
                 <div className="mb-2">
                   <span className="text-xs font-medium text-green-700">API URL:</span>
@@ -276,18 +276,18 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                     {result.apiUrl || 'N/A'}
                   </code>
                 </div>
-                {result.humanReadableLabel && (
+                {(result.humanReadableLabel || result.summary) && (
                   <div className="mb-3">
                     <span className="text-xs font-medium text-blue-700">Scope Test:</span>
                     <p className="mt-1 text-xs text-blue-800 bg-blue-50 p-2 rounded border">
-                      {result.humanReadableLabel}
+                      {result.humanReadableLabel || result.summary}
                     </p>
                   </div>
                 )}
                 <div>
                   <span className="text-xs font-medium text-gray-700">Raw JSON Response:</span>
                   <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-60">
-                    {JSON.stringify(result.rawJson || result, null, 2)}
+                    {JSON.stringify(result.rawJson || result.json || result, null, 2)}
                   </pre>
                 </div>
               </div>
@@ -295,13 +295,13 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
               <div>
                 <div className="mb-2">
                   <span className="text-xs font-medium text-red-700">Error:</span>
-                  <span className="ml-2 text-xs text-red-600">{result.error}</span>
+                  <span className="ml-2 text-xs text-red-600">{result.error || 'Unknown error'}</span>
                 </div>
-                {result.details && (
+                {(result.details || result.json) && (
                   <div>
                     <span className="text-xs font-medium text-gray-700">Details:</span>
                     <pre className="mt-1 text-xs bg-white p-2 rounded border overflow-x-auto max-h-40">
-                      {JSON.stringify(result.details, null, 2)}
+                      {JSON.stringify(result.details || result.json, null, 2)}
                     </pre>
                   </div>
                 )}
@@ -532,7 +532,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       )}
 
                       {/* Display assets from onboarding request if available */}
-                      {onboardingRequest?.platform_connections?.[connection.platform]?.assets && (
+                      {onboardingRequest?.platform_connections?.[connection.platform]?.assets && onboardingRequest.platform_connections[connection.platform].assets.length > 0 ? (
                         <div className="mt-3">
                           <label className="text-sm font-medium text-gray-500">Available Assets</label>
                           <div className="mt-1 space-y-2">
@@ -556,11 +556,16 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                           asset.type === 'page' ? 'Page' : 
                                           asset.type === 'business_dataset' ? 'Business Manager' : 
                                           asset.type === 'instagram_account' ? 'Instagram Account' : 
-                                          asset.type === 'analytics_property' ? 'Analytics Property' :
+                                          asset.type === 'analytics_property' ? 'Analytics (GA4 Property)' :
                                           asset.type === 'business_profile' ? 'Business Profile' :
+                                          asset.type === 'business_profile_location' ? 'Business Profile Location' :
                                           asset.type === 'tag_manager' ? 'Tag Manager' :
+                                          asset.type === 'tagmanager_account' ? 'Tag Manager Account' :
                                           asset.type === 'search_console' ? 'Search Console' :
+                                          asset.type === 'searchconsole_site' ? 'Search Console Site' :
                                           asset.type === 'merchant_center' ? 'Merchant Center' :
+                                          asset.type === 'merchant_account' ? 'Merchant Account' :
+                                          asset.type === 'ads_account' ? 'Google Ads Account' :
                                           asset.type})
                                       </span>
                                     </div>
@@ -575,22 +580,26 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                             let googleUrl = '';
                                             switch (asset.type) {
                                               case 'ads_account':
-                                                googleUrl = `https://ads.google.com/aw/campaigns?campaignId=&accountId=${asset.id}`;
+                                                googleUrl = `https://ads.google.com/`;
                                                 break;
                                               case 'analytics_property':
-                                                googleUrl = `https://analytics.google.com/analytics/web/#/p${asset.id}`;
+                                                googleUrl = `https://analytics.google.com/`;
                                                 break;
                                               case 'business_profile':
+                                              case 'business_profile_location':
                                                 googleUrl = 'https://business.google.com/';
                                                 break;
                                               case 'tag_manager':
-                                                googleUrl = `https://tagmanager.google.com/#/container/accounts/${asset.id}`;
+                                              case 'tagmanager_account':
+                                                googleUrl = `https://tagmanager.google.com/`;
                                                 break;
                                               case 'search_console':
-                                                googleUrl = `https://search.google.com/search-console?resource_id=${encodeURIComponent(asset.id)}`;
+                                              case 'searchconsole_site':
+                                                googleUrl = `https://search.google.com/search-console`;
                                                 break;
                                               case 'merchant_center':
-                                                googleUrl = `https://merchants.google.com/mc/overview?a=${asset.id}`;
+                                              case 'merchant_account':
+                                                googleUrl = `https://merchants.google.com/`;
                                                 break;
                                               default:
                                                 googleUrl = 'https://myaccount.google.com/';
@@ -650,7 +659,50 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                             })}
                           </div>
                         </div>
-                      )}
+                      ) : connection.platform === 'google' ? (
+                        // Fallback for Google when no assets discovered
+                        <div className="mt-3">
+                          <label className="text-sm font-medium text-gray-500">Basic Profile Access</label>
+                          <div className="mt-1">
+                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                              <div>
+                                <span className="text-sm font-medium">Basic Google Profile</span>
+                                <span className="text-xs text-gray-500 ml-2">
+                                  (Basic profile information)
+                                </span>
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs"
+                                  onClick={() => window.open('https://myaccount.google.com/', '_blank')}
+                                >
+                                  Open in Google
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs"
+                                  onClick={() => handleTestApiAccess('google', '', 'basic')}
+                                  disabled={apiTestLoading['google--basic']}
+                                >
+                                  {apiTestLoading['google--basic'] ? (
+                                    <div className="w-3 h-3 border border-gray-600 border-t-transparent rounded-full animate-spin mr-1" />
+                                  ) : (
+                                    <TestTube className="h-3 w-3 mr-1" />
+                                  )}
+                                  {apiTestLoading['google--basic'] ? 'Testing...' : 'Test API'}
+                                </Button>
+                              </div>
+                            </div>
+                            {/* API Test Results Panel */}
+                            <div className="space-y-2">
+                              {apiTestResults['google--basic'] && renderApiTestResult('google--basic', apiTestResults['google--basic'], 'basic')}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
                       
                       <div className="mt-3 text-xs text-gray-400">
                         <p>Connected: {formatDate(connection.created_at)}</p>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exchangeCodeForToken, fetchPlatformUserInfo, fetchPlatformAssets } from '@/lib/oauth/oauth-utils';
+import { exchangeCodeForToken, fetchPlatformUserInfo, fetchPlatformAssets, discoverGoogleAssets } from '@/lib/oauth/oauth-utils';
 
 // Client OAuth connection endpoints
 // These will be used when clients connect their platform accounts during onboarding
@@ -100,8 +100,16 @@ export async function GET(
       let assets = [];
       try {
         console.log(`[ClientOAuth] Fetching assets for ${platform}...`);
-        assets = await fetchPlatformAssets(platform, tokenResponse.access_token, resolvedScopes);
-        console.log(`[ClientOAuth] Fetched ${assets.length} assets for ${platform}:`, assets);
+        
+        if (platform === 'google') {
+          // Use the new Google asset discovery function
+          assets = await discoverGoogleAssets(tokenResponse.access_token);
+          console.log(`[ClientOAuth] Discovered ${assets.length} Google assets:`, assets);
+        } else {
+          // Use the existing asset fetching for other platforms
+          assets = await fetchPlatformAssets(platform, tokenResponse.access_token, resolvedScopes);
+          console.log(`[ClientOAuth] Fetched ${assets.length} assets for ${platform}:`, assets);
+        }
       } catch (error) {
         console.warn(`[ClientOAuth] Failed to fetch assets for ${platform}:`, error);
         // Continue without assets

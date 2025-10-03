@@ -315,6 +315,207 @@ export async function fetchPlatformAssets(
   }
 }
 
+export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]> {
+  const assets: Asset[] = [];
+  
+  console.log('[Google Asset Discovery] Starting Google asset discovery...');
+  
+  try {
+    // 1. Analytics (GA4) - Account Summaries
+    try {
+      console.log('[Google Asset Discovery] Fetching Analytics account summaries...');
+      const analyticsUrl = 'https://analyticsadmin.googleapis.com/v1/accountSummaries';
+      const analyticsResponse = await fetch(analyticsUrl, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      
+      if (analyticsResponse.ok) {
+        const data = await analyticsResponse.json();
+        console.log('[Google Asset Discovery] Analytics response:', data);
+        
+        if (data.accountSummaries && data.accountSummaries.length > 0) {
+          data.accountSummaries.forEach((summary: any) => {
+            summary.propertySummaries?.forEach((property: any) => {
+              assets.push({
+                id: property.property.replace('properties/', ''),
+                name: property.displayName || `Analytics Property ${property.property.replace('properties/', '')}`,
+                type: 'analytics_property'
+              });
+            });
+          });
+          console.log('[Google Asset Discovery] Found Analytics properties:', assets.filter(a => a.type === 'analytics_property'));
+        }
+      } else {
+        console.log('[Google Asset Discovery] Analytics fetch failed:', analyticsResponse.status);
+      }
+    } catch (error) {
+      console.log('[Google Asset Discovery] Analytics error:', error);
+    }
+
+    // 2. Tag Manager Accounts
+    try {
+      console.log('[Google Asset Discovery] Fetching Tag Manager accounts...');
+      const tagmanagerUrl = 'https://www.googleapis.com/tagmanager/v2/accounts';
+      const tagmanagerResponse = await fetch(tagmanagerUrl, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      
+      if (tagmanagerResponse.ok) {
+        const data = await tagmanagerResponse.json();
+        console.log('[Google Asset Discovery] Tag Manager response:', data);
+        
+        if (data.account && data.account.length > 0) {
+          data.account.forEach((account: any) => {
+            assets.push({
+              id: account.accountId,
+              name: account.name || `Tag Manager Account ${account.accountId}`,
+              type: 'tagmanager_account'
+            });
+          });
+          console.log('[Google Asset Discovery] Found Tag Manager accounts:', assets.filter(a => a.type === 'tagmanager_account'));
+        }
+      } else {
+        console.log('[Google Asset Discovery] Tag Manager fetch failed:', tagmanagerResponse.status);
+      }
+    } catch (error) {
+      console.log('[Google Asset Discovery] Tag Manager error:', error);
+    }
+
+    // 3. Search Console Sites
+    try {
+      console.log('[Google Asset Discovery] Fetching Search Console sites...');
+      const searchconsoleUrl = 'https://www.googleapis.com/webmasters/v3/sites';
+      const searchconsoleResponse = await fetch(searchconsoleUrl, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      
+      if (searchconsoleResponse.ok) {
+        const data = await searchconsoleResponse.json();
+        console.log('[Google Asset Discovery] Search Console response:', data);
+        
+        if (data.siteEntry && data.siteEntry.length > 0) {
+          data.siteEntry.forEach((site: any) => {
+            assets.push({
+              id: site.siteUrl,
+              name: site.siteUrl,
+              type: 'searchconsole_site'
+            });
+          });
+          console.log('[Google Asset Discovery] Found Search Console sites:', assets.filter(a => a.type === 'searchconsole_site'));
+        }
+      } else {
+        console.log('[Google Asset Discovery] Search Console fetch failed:', searchconsoleResponse.status);
+      }
+    } catch (error) {
+      console.log('[Google Asset Discovery] Search Console error:', error);
+    }
+
+    // 4. Business Profile Locations
+    try {
+      console.log('[Google Asset Discovery] Fetching Business Profile locations...');
+      const businessUrl = 'https://mybusinessbusinessinformation.googleapis.com/v1/locations?readMask=name,storeCode,websiteUri';
+      const businessResponse = await fetch(businessUrl, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      
+      if (businessResponse.ok) {
+        const data = await businessResponse.json();
+        console.log('[Google Asset Discovery] Business Profile response:', data);
+        
+        if (data.locations && data.locations.length > 0) {
+          data.locations.forEach((location: any) => {
+            assets.push({
+              id: location.name.replace('locations/', ''),
+              name: location.title || `Business Profile ${location.name.replace('locations/', '')}`,
+              type: 'business_profile_location'
+            });
+          });
+          console.log('[Google Asset Discovery] Found Business Profile locations:', assets.filter(a => a.type === 'business_profile_location'));
+        }
+      } else {
+        console.log('[Google Asset Discovery] Business Profile fetch failed:', businessResponse.status);
+      }
+    } catch (error) {
+      console.log('[Google Asset Discovery] Business Profile error:', error);
+    }
+
+    // 5. Merchant Center Accounts
+    try {
+      console.log('[Google Asset Discovery] Fetching Merchant Center auth info...');
+      const merchantUrl = 'https://shoppingcontent.googleapis.com/content/v2.1/accounts/authinfo';
+      const merchantResponse = await fetch(merchantUrl, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      
+      if (merchantResponse.ok) {
+        const data = await merchantResponse.json();
+        console.log('[Google Asset Discovery] Merchant Center response:', data);
+        
+        if (data.accountIdentifiers && data.accountIdentifiers.length > 0) {
+          data.accountIdentifiers.forEach((account: any) => {
+            assets.push({
+              id: account.merchantId,
+              name: `Merchant Center Account ${account.merchantId}`,
+              type: 'merchant_account'
+            });
+          });
+          console.log('[Google Asset Discovery] Found Merchant Center accounts:', assets.filter(a => a.type === 'merchant_account'));
+        }
+      } else {
+        console.log('[Google Asset Discovery] Merchant Center fetch failed:', merchantResponse.status);
+      }
+    } catch (error) {
+      console.log('[Google Asset Discovery] Merchant Center error:', error);
+    }
+
+    // 6. Google Ads (optional - requires developer token)
+    try {
+      const devToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+      if (devToken) {
+        console.log('[Google Asset Discovery] Fetching Google Ads accessible customers...');
+        const adsUrl = 'https://googleads.googleapis.com/v14/customers:listAccessibleCustomers';
+        const adsResponse = await fetch(adsUrl, {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${accessToken}`,
+            'developer-token': devToken
+          }
+        });
+        
+        if (adsResponse.ok) {
+          const data = await adsResponse.json();
+          console.log('[Google Asset Discovery] Google Ads response:', data);
+          
+          if (data.resourceNames && data.resourceNames.length > 0) {
+            data.resourceNames.forEach((resource: string) => {
+              const customerId = resource.replace('customers/', '');
+              assets.push({
+                id: customerId,
+                name: `Google Ads Account ${customerId}`,
+                type: 'ads_account'
+              });
+            });
+            console.log('[Google Asset Discovery] Found Google Ads accounts:', assets.filter(a => a.type === 'ads_account'));
+          }
+        } else {
+          console.log('[Google Asset Discovery] Google Ads fetch failed:', adsResponse.status);
+        }
+      } else {
+        console.log('[Google Asset Discovery] Google Ads Developer Token not configured, skipping...');
+      }
+    } catch (error) {
+      console.log('[Google Asset Discovery] Google Ads error:', error);
+    }
+
+    console.log('[Google Asset Discovery] Final discovered assets:', assets);
+    return assets;
+    
+  } catch (error) {
+    console.error('[Google Asset Discovery] Error:', error);
+    return [];
+  }
+}
+
 async function fetchMetaAssets(accessToken: string, scopes: string[]): Promise<Asset[]> {
   const assets: Asset[] = [];
   
