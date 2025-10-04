@@ -123,6 +123,12 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         
         if (connected && success === 'true') {
           // Mark platform as connected
+          console.log('[Onboarding] ===========================================');
+          console.log('[Onboarding] URL PARAMETERS DETECTED - MARKING PLATFORM AS CONNECTED');
+          console.log('[Onboarding] Platform from URL:', connected);
+          console.log('[Onboarding] Success from URL:', success);
+          console.log('[Onboarding] WARNING: This might be a false positive if no actual OAuth callback occurred');
+          console.log('[Onboarding] ===========================================');
           setConnectedPlatforms(prev => ({
             ...prev,
             [connected]: true
@@ -484,6 +490,16 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
       platformScopes.every(scope => selectedPermissions[platform.id]?.includes(scope));
   });
   const isFinalStepComplete = allPlatformsConnected && allPlatformsHavePermissions;
+  
+  // Debug logging for platform connection status
+  console.log('[Onboarding] ===========================================');
+  console.log('[Onboarding] PLATFORM CONNECTION STATUS DEBUG');
+  console.log('[Onboarding] requestedPlatforms:', requestedPlatforms.map(p => ({ id: p.id, name: p.name })));
+  console.log('[Onboarding] connectedPlatforms:', connectedPlatforms);
+  console.log('[Onboarding] allPlatformsConnected:', allPlatformsConnected);
+  console.log('[Onboarding] allPlatformsHavePermissions:', allPlatformsHavePermissions);
+  console.log('[Onboarding] isFinalStepComplete:', isFinalStepComplete);
+  console.log('[Onboarding] ===========================================');
   
   // Test mode: allow completion even without OAuth connections
   const canCompleteInTestMode = testMode && formData.name.trim() && formData.email.trim();
