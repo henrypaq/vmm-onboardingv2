@@ -352,7 +352,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
                 console.log(`[Google Asset Discovery] Property ${propIndex + 1}:`, property);
                 const asset = {
                   id: property.property.replace('properties/', ''),
-                  name: property.displayName || `Analytics Property ${property.property.replace('properties/', '')}`,
+                  name: property.displayName || `Analytics (${property.property.replace('properties/', '')})`,
                   type: 'analytics_property'
                 };
                 console.log('GOOGLE_ASSET_TO_SAVE', { 
@@ -511,7 +511,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
             console.log(`[Google Asset Discovery] Business Profile Account ${index + 1}:`, account);
             const asset = {
               id: account.name.replace('accounts/', ''),
-              name: account.accountName || `Business Profile Account ${account.name.replace('accounts/', '')}`,
+              name: account.accountName || `Business Profile (${account.name.replace('accounts/', '')})`,
               type: 'business_account'
             };
             console.log('GOOGLE_ASSET_TO_SAVE', { 
@@ -556,7 +556,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
           data.accountIdentifiers.forEach((account: any) => {
             const asset = {
               id: account.merchantId,
-              name: `Merchant Center Account ${account.merchantId}`,
+              name: `Merchant Center (${account.merchantId})`,
               type: 'merchant_account'
             };
             console.log('GOOGLE_ASSET_TO_SAVE', { 
