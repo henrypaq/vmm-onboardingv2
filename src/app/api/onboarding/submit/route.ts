@@ -168,29 +168,45 @@ export async function POST(request: NextRequest) {
     try {
       const existing = await getOnboardingRequestByLinkId(link.id);
       if (existing) {
+        console.log('[Onboarding] Found existing onboarding request:', existing.id);
+        
         // For existing requests, use the userId we just ensured exists
         const updateData = { ...onboardingRequestData };
         if (userId) {
           updateData.client_id = userId;
+          console.log('[Onboarding] Using userId for existing request:', userId);
+        } else {
+          console.log('[Onboarding] No userId available, using undefined for client_id');
+          updateData.client_id = undefined;
         }
         
-        onboardingRequest = await (async () => {
-          const updated = await updateOnboardingRequest(existing.id, updateData);
-          return updated;
-        })();
-        console.log('[Onboarding] Updated existing onboarding request to completed');
+        console.log('[Onboarding] Updating existing request with data:', updateData);
+        onboardingRequest = await updateOnboardingRequest(existing.id, updateData);
+        console.log('[Onboarding] Successfully updated existing onboarding request to completed');
       } else {
+        console.log('[Onboarding] No existing request found, creating new one');
+        
         // For new requests, use the userId we just ensured exists
         const createData = { ...onboardingRequestData };
         if (userId) {
           createData.client_id = userId;
+          console.log('[Onboarding] Using userId for new request:', userId);
+        } else {
+          console.log('[Onboarding] No userId available, using undefined for client_id');
+          createData.client_id = undefined;
         }
         
+        console.log('[Onboarding] Creating new request with data:', createData);
         onboardingRequest = await createOnboardingRequest(createData);
-        console.log('[Onboarding] Created new onboarding request as completed');
+        console.log('[Onboarding] Successfully created new onboarding request as completed');
       }
     } catch (onboardingError) {
-      console.error('[Onboarding] Failed to upsert onboarding request:', onboardingError);
+      console.error('[Onboarding] ===========================================');
+      console.error('[Onboarding] FAILED TO UPSERT ONBOARDING REQUEST');
+      console.error('[Onboarding] Error:', onboardingError);
+      console.error('[Onboarding] Error message:', onboardingError instanceof Error ? onboardingError.message : 'Unknown error');
+      console.error('[Onboarding] Error stack:', onboardingError instanceof Error ? onboardingError.stack : 'No stack trace');
+      console.error('[Onboarding] ===========================================');
       throw onboardingError;
     }
 

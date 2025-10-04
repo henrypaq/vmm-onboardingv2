@@ -799,14 +799,40 @@ export async function ensureUserExists(clientData: {
       .single();
 
     if (createError) {
-      console.error('[Database] Error creating user:', createError);
+      console.error('[Database] ===========================================');
+      console.error('[Database] ERROR CREATING USER');
+      console.error('[Database] Error details:', createError);
+      console.error('[Database] User data attempted:', newUserData);
+      console.error('[Database] ===========================================');
+      
+      // If it's a duplicate key error, try to find the user again
+      if (createError.code === '23505') { // Unique constraint violation
+        console.log('[Database] Duplicate key error, attempting to find existing user...');
+        if (clientData.client_email) {
+          const { data: existingUser, error: findError } = await supabaseAdmin
+            .from('users')
+            .select('id')
+            .eq('email', clientData.client_email)
+            .single();
+          
+          if (!findError && existingUser) {
+            console.log('[Database] Found existing user after duplicate key error:', existingUser.id);
+            return existingUser.id;
+          }
+        }
+      }
+      
       throw new Error(`Failed to create user: ${createError.message}`);
     }
 
     console.log('[Database] Created missing user record:', newUser.id);
     return newUser.id;
   } catch (error) {
-    console.error('[Database] Failed to create user:', error);
+    console.error('[Database] ===========================================');
+    console.error('[Database] FAILED TO CREATE USER');
+    console.error('[Database] Error:', error);
+    console.error('[Database] User data attempted:', newUserData);
+    console.error('[Database] ===========================================');
     throw error;
   }
 }
