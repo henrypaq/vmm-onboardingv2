@@ -316,7 +316,10 @@ export async function getOnboardingRequests(linkId?: string): Promise<Onboarding
 }
 
 export async function createOnboardingRequest(request: Omit<OnboardingRequest, 'id' | 'created_at' | 'updated_at'>): Promise<OnboardingRequest> {
-  console.log('[DB] Creating onboarding request with data:', request);
+  console.log('[Database] ===========================================');
+  console.log('[Database] CREATING ONBOARDING REQUEST');
+  console.log('[Database] Request data:', request);
+  console.log('[Database] ===========================================');
   
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
@@ -326,21 +329,33 @@ export async function createOnboardingRequest(request: Omit<OnboardingRequest, '
     .single();
 
   if (error) {
-    console.error('Error creating onboarding request:', error);
-    console.error('Error details:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code
-    });
-    throw new Error('Failed to create onboarding request');
+    console.error('[Database] ===========================================');
+    console.error('[Database] ERROR CREATING ONBOARDING REQUEST');
+    console.error('[Database] Request data attempted:', request);
+    console.error('[Database] Supabase error:', error);
+    console.error('[Database] Error code:', error.code);
+    console.error('[Database] Error message:', error.message);
+    console.error('[Database] Error details:', error.details);
+    console.error('[Database] Error hint:', error.hint);
+    console.error('[Database] ===========================================');
+    throw new Error(`Failed to create onboarding request: ${error.message}`);
   }
 
-  console.log('[DB] Successfully created onboarding request:', data);
+  console.log('[Database] ===========================================');
+  console.log('[Database] SUCCESSFULLY CREATED ONBOARDING REQUEST');
+  console.log('[Database] Created data:', data);
+  console.log('[Database] ===========================================');
+  
   return data;
 }
 
 export async function updateOnboardingRequest(id: string, updates: Partial<OnboardingRequest>): Promise<OnboardingRequest> {
+  console.log('[Database] ===========================================');
+  console.log('[Database] UPDATING ONBOARDING REQUEST');
+  console.log('[Database] Request ID:', id);
+  console.log('[Database] Updates being applied:', updates);
+  console.log('[Database] ===========================================');
+  
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('onboarding_requests')
@@ -350,10 +365,25 @@ export async function updateOnboardingRequest(id: string, updates: Partial<Onboa
     .single();
 
   if (error) {
-    console.error('Error updating onboarding request:', error);
-    throw new Error('Failed to update onboarding request');
+    console.error('[Database] ===========================================');
+    console.error('[Database] ERROR UPDATING ONBOARDING REQUEST');
+    console.error('[Database] Request ID:', id);
+    console.error('[Database] Updates attempted:', updates);
+    console.error('[Database] Supabase error:', error);
+    console.error('[Database] Error code:', error.code);
+    console.error('[Database] Error message:', error.message);
+    console.error('[Database] Error details:', error.details);
+    console.error('[Database] Error hint:', error.hint);
+    console.error('[Database] ===========================================');
+    throw new Error(`Failed to update onboarding request: ${error.message}`);
   }
 
+  console.log('[Database] ===========================================');
+  console.log('[Database] SUCCESSFULLY UPDATED ONBOARDING REQUEST');
+  console.log('[Database] Request ID:', id);
+  console.log('[Database] Updated data:', data);
+  console.log('[Database] ===========================================');
+  
   return data;
 }
 

@@ -159,7 +159,8 @@ export async function POST(request: NextRequest) {
         console.log('[Onboarding] User existence check completed. User ID:', userId);
       } catch (userError) {
         console.error('[Onboarding] Failed to ensure user exists:', userError);
-        // Continue anyway - we'll handle this gracefully
+        console.error('[Onboarding] Continuing without userId to avoid blocking the flow');
+        userId = null; // Explicitly set to null to avoid undefined issues
       }
     }
     
@@ -176,8 +177,8 @@ export async function POST(request: NextRequest) {
           updateData.client_id = userId;
           console.log('[Onboarding] Using userId for existing request:', userId);
         } else {
-          console.log('[Onboarding] No userId available, using undefined for client_id');
-          updateData.client_id = undefined;
+          console.log('[Onboarding] No userId available, setting client_id to null to avoid foreign key issues');
+          updateData.client_id = null; // Use null instead of undefined
         }
         
         console.log('[Onboarding] Updating existing request with data:', updateData);
@@ -192,8 +193,8 @@ export async function POST(request: NextRequest) {
           createData.client_id = userId;
           console.log('[Onboarding] Using userId for new request:', userId);
         } else {
-          console.log('[Onboarding] No userId available, using undefined for client_id');
-          createData.client_id = undefined;
+          console.log('[Onboarding] No userId available, setting client_id to null to avoid foreign key issues');
+          createData.client_id = null; // Use null instead of undefined
         }
         
         console.log('[Onboarding] Creating new request with data:', createData);
@@ -207,7 +208,34 @@ export async function POST(request: NextRequest) {
       console.error('[Onboarding] Error message:', onboardingError instanceof Error ? onboardingError.message : 'Unknown error');
       console.error('[Onboarding] Error stack:', onboardingError instanceof Error ? onboardingError.stack : 'No stack trace');
       console.error('[Onboarding] ===========================================');
-      throw onboardingError;
+      
+      // Try a fallback approach - create a minimal onboarding request without client_id
+      console.log('[Onboarding] ===========================================');
+      console.log('[Onboarding] ATTEMPTING FALLBACK ONBOARDING REQUEST CREATION');
+      console.log('[Onboarding] ===========================================');
+      
+      try {
+        const fallbackData = {
+          link_id: link.id,
+          client_id: null, // Explicitly null to avoid foreign key issues
+          client_email: data?.email,
+          client_name: data?.name,
+          company_name: data?.company,
+          granted_permissions: grantedPermissions,
+          platform_connections: storedPlatformConnections,
+          status: 'completed' as const,
+        };
+        
+        console.log('[Onboarding] Creating fallback onboarding request with data:', fallbackData);
+        onboardingRequest = await createOnboardingRequest(fallbackData);
+        console.log('[Onboarding] Fallback onboarding request created successfully');
+      } catch (fallbackError) {
+        console.error('[Onboarding] ===========================================');
+        console.error('[Onboarding] FALLBACK ALSO FAILED');
+        console.error('[Onboarding] Fallback error:', fallbackError);
+        console.error('[Onboarding] ===========================================');
+        throw onboardingError; // Throw the original error
+      }
     }
 
     // DEFERRED: We save client_platform_connections AFTER we create/update the client below
