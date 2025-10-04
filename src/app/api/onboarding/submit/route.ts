@@ -248,6 +248,7 @@ export async function POST(request: NextRequest) {
               refresh_token: connectionData.refresh_token,
               token_expires_at: connectionData.token_expires_at,
               scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
+              assets: connectionData.assets || [], // Include assets from the stored platform connection
               is_active: true
             });
           }
