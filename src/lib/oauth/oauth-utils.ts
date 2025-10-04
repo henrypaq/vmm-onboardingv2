@@ -640,6 +640,18 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
     console.log('[Google Asset Discovery] Assets by type:', assetsByType);
     console.log('[Google Asset Discovery] All discovered assets:', assets);
     
+    // Detailed breakdown of what should have been found
+    console.log('[Google Asset Discovery] ===========================================');
+    console.log('[Google Asset Discovery] EXPECTED ASSET TYPES BREAKDOWN:');
+    console.log('[Google Asset Discovery] - Analytics Properties (analytics_property):', assetsByType['analytics_property'] || 0);
+    console.log('[Google Asset Discovery] - Tag Manager Accounts (tagmanager_account):', assetsByType['tagmanager_account'] || 0);
+    console.log('[Google Asset Discovery] - Search Console Sites (searchconsole_site):', assetsByType['searchconsole_site'] || 0);
+    console.log('[Google Asset Discovery] - Business Profile Accounts (business_account):', assetsByType['business_account'] || 0);
+    console.log('[Google Asset Discovery] - Merchant Center Accounts (merchant_account):', assetsByType['merchant_account'] || 0);
+    console.log('[Google Asset Discovery] - Google Ads Accounts (ads_account):', assetsByType['ads_account'] || 0);
+    console.log('[Google Asset Discovery] - Basic Profile Access (basic):', assetsByType['basic'] || 0);
+    console.log('[Google Asset Discovery] ===========================================');
+    
     // Always add basic profile access as a fallback asset
     console.log('[Google Asset Discovery] ===========================================');
     console.log('[Google Asset Discovery] ADDING BASIC PROFILE ACCESS ASSET');
