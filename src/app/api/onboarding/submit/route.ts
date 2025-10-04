@@ -320,7 +320,7 @@ export async function POST(request: NextRequest) {
               console.log(`[Onboarding Submit] ===========================================`);
               
               try {
-                const discoveredAssets = await discoverGoogleAssets(connectionData.access_token);
+                const discoveredAssets = await discoverGoogleAssets(connectionData.access_token, clientId);
                 console.log(`[Onboarding Submit] ===========================================`);
                 console.log(`[Onboarding Submit] ✅ FRESH ASSET DISCOVERY COMPLETED! ✅`);
                 console.log(`[Onboarding Submit] Discovered ${discoveredAssets.length} assets:`, discoveredAssets);

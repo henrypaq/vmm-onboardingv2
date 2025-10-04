@@ -109,7 +109,7 @@ export async function GET(
         if (platform === 'google') {
           console.log(`[ClientOAuth] Calling discoverGoogleAssets()...`);
           // Use the new Google asset discovery function
-          assets = await discoverGoogleAssets(tokenResponse.access_token);
+          assets = await discoverGoogleAssets(tokenResponse.access_token, 'unknown'); // clientId will be resolved later
           console.log(`[ClientOAuth] ===========================================`);
           console.log(`[ClientOAuth] GOOGLE ASSET DISCOVERY COMPLETED`);
           console.log(`[ClientOAuth] Discovered ${assets.length} Google assets:`, assets);

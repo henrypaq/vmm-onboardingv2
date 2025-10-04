@@ -294,6 +294,12 @@ export interface Asset {
   id: string;
   name: string;
   type: string;
+  clientId?: string;
+  platform?: string;
+  assetId?: string;
+  assetType?: string;
+  displayName?: string;
+  metadata?: any;
 }
 
 export async function fetchPlatformAssets(
@@ -315,7 +321,7 @@ export async function fetchPlatformAssets(
   }
 }
 
-export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]> {
+export async function discoverGoogleAssets(accessToken: string, clientId?: string): Promise<Asset[]> {
   const assets: Asset[] = [];
   
   console.log('[Google Asset Discovery] ===========================================');
@@ -323,6 +329,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
   console.log('[Google Asset Discovery] Starting Google asset discovery...');
   console.log('[Google Asset Discovery] Access token (first 20 chars):', accessToken.substring(0, 20) + '...');
   console.log('[Google Asset Discovery] Access token length:', accessToken.length);
+  console.log('[Google Asset Discovery] Client ID:', clientId || 'unknown');
   console.log('[Google Asset Discovery] Timestamp:', new Date().toISOString());
   console.log('[Google Asset Discovery] ===========================================');
   
@@ -331,8 +338,8 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
     try {
       console.log('[Google Asset Discovery] ===========================================');
       console.log('[Google Asset Discovery] 1. ANALYTICS API CALL');
-      console.log('[Google Asset Discovery] URL: https://analyticsadmin.googleapis.com/v1/accountSummaries');
-      const analyticsUrl = 'https://analyticsadmin.googleapis.com/v1/accountSummaries';
+      console.log('[Google Asset Discovery] URL: https://analyticsadmin.googleapis.com/v1beta/accountSummaries');
+      const analyticsUrl = 'https://analyticsadmin.googleapis.com/v1beta/accountSummaries';
       const analyticsResponse = await fetch(analyticsUrl, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
@@ -352,18 +359,26 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
             if (summary.propertySummaries && summary.propertySummaries.length > 0) {
               summary.propertySummaries.forEach((property: any, propIndex: number) => {
                 console.log(`[Google Asset Discovery] Property ${propIndex + 1}:`, property);
+                const assetId = property.property.replace('properties/', '');
+                const displayName = property.displayName || `Analytics (${assetId})`;
                 const asset = {
-                  id: property.property.replace('properties/', ''),
-                  name: property.displayName || `Analytics (${property.property.replace('properties/', '')})`,
-                  type: 'analytics_property'
+                  id: assetId,
+                  name: displayName,
+                  type: 'analytics_property',
+                  clientId: clientId || 'unknown',
+                  platform: 'google',
+                  assetId: assetId,
+                  assetType: 'analytics_property',
+                  displayName: displayName,
+                  metadata: { originalProperty: property }
                 };
                 console.log('GOOGLE_ASSET_TO_SAVE', { 
-                  clientId: 'unknown', 
-                  platform: 'google', 
-                  assetId: asset.id, 
-                  assetType: asset.type, 
-                  displayName: asset.name, 
-                  metadata: { originalProperty: property } 
+                  clientId: asset.clientId, 
+                  platform: asset.platform, 
+                  assetId: asset.assetId, 
+                  assetType: asset.assetType, 
+                  displayName: asset.displayName, 
+                  metadata: asset.metadata
                 });
                 assets.push(asset);
                 console.log('[Google Asset Discovery] Added Analytics asset:', asset);
@@ -408,18 +423,26 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
           console.log('[Google Asset Discovery] Processing', data.account.length, 'Tag Manager accounts...');
           data.account.forEach((account: any, index: number) => {
             console.log(`[Google Asset Discovery] Tag Manager Account ${index + 1}:`, account);
+            const assetId = account.accountId;
+            const displayName = account.name || `Tag Manager (${account.accountId})`;
             const asset = {
-              id: account.accountId,
-              name: `Tag Manager (${account.accountId})`,
-              type: 'tagmanager_account'
+              id: assetId,
+              name: displayName,
+              type: 'tagmanager_account',
+              clientId: clientId || 'unknown',
+              platform: 'google',
+              assetId: assetId,
+              assetType: 'tagmanager_account',
+              displayName: displayName,
+              metadata: { originalAccount: account }
             };
             console.log('GOOGLE_ASSET_TO_SAVE', { 
-              clientId: 'unknown', 
-              platform: 'google', 
-              assetId: asset.id, 
-              assetType: asset.type, 
-              displayName: asset.name, 
-              metadata: { originalAccount: account } 
+              clientId: asset.clientId, 
+              platform: asset.platform, 
+              assetId: asset.assetId, 
+              assetType: asset.assetType, 
+              displayName: asset.displayName, 
+              metadata: asset.metadata
             });
             assets.push(asset);
             console.log('[Google Asset Discovery] Added Tag Manager asset:', asset);
@@ -460,18 +483,26 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
           console.log('[Google Asset Discovery] Processing', data.siteEntry.length, 'Search Console sites...');
           data.siteEntry.forEach((site: any, index: number) => {
             console.log(`[Google Asset Discovery] Search Console Site ${index + 1}:`, site);
+            const assetId = site.siteUrl;
+            const displayName = `Search Console (${site.siteUrl})`;
             const asset = {
-              id: site.siteUrl,
-              name: `Search Console (${site.siteUrl})`,
-              type: 'searchconsole_site'
+              id: assetId,
+              name: displayName,
+              type: 'searchconsole_site',
+              clientId: clientId || 'unknown',
+              platform: 'google',
+              assetId: assetId,
+              assetType: 'searchconsole_site',
+              displayName: displayName,
+              metadata: { originalSite: site }
             };
             console.log('GOOGLE_ASSET_TO_SAVE', { 
-              clientId: 'unknown', 
-              platform: 'google', 
-              assetId: asset.id, 
-              assetType: asset.type, 
-              displayName: asset.name, 
-              metadata: { originalSite: site } 
+              clientId: asset.clientId, 
+              platform: asset.platform, 
+              assetId: asset.assetId, 
+              assetType: asset.assetType, 
+              displayName: asset.displayName, 
+              metadata: asset.metadata
             });
             assets.push(asset);
             console.log('[Google Asset Discovery] Added Search Console asset:', asset);
@@ -511,18 +542,26 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
           console.log('[Google Asset Discovery] Processing', data.accounts.length, 'Business Profile accounts...');
           data.accounts.forEach((account: any, index: number) => {
             console.log(`[Google Asset Discovery] Business Profile Account ${index + 1}:`, account);
+            const assetId = account.name.replace('accounts/', '');
+            const displayName = account.accountName || `Business Profile (${assetId})`;
             const asset = {
-              id: account.name.replace('accounts/', ''),
-              name: account.accountName || `Business Profile (${account.name.replace('accounts/', '')})`,
-              type: 'business_account'
+              id: assetId,
+              name: displayName,
+              type: 'business_account',
+              clientId: clientId || 'unknown',
+              platform: 'google',
+              assetId: assetId,
+              assetType: 'business_account',
+              displayName: displayName,
+              metadata: { originalAccount: account }
             };
             console.log('GOOGLE_ASSET_TO_SAVE', { 
-              clientId: 'unknown', 
-              platform: 'google', 
-              assetId: asset.id, 
-              assetType: asset.type, 
-              displayName: asset.name, 
-              metadata: { originalAccount: account } 
+              clientId: asset.clientId, 
+              platform: asset.platform, 
+              assetId: asset.assetId, 
+              assetType: asset.assetType, 
+              displayName: asset.displayName, 
+              metadata: asset.metadata
             });
             assets.push(asset);
             console.log('[Google Asset Discovery] Added Business Profile asset:', asset);
@@ -556,18 +595,26 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
         
         if (data.accountIdentifiers && data.accountIdentifiers.length > 0) {
           data.accountIdentifiers.forEach((account: any) => {
+            const assetId = account.merchantId;
+            const displayName = `Merchant Center (${account.merchantId})`;
             const asset = {
-              id: account.merchantId,
-              name: `Merchant Center (${account.merchantId})`,
-              type: 'merchant_account'
+              id: assetId,
+              name: displayName,
+              type: 'merchant_account',
+              clientId: clientId || 'unknown',
+              platform: 'google',
+              assetId: assetId,
+              assetType: 'merchant_account',
+              displayName: displayName,
+              metadata: { originalAccount: account }
             };
             console.log('GOOGLE_ASSET_TO_SAVE', { 
-              clientId: 'unknown', 
-              platform: 'google', 
-              assetId: asset.id, 
-              assetType: asset.type, 
-              displayName: asset.name, 
-              metadata: { originalAccount: account } 
+              clientId: asset.clientId, 
+              platform: asset.platform, 
+              assetId: asset.assetId, 
+              assetType: asset.assetType, 
+              displayName: asset.displayName, 
+              metadata: asset.metadata
             });
             assets.push(asset);
           });
@@ -602,18 +649,25 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
           if (data.resourceNames && data.resourceNames.length > 0) {
             data.resourceNames.forEach((resource: string) => {
               const customerId = resource.replace('customers/', '');
+              const displayName = `Google Ads (${customerId})`;
               const asset = {
                 id: customerId,
-                name: `Google Ads (${customerId})`,
-                type: 'ads_account'
+                name: displayName,
+                type: 'ads_account',
+                clientId: clientId || 'unknown',
+                platform: 'google',
+                assetId: customerId,
+                assetType: 'ads_account',
+                displayName: displayName,
+                metadata: { originalResource: resource }
               };
               console.log('GOOGLE_ASSET_TO_SAVE', { 
-                clientId: 'unknown', 
-                platform: 'google', 
-                assetId: asset.id, 
-                assetType: asset.type, 
-                displayName: asset.name, 
-                metadata: { originalResource: resource } 
+                clientId: asset.clientId, 
+                platform: asset.platform, 
+                assetId: asset.assetId, 
+                assetType: asset.assetType, 
+                displayName: asset.displayName, 
+                metadata: asset.metadata
               });
               assets.push(asset);
             });
@@ -657,11 +711,18 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
     // Always add basic profile access as a fallback asset
     console.log('[Google Asset Discovery] ===========================================');
     console.log('[Google Asset Discovery] ADDING BASIC PROFILE ACCESS ASSET');
-    assets.push({
+    const basicAsset = {
       id: 'basic-profile',
       name: 'Basic Profile Access',
-      type: 'basic'
-    });
+      type: 'basic',
+      clientId: clientId || 'unknown',
+      platform: 'google',
+      assetId: 'basic-profile',
+      assetType: 'basic',
+      displayName: 'Basic Profile Access',
+      metadata: { description: 'Basic profile access for Google account' }
+    };
+    assets.push(basicAsset);
     console.log('[Google Asset Discovery] Added basic profile asset');
     
     // If no other assets were discovered, add some test assets for debugging
@@ -672,17 +733,35 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
         {
           id: 'test-analytics-123',
           name: 'Analytics Property (test)',
-          type: 'analytics_property'
+          type: 'analytics_property',
+          clientId: clientId || 'unknown',
+          platform: 'google',
+          assetId: 'test-analytics-123',
+          assetType: 'analytics_property',
+          displayName: 'Analytics Property (test)',
+          metadata: { description: 'Test analytics property for debugging' }
         },
         {
           id: 'test-tagmanager-456',
           name: 'Tag Manager (test-tagmanager-456)',
-          type: 'tagmanager_account'
+          type: 'tagmanager_account',
+          clientId: clientId || 'unknown',
+          platform: 'google',
+          assetId: 'test-tagmanager-456',
+          assetType: 'tagmanager_account',
+          displayName: 'Tag Manager (test-tagmanager-456)',
+          metadata: { description: 'Test tag manager account for debugging' }
         },
         {
           id: 'https://example.com',
           name: 'Search Console (test)',
-          type: 'searchconsole_site'
+          type: 'searchconsole_site',
+          clientId: clientId || 'unknown',
+          platform: 'google',
+          assetId: 'https://example.com',
+          assetType: 'searchconsole_site',
+          displayName: 'Search Console (test)',
+          metadata: { description: 'Test search console site for debugging' }
         }
       );
       console.log('[Google Asset Discovery] Added test assets:', assets);
