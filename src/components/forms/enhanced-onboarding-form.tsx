@@ -341,6 +341,11 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         companyValue: formData.company
       });
 
+      console.log('[Onboarding] ===========================================');
+      console.log('[Onboarding] 🚀 MAKING API CALL TO /api/onboarding/submit 🚀');
+      console.log('[Onboarding] Payload being sent:', payload);
+      console.log('[Onboarding] ===========================================');
+      
       const response = await fetch('/api/onboarding/submit', {
         method: 'POST',
         headers: {
@@ -349,9 +354,19 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
         body: JSON.stringify(payload),
       });
 
+      console.log('[Onboarding] ===========================================');
+      console.log('[Onboarding] 📡 API RESPONSE RECEIVED 📡');
+      console.log('[Onboarding] Response status:', response.status);
+      console.log('[Onboarding] Response ok:', response.ok);
+      console.log('[Onboarding] Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('[Onboarding] ===========================================');
+
       if (response.ok) {
         const data = await response.json();
-        console.log('[Onboarding] Auto-submission successful:', data);
+        console.log('[Onboarding] ===========================================');
+        console.log('[Onboarding] ✅ AUTO-SUBMISSION SUCCESSFUL! ✅');
+        console.log('[Onboarding] Response data:', data);
+        console.log('[Onboarding] ===========================================');
         setIsCompleted(true);
         onSubmissionComplete(data.requestId);
         
@@ -360,7 +375,20 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           window.location.href = '/client';
         }, 3000);
       } else {
-        console.error('[Onboarding] Auto-submission failed:', response.statusText);
+        console.error('[Onboarding] ===========================================');
+        console.error('[Onboarding] ❌ SUBMISSION FAILED! ❌');
+        console.error('[Onboarding] Response status:', response.status);
+        console.error('[Onboarding] Response statusText:', response.statusText);
+        console.error('[Onboarding] Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        // Try to get error details from response
+        try {
+          const errorData = await response.text();
+          console.error('[Onboarding] Error response body:', errorData);
+        } catch (e) {
+          console.error('[Onboarding] Could not read error response:', e);
+        }
+        console.error('[Onboarding] ===========================================');
         setIsSubmitting(false);
       }
     } catch (error) {
