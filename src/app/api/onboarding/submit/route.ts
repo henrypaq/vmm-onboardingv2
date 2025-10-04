@@ -238,22 +238,56 @@ export async function POST(request: NextRequest) {
     if (clientId) {
       try {
         const connections = storedPlatformConnections || {};
+        console.log(`[Onboarding Submit] ===========================================`);
+        console.log(`[Onboarding Submit] STARTING PLATFORM CONNECTION PROCESSING`);
+        console.log(`[Onboarding Submit] Client ID: ${clientId}`);
+        console.log(`[Onboarding Submit] Stored platform connections:`, connections);
+        console.log(`[Onboarding Submit] Connections object keys:`, Object.keys(connections));
+        console.log(`[Onboarding Submit] Connections count:`, Object.keys(connections).length);
+        
         if (Object.keys(connections).length > 0) {
+          console.log(`[Onboarding Submit] Processing ${Object.keys(connections).length} platform connection(s)...`);
+          
           for (const [platform, connectionData] of Object.entries<any>(connections)) {
+            console.log(`[Onboarding Submit] ===========================================`);
+            console.log(`[Onboarding Submit] PROCESSING PLATFORM: ${platform.toUpperCase()}`);
+            console.log(`[Onboarding Submit] Connection data:`, {
+              platform_user_id: connectionData.platform_user_id,
+              platform_username: connectionData.platform_username,
+              has_access_token: !!connectionData.access_token,
+              access_token_preview: connectionData.access_token ? connectionData.access_token.substring(0, 20) + '...' : 'none',
+              assets_count: connectionData.assets?.length || 0,
+              scopes_count: connectionData.scopes?.length || 0
+            });
+            
             let finalAssets = connectionData.assets || [];
             
             // For Google connections, trigger fresh asset discovery to get the latest assets
             if (platform === 'google' && connectionData.access_token) {
-              console.log(`[Onboarding] Triggering fresh Google asset discovery for client ${clientId}...`);
+              console.log(`[Onboarding Submit] ===========================================`);
+              console.log(`[Onboarding Submit] 🚀 TRIGGERING FRESH GOOGLE ASSET DISCOVERY! 🚀`);
+              console.log(`[Onboarding Submit] Client ID: ${clientId}`);
+              console.log(`[Onboarding Submit] Access token preview: ${connectionData.access_token.substring(0, 20)}...`);
+              console.log(`[Onboarding Submit] ===========================================`);
+              
               try {
                 const discoveredAssets = await discoverGoogleAssets(connectionData.access_token);
-                console.log(`[Onboarding] Fresh asset discovery found ${discoveredAssets.length} assets:`, discoveredAssets);
+                console.log(`[Onboarding Submit] ===========================================`);
+                console.log(`[Onboarding Submit] ✅ FRESH ASSET DISCOVERY COMPLETED! ✅`);
+                console.log(`[Onboarding Submit] Discovered ${discoveredAssets.length} assets:`, discoveredAssets);
+                console.log(`[Onboarding Submit] ===========================================`);
                 finalAssets = discoveredAssets;
               } catch (error) {
-                console.error(`[Onboarding] Fresh asset discovery failed, using stored assets:`, error);
+                console.error(`[Onboarding Submit] ===========================================`);
+                console.error(`[Onboarding Submit] ❌ FRESH ASSET DISCOVERY FAILED! ❌`);
+                console.error(`[Onboarding Submit] Error:`, error);
+                console.error(`[Onboarding Submit] Falling back to stored assets...`);
+                console.error(`[Onboarding Submit] ===========================================`);
                 // Fall back to stored assets if discovery fails
                 finalAssets = connectionData.assets || [];
               }
+            } else {
+              console.log(`[Onboarding Submit] Skipping fresh asset discovery for ${platform} (not Google or no access token)`);
             }
             
             await upsertClientPlatformConnection({
