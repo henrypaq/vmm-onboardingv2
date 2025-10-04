@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOnboardingRequest, updateOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient as createClientRecord, updateClient, upsertClientPlatformConnection, getOnboardingRequestByLinkId } from '@/lib/db/database';
+import { discoverGoogleAssets } from '@/lib/oauth/oauth-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -239,6 +240,22 @@ export async function POST(request: NextRequest) {
         const connections = storedPlatformConnections || {};
         if (Object.keys(connections).length > 0) {
           for (const [platform, connectionData] of Object.entries<any>(connections)) {
+            let finalAssets = connectionData.assets || [];
+            
+            // For Google connections, trigger fresh asset discovery to get the latest assets
+            if (platform === 'google' && connectionData.access_token) {
+              console.log(`[Onboarding] Triggering fresh Google asset discovery for client ${clientId}...`);
+              try {
+                const discoveredAssets = await discoverGoogleAssets(connectionData.access_token);
+                console.log(`[Onboarding] Fresh asset discovery found ${discoveredAssets.length} assets:`, discoveredAssets);
+                finalAssets = discoveredAssets;
+              } catch (error) {
+                console.error(`[Onboarding] Fresh asset discovery failed, using stored assets:`, error);
+                // Fall back to stored assets if discovery fails
+                finalAssets = connectionData.assets || [];
+              }
+            }
+            
             await upsertClientPlatformConnection({
               client_id: clientId,
               platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
@@ -248,7 +265,7 @@ export async function POST(request: NextRequest) {
               refresh_token: connectionData.refresh_token,
               token_expires_at: connectionData.token_expires_at,
               scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
-              assets: connectionData.assets || [], // Include assets from the stored platform connection
+              assets: finalAssets, // Use freshly discovered assets for Google, stored assets for others
               is_active: true
             });
           }
