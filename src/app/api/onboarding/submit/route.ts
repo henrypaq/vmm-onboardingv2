@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createOnboardingRequest, updateOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient as createClientRecord, updateClient, upsertClientPlatformConnection, getOnboardingRequestByLinkId, ensureUserExists } from '@/lib/db/database';
+import { createOnboardingRequest, updateOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient as createClientRecord, updateClient, upsertClientPlatformConnection, getOnboardingRequestByLinkId, ensureUserExists, getClientPlatformConnection, updateClientPlatformConnection } from '@/lib/db/database';
 import { discoverGoogleAssets } from '@/lib/oauth/oauth-utils';
 
 export async function POST(request: NextRequest) {
@@ -323,18 +323,38 @@ export async function POST(request: NextRequest) {
               console.log(`[Onboarding Submit] Skipping fresh asset discovery for ${platform} (not Google or no access token)`);
             }
             
-            await upsertClientPlatformConnection({
-              client_id: clientId,
-              platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
-              platform_user_id: connectionData.platform_user_id || '',
-              platform_username: connectionData.platform_username,
-              access_token: connectionData.access_token,
-              refresh_token: connectionData.refresh_token,
-              token_expires_at: connectionData.token_expires_at,
-              scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
-              assets: finalAssets, // Use freshly discovered assets for Google, stored assets for others
-              is_active: true
-            });
+            // Check if connection already exists in client_platform_connections
+            const existingConnection = await getClientPlatformConnection(clientId, platform);
+            
+            if (existingConnection) {
+              console.log(`[Onboarding Submit] Connection already exists in client_platform_connections, checking if assets need updating...`);
+              
+              // Only update if assets have changed
+              const assetsChanged = JSON.stringify(finalAssets) !== JSON.stringify(existingConnection.assets || []);
+              
+              if (assetsChanged) {
+                console.log(`[Onboarding Submit] Assets changed, updating existing connection...`);
+                await updateClientPlatformConnection(existingConnection.id, {
+                  assets: finalAssets
+                });
+              } else {
+                console.log(`[Onboarding Submit] No asset changes, skipping update of existing connection`);
+              }
+            } else {
+              console.log(`[Onboarding Submit] No existing connection found, creating new one...`);
+              await upsertClientPlatformConnection({
+                client_id: clientId,
+                platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
+                platform_user_id: connectionData.platform_user_id || '',
+                platform_username: connectionData.platform_username,
+                access_token: connectionData.access_token,
+                refresh_token: connectionData.refresh_token,
+                token_expires_at: connectionData.token_expires_at,
+                scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
+                assets: finalAssets,
+                is_active: true
+              });
+            }
           }
           console.log(`[Onboarding] Persisted ${Object.keys(connections).length} platform connection(s) for client ${clientId}`);
         } else {
