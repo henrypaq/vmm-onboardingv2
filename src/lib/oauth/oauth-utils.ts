@@ -408,7 +408,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
             console.log(`[Google Asset Discovery] Tag Manager Account ${index + 1}:`, account);
             const asset = {
               id: account.accountId,
-              name: account.name || `Tag Manager Account ${account.accountId}`,
+              name: account.name || `Tag Manager (${account.accountId})`,
               type: 'tagmanager_account'
             };
             console.log('GOOGLE_ASSET_TO_SAVE', { 
@@ -460,7 +460,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
             console.log(`[Google Asset Discovery] Search Console Site ${index + 1}:`, site);
             const asset = {
               id: site.siteUrl,
-              name: site.siteUrl,
+              name: `Search Console (${site.siteUrl})`,
               type: 'searchconsole_site'
             };
             console.log('GOOGLE_ASSET_TO_SAVE', { 
@@ -602,7 +602,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
               const customerId = resource.replace('customers/', '');
               const asset = {
                 id: customerId,
-                name: `Google Ads Account ${customerId}`,
+                name: `Google Ads (${customerId})`,
                 type: 'ads_account'
               };
               console.log('GOOGLE_ASSET_TO_SAVE', { 
@@ -640,24 +640,34 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
     console.log('[Google Asset Discovery] Assets by type:', assetsByType);
     console.log('[Google Asset Discovery] All discovered assets:', assets);
     
-    // If no assets were discovered, add some test assets for debugging
-    if (assets.length === 0) {
+    // Always add basic profile access as a fallback asset
+    console.log('[Google Asset Discovery] ===========================================');
+    console.log('[Google Asset Discovery] ADDING BASIC PROFILE ACCESS ASSET');
+    assets.push({
+      id: 'basic-profile',
+      name: 'Basic Profile Access',
+      type: 'basic'
+    });
+    console.log('[Google Asset Discovery] Added basic profile asset');
+    
+    // If no other assets were discovered, add some test assets for debugging
+    if (assets.length === 1) { // Only basic profile asset exists
       console.log('[Google Asset Discovery] ===========================================');
-      console.log('[Google Asset Discovery] NO ASSETS DISCOVERED - ADDING TEST ASSETS');
+      console.log('[Google Asset Discovery] NO ADVANCED ASSETS DISCOVERED - ADDING TEST ASSETS');
       assets.push(
         {
           id: 'test-analytics-123',
-          name: 'Test Analytics Property',
+          name: 'Analytics Property (test)',
           type: 'analytics_property'
         },
         {
           id: 'test-tagmanager-456',
-          name: 'Test Tag Manager Account',
+          name: 'Tag Manager (test)',
           type: 'tagmanager_account'
         },
         {
           id: 'https://example.com',
-          name: 'https://example.com',
+          name: 'Search Console (test)',
           type: 'searchconsole_site'
         }
       );
