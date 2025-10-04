@@ -728,6 +728,89 @@ export async function getOnboardingRequestByLinkId(linkId: string): Promise<Onbo
   return data;
 }
 
+// Helper function to ensure user exists before creating onboarding request
+export async function ensureUserExists(clientData: {
+  client_id?: string;
+  client_email?: string;
+  client_name?: string;
+  company_name?: string;
+}): Promise<string | null> {
+  console.log('[Database] ===========================================');
+  console.log('[Database] ENSURE USER EXISTS CHECK');
+  console.log('[Database] Client data:', clientData);
+  console.log('[Database] ===========================================');
+
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // First, check if a user exists by client_id or email
+  let existingUser = null;
+  
+  if (clientData.client_id) {
+    console.log('[Database] Checking for existing user by client_id:', clientData.client_id);
+    const { data: userById, error: userByIdError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('id', clientData.client_id)
+      .single();
+    
+    if (!userByIdError && userById) {
+      existingUser = userById;
+      console.log('[Database] Found existing user by client_id:', userById.id);
+    }
+  }
+  
+  if (!existingUser && clientData.client_email) {
+    console.log('[Database] Checking for existing user by email:', clientData.client_email);
+    const { data: userByEmail, error: userByEmailError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('email', clientData.client_email)
+      .single();
+    
+    if (!userByEmailError && userByEmail) {
+      existingUser = userByEmail;
+      console.log('[Database] Found existing user by email:', userByEmail.id);
+    }
+  }
+
+  if (existingUser) {
+    console.log('[Database] User already exists:', existingUser.id);
+    return existingUser.id;
+  }
+
+  // No user exists, create one
+  console.log('[Database] No existing user found, creating new user...');
+  
+  const newUserData = {
+    id: clientData.client_id || undefined, // Use provided client_id if available
+    email: clientData.client_email || '',
+    role: 'client' as const,
+    full_name: clientData.client_name || null,
+    company_name: clientData.company_name || null,
+  };
+
+  console.log('[Database] Creating user with data:', newUserData);
+
+  try {
+    const { data: newUser, error: createError } = await supabaseAdmin
+      .from('users')
+      .insert([newUserData])
+      .select('id')
+      .single();
+
+    if (createError) {
+      console.error('[Database] Error creating user:', createError);
+      throw new Error(`Failed to create user: ${createError.message}`);
+    }
+
+    console.log('[Database] Created missing user record:', newUser.id);
+    return newUser.id;
+  } catch (error) {
+    console.error('[Database] Failed to create user:', error);
+    throw error;
+  }
+}
+
 // Utility functions
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {

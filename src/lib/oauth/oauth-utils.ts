@@ -410,7 +410,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
             console.log(`[Google Asset Discovery] Tag Manager Account ${index + 1}:`, account);
             const asset = {
               id: account.accountId,
-              name: account.name || `Tag Manager (${account.accountId})`,
+              name: `Tag Manager (${account.accountId})`,
               type: 'tagmanager_account'
             };
             console.log('GOOGLE_ASSET_TO_SAVE', { 
@@ -676,7 +676,7 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
         },
         {
           id: 'test-tagmanager-456',
-          name: 'Tag Manager (test)',
+          name: 'Tag Manager (test-tagmanager-456)',
           type: 'tagmanager_account'
         },
         {

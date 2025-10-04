@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createOnboardingRequest, updateOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient as createClientRecord, updateClient, upsertClientPlatformConnection, getOnboardingRequestByLinkId } from '@/lib/db/database';
+import { createOnboardingRequest, updateOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient as createClientRecord, updateClient, upsertClientPlatformConnection, getOnboardingRequestByLinkId, ensureUserExists } from '@/lib/db/database';
 import { discoverGoogleAssets } from '@/lib/oauth/oauth-utils';
 
 export async function POST(request: NextRequest) {
@@ -142,18 +142,51 @@ export async function POST(request: NextRequest) {
       company_name: data?.company
     });
     
+    // CRITICAL: Ensure user exists before creating onboarding request to avoid foreign key constraint errors
+    let userId: string | null = null;
+    if (data?.email) {
+      console.log('[Onboarding] ===========================================');
+      console.log('[Onboarding] ENSURING USER EXISTS BEFORE CREATING ONBOARDING REQUEST');
+      console.log('[Onboarding] ===========================================');
+      
+      try {
+        userId = await ensureUserExists({
+          client_id: clientId,
+          client_email: data.email,
+          client_name: data.name,
+          company_name: data.company
+        });
+        console.log('[Onboarding] User existence check completed. User ID:', userId);
+      } catch (userError) {
+        console.error('[Onboarding] Failed to ensure user exists:', userError);
+        // Continue anyway - we'll handle this gracefully
+      }
+    }
+    
     // Update existing in_progress request if present, else create
     let onboardingRequest;
     try {
       const existing = await getOnboardingRequestByLinkId(link.id);
       if (existing) {
+        // For existing requests, use the userId we just ensured exists
+        const updateData = { ...onboardingRequestData };
+        if (userId) {
+          updateData.client_id = userId;
+        }
+        
         onboardingRequest = await (async () => {
-          const updated = await updateOnboardingRequest(existing.id, onboardingRequestData);
+          const updated = await updateOnboardingRequest(existing.id, updateData);
           return updated;
         })();
         console.log('[Onboarding] Updated existing onboarding request to completed');
       } else {
-        onboardingRequest = await createOnboardingRequest(onboardingRequestData);
+        // For new requests, use the userId we just ensured exists
+        const createData = { ...onboardingRequestData };
+        if (userId) {
+          createData.client_id = userId;
+        }
+        
+        onboardingRequest = await createOnboardingRequest(createData);
         console.log('[Onboarding] Created new onboarding request as completed');
       }
     } catch (onboardingError) {
