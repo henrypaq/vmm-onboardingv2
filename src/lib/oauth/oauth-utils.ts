@@ -321,6 +321,8 @@ export async function discoverGoogleAssets(accessToken: string): Promise<Asset[]
   console.log('[Google Asset Discovery] ===========================================');
   console.log('[Google Asset Discovery] Starting Google asset discovery...');
   console.log('[Google Asset Discovery] Access token (first 20 chars):', accessToken.substring(0, 20) + '...');
+  console.log('[Google Asset Discovery] Access token length:', accessToken.length);
+  console.log('[Google Asset Discovery] Timestamp:', new Date().toISOString());
   
   try {
     // 1. Analytics (GA4) - Account Summaries

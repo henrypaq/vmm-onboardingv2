@@ -646,10 +646,22 @@ export async function findConnectionByPlatformUserId(platform: string, platformU
 
 // Upsert by stable id across clients (moves ownership if needed)
 export async function upsertClientPlatformConnectionByStableId(params: Omit<ClientPlatformConnection, 'id' | 'created_at' | 'updated_at'>): Promise<ClientPlatformConnection> {
+  console.log('[Database] ===========================================');
+  console.log('[Database] UPSERTING CLIENT PLATFORM CONNECTION');
+  console.log('[Database] Platform:', params.platform);
+  console.log('[Database] Client ID:', params.client_id);
+  console.log('[Database] Platform User ID:', params.platform_user_id);
+  console.log('[Database] Assets being stored:', params.assets);
+  console.log('[Database] Assets count:', params.assets?.length || 0);
+  console.log('[Database] ===========================================');
+  
   const existingByStable = await findConnectionByPlatformUserId(params.platform, params.platform_user_id);
   const supabaseAdmin = getSupabaseAdmin();
 
   if (existingByStable) {
+    console.log('[Database] Found existing connection, updating...');
+    console.log('[Database] Existing connection ID:', existingByStable.id);
+    
     const { data, error } = await supabaseAdmin
       .from('client_platform_connections')
       .update({
@@ -668,13 +680,16 @@ export async function upsertClientPlatformConnectionByStableId(params: Omit<Clie
       .single();
 
     if (error) {
-      console.error('Error updating connection by stable id:', error);
+      console.error('[Database] Error updating connection by stable id:', error);
       throw new Error('Failed to update platform connection');
     }
 
+    console.log('[Database] Successfully updated existing connection');
+    console.log('[Database] Updated connection data:', data);
     return data;
   }
 
+  console.log('[Database] No existing connection found, creating new one...');
   const { data, error } = await supabaseAdmin
     .from('client_platform_connections')
     .insert([params])
@@ -682,9 +697,13 @@ export async function upsertClientPlatformConnectionByStableId(params: Omit<Clie
     .single();
 
   if (error) {
-    console.error('Error inserting connection by stable id:', error);
+    console.error('[Database] Error inserting connection by stable id:', error);
     throw new Error('Failed to create platform connection');
   }
+  
+  console.log('[Database] Successfully created new connection');
+  console.log('[Database] New connection data:', data);
+  console.log('[Database] ===========================================');
   return data;
 }
 

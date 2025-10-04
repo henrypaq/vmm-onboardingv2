@@ -95,11 +95,33 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       setClient(clientData.client);
       
       // Fetch platform connections
+      console.log('[Client Details] ===========================================');
+      console.log('[Client Details] Fetching platform connections for client:', clientId);
       const connectionsResponse = await fetch(`/api/clients/${clientId}/connections`);
       if (connectionsResponse.ok) {
         const connectionsData = await connectionsResponse.json();
+        console.log('[Client Details] Platform connections API response:', connectionsData);
+        console.log('[Client Details] Platform connections count:', connectionsData.connections?.length || 0);
+        
+        // Debug each connection
+        if (connectionsData.connections && connectionsData.connections.length > 0) {
+          connectionsData.connections.forEach((conn: any, index: number) => {
+            console.log(`[Client Details] Connection ${index + 1}:`, {
+              id: conn.id,
+              platform: conn.platform,
+              platform_username: conn.platform_username,
+              assets: conn.assets,
+              assets_count: conn.assets?.length || 0,
+              scopes: conn.scopes
+            });
+          });
+        }
+        
         setPlatformConnections(connectionsData.connections || []);
+      } else {
+        console.error('[Client Details] Failed to fetch platform connections:', connectionsResponse.status);
       }
+      console.log('[Client Details] ===========================================');
       
       // Fetch onboarding request details
       const requestResponse = await fetch(`/api/clients/${clientId}/onboarding-request`);
