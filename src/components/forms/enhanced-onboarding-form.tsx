@@ -198,10 +198,19 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
             
             // Load existing connected platforms
             if (data.request.platform_connections) {
+              console.log('[Onboarding] ===========================================');
+              console.log('[Onboarding] LOADING EXISTING PLATFORM CONNECTIONS FROM REQUEST');
+              console.log('[Onboarding] platform_connections from request:', data.request.platform_connections);
+              
               const connected: Record<string, boolean> = {};
               data.request.platform_connections.forEach((conn: { platform: string }) => {
+                console.log('[Onboarding] Marking platform as connected:', conn.platform);
                 connected[conn.platform] = true;
               });
+              
+              console.log('[Onboarding] Setting connectedPlatforms to:', connected);
+              console.log('[Onboarding] WARNING: This may mark platforms as connected without triggering OAuth flow');
+              console.log('[Onboarding] ===========================================');
               setConnectedPlatforms(connected);
             }
           }
