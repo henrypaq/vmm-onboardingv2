@@ -614,14 +614,21 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                 <div key={index} className="space-y-2">
                                   <div className="flex items-center justify-between p-2 bg-gray-50 rounded border">
                                     <div>
-                                      <span className="text-sm font-medium">{asset.name}</span>
-                                      <span className="text-xs text-gray-500 ml-2 capitalize">
-                                        ({asset.type === 'catalog' ? 'Product Catalog' : 
+                                      <div className="flex items-center">
+                                        <span className="text-sm font-medium">{asset.name}</span>
+                                        {asset.id && asset.type !== 'basic' && (
+                                          <span className="text-xs text-gray-400 ml-2">
+                                            ({asset.id})
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="text-xs text-gray-500 capitalize">
+                                        {asset.type === 'catalog' ? 'Product Catalog' : 
                                           asset.type === 'ad_account' ? 'Ad Account' : 
                                           asset.type === 'page' ? 'Page' : 
                                           asset.type === 'business_dataset' ? 'Business Manager' : 
                                           asset.type === 'instagram_account' ? 'Instagram Account' : 
-                                          asset.type === 'analytics_property' ? 'Analytics (GA4 Property)' :
+                                          asset.type === 'analytics_property' ? 'Analytics Account' :
                                           asset.type === 'business_profile' ? 'Business Profile' :
                                           asset.type === 'business_profile_location' ? 'Business Profile Location' :
                                           asset.type === 'business_account' ? 'Business Profile Account' :
@@ -632,7 +639,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                           asset.type === 'merchant_center' ? 'Merchant Center' :
                                           asset.type === 'merchant_account' ? 'Merchant Account' :
                                           asset.type === 'ads_account' ? 'Google Ads Account' :
-                                          asset.type})
+                                          asset.type}
                                       </span>
                                     </div>
                                     <div className="flex space-x-2">

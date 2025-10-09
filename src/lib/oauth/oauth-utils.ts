@@ -360,7 +360,7 @@ export async function discoverGoogleAssets(accessToken: string, clientId?: strin
               summary.propertySummaries.forEach((property: any, propIndex: number) => {
                 console.log(`[Google Asset Discovery] Property ${propIndex + 1}:`, property);
                 const assetId = property.property.replace('properties/', '');
-                const displayName = property.displayName || `Analytics (${assetId})`;
+                const displayName = property.displayName || `Analytics Account (${assetId})`;
                 const asset = {
                   id: assetId,
                   name: displayName,
@@ -732,13 +732,13 @@ export async function discoverGoogleAssets(accessToken: string, clientId?: strin
       assets.push(
         {
           id: 'test-analytics-123',
-          name: 'Analytics Property (test)',
+          name: 'Analytics Account (test)',
           type: 'analytics_property',
           clientId: clientId || 'unknown',
           platform: 'google',
           assetId: 'test-analytics-123',
           assetType: 'analytics_property',
-          displayName: 'Analytics Property (test)',
+          displayName: 'Analytics Account (test)',
           metadata: { description: 'Test analytics property for debugging' }
         },
         {
