@@ -615,8 +615,10 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   <div className="flex items-center justify-between p-2 bg-gray-50 rounded border">
                                     <div>
                                       <div className="flex items-center">
-                                        <span className="text-sm font-medium">{asset.name}</span>
-                                        {asset.id && asset.type !== 'basic' && (
+                                        <span className="text-sm font-medium">
+                                          {asset.type === 'analytics_property' ? 'Analytics Account' : asset.name}
+                                        </span>
+                                        {asset.id && asset.type !== 'basic' && asset.type !== 'analytics_property' && (
                                           <span className="text-xs text-gray-400 ml-2">
                                             ({asset.id})
                                           </span>
@@ -628,7 +630,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                           asset.type === 'page' ? 'Page' : 
                                           asset.type === 'business_dataset' ? 'Business Manager' : 
                                           asset.type === 'instagram_account' ? 'Instagram Account' : 
-                                          asset.type === 'analytics_property' ? 'Analytics Account' :
+                                          asset.type === 'analytics_property' ? `Analytics Property (${asset.id})` :
                                           asset.type === 'business_profile' ? 'Business Profile' :
                                           asset.type === 'business_profile_location' ? 'Business Profile Location' :
                                           asset.type === 'business_account' ? 'Business Profile Account' :
