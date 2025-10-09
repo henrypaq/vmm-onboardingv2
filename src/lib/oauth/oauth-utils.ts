@@ -360,7 +360,7 @@ export async function discoverGoogleAssets(accessToken: string, clientId?: strin
               summary.propertySummaries.forEach((property: any, propIndex: number) => {
                 console.log(`[Google Asset Discovery] Property ${propIndex + 1}:`, property);
                 const assetId = property.property.replace('properties/', '');
-                const displayName = property.displayName || `Analytics Account (${assetId})`;
+                const displayName = property.displayName || `Analytics Property (GA4) (${assetId})`;
                 const asset = {
                   id: assetId,
                   name: displayName,
@@ -424,7 +424,7 @@ export async function discoverGoogleAssets(accessToken: string, clientId?: strin
           data.account.forEach((account: any, index: number) => {
             console.log(`[Google Asset Discovery] Tag Manager Account ${index + 1}:`, account);
             const assetId = account.accountId;
-            const displayName = account.name || `Tag Manager (${account.accountId})`;
+            const displayName = account.name || `Tag Manager Account (${account.accountId})`;
             const asset = {
               id: assetId,
               name: displayName,
@@ -484,7 +484,7 @@ export async function discoverGoogleAssets(accessToken: string, clientId?: strin
           data.siteEntry.forEach((site: any, index: number) => {
             console.log(`[Google Asset Discovery] Search Console Site ${index + 1}:`, site);
             const assetId = site.siteUrl;
-            const displayName = `Search Console (${site.siteUrl})`;
+            const displayName = `Search Console Site (${site.siteUrl.replace('sc-domain:', '')})`;
             const asset = {
               id: assetId,
               name: displayName,
@@ -596,7 +596,7 @@ export async function discoverGoogleAssets(accessToken: string, clientId?: strin
         if (data.accountIdentifiers && data.accountIdentifiers.length > 0) {
           data.accountIdentifiers.forEach((account: any) => {
             const assetId = account.merchantId;
-            const displayName = `Merchant Center (${account.merchantId})`;
+            const displayName = `Merchant Center Account (ID: ${account.merchantId})`;
             const asset = {
               id: assetId,
               name: displayName,
@@ -732,18 +732,18 @@ export async function discoverGoogleAssets(accessToken: string, clientId?: strin
       assets.push(
         {
           id: 'test-analytics-123',
-          name: 'Analytics Account (test)',
+          name: 'Analytics Property (GA4) (test)',
           type: 'analytics_property',
           clientId: clientId || 'unknown',
           platform: 'google',
           assetId: 'test-analytics-123',
           assetType: 'analytics_property',
-          displayName: 'Analytics Account (test)',
+          displayName: 'Analytics Property (GA4) (test)',
           metadata: { description: 'Test analytics property for debugging' }
         },
         {
           id: 'test-tagmanager-456',
-          name: 'Tag Manager (test-tagmanager-456)',
+          name: 'Tag Manager Account (test-tagmanager-456)',
           type: 'tagmanager_account',
           clientId: clientId || 'unknown',
           platform: 'google',
@@ -754,13 +754,13 @@ export async function discoverGoogleAssets(accessToken: string, clientId?: strin
         },
         {
           id: 'https://example.com',
-          name: 'Search Console (test)',
+          name: 'Search Console Site (test)',
           type: 'searchconsole_site',
           clientId: clientId || 'unknown',
           platform: 'google',
           assetId: 'https://example.com',
           assetType: 'searchconsole_site',
-          displayName: 'Search Console (test)',
+          displayName: 'Search Console Site (test)',
           metadata: { description: 'Test search console site for debugging' }
         }
       );

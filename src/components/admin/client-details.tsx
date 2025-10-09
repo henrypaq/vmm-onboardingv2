@@ -630,16 +630,16 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                           asset.type === 'page' ? 'Page' : 
                                           asset.type === 'business_dataset' ? 'Business Manager' : 
                                           asset.type === 'instagram_account' ? 'Instagram Account' : 
-                                          asset.type === 'analytics_property' ? `Analytics Property (${asset.id})` :
+                                          asset.type === 'analytics_property' ? `Analytics Property (GA4) (${asset.id})` :
                                           asset.type === 'business_profile' ? 'Business Profile' :
                                           asset.type === 'business_profile_location' ? 'Business Profile Location' :
                                           asset.type === 'business_account' ? 'Business Profile Account' :
-                                          asset.type === 'tag_manager' ? 'Tag Manager' :
+                                          asset.type === 'tag_manager' ? 'Tag Manager Account' :
                                           asset.type === 'tagmanager_account' ? 'Tag Manager Account' :
-                                          asset.type === 'search_console' ? 'Search Console' :
-                                          asset.type === 'searchconsole_site' ? 'Search Console Site' :
-                                          asset.type === 'merchant_center' ? 'Merchant Center' :
-                                          asset.type === 'merchant_account' ? 'Merchant Account' :
+                                          asset.type === 'search_console' ? 'Search Console Site' :
+                                          asset.type === 'searchconsole_site' ? `Search Console Site (${asset.id.replace('sc-domain:', '')})` :
+                                          asset.type === 'merchant_center' ? `Merchant Center Account (ID: ${asset.id})` :
+                                          asset.type === 'merchant_account' ? `Merchant Center Account (ID: ${asset.id})` :
                                           asset.type === 'ads_account' ? 'Google Ads Account' :
                                           asset.type}
                                       </span>
