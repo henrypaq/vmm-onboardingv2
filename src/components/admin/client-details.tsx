@@ -562,7 +562,8 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       {(() => {
                         const assets = connection.assets;
                         console.log(`[Client Details] ${connection.platform} assets from connection:`, assets);
-                        return assets && assets.length > 0;
+                        // Always show assets section for Google connections, or if assets exist for other platforms
+                        return connection.platform === 'google' || (assets && assets.length > 0);
                       })() ? (
                         <div className="mt-3">
                           <label className="text-sm font-medium text-gray-500">Available Assets</label>
@@ -573,7 +574,33 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                 assets: connection.assets,
                                 assetCount: connection.assets?.length || 0
                               });
-                              return connection.assets;
+                              
+                              // Add basic asset if it doesn't exist
+                              const assetsWithBasic = [...(connection.assets || [])];
+                              const hasBasicAsset = assetsWithBasic.some(asset => asset.type === 'basic');
+                              
+                              if (!hasBasicAsset && connection.platform === 'google') {
+                                assetsWithBasic.unshift({
+                                  id: '',
+                                  name: 'Basic Google Profile',
+                                  type: 'basic'
+                                });
+                              }
+                              
+                              // Sort assets to put basic first, then others
+                              const sortedAssets = assetsWithBasic.sort((a, b) => {
+                                // If either is basic type, prioritize it
+                                if (a.type === 'basic' && b.type !== 'basic') return -1;
+                                if (b.type === 'basic' && a.type !== 'basic') return 1;
+                                // Otherwise maintain original order
+                                return 0;
+                              });
+                              
+                              // Clean up asset names by removing "Test" prefix
+                              return sortedAssets.map(asset => ({
+                                ...asset,
+                                name: asset.name.replace(/^Test\s+/i, '')
+                              }));
                             })().map((asset: Asset, index: number) => {
                               const testKey = `${connection.platform}-${asset.id}-${asset.type}`;
                               const pagePostsTestKey = `${connection.platform}-${asset.id}-page_posts`;
@@ -697,49 +724,6 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                 </div>
                               );
                             })}
-                          </div>
-                        </div>
-                      ) : connection.platform === 'google' ? (
-                        // Fallback for Google when no assets discovered
-                        <div className="mt-3">
-                          <label className="text-sm font-medium text-gray-500">Basic Profile Access</label>
-                          <div className="mt-1">
-                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded border">
-                              <div>
-                                <span className="text-sm font-medium">Basic Google Profile</span>
-                                <span className="text-xs text-gray-500 ml-2">
-                                  (Basic profile information)
-                                </span>
-                              </div>
-                              <div className="flex space-x-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs"
-                                  onClick={() => window.open('https://myaccount.google.com/', '_blank')}
-                                >
-                                  Open in Google
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs"
-                                  onClick={() => handleTestApiAccess('google', '', 'basic')}
-                                  disabled={apiTestLoading['google--basic']}
-                                >
-                                  {apiTestLoading['google--basic'] ? (
-                                    <div className="w-3 h-3 border border-gray-600 border-t-transparent rounded-full animate-spin mr-1" />
-                                  ) : (
-                                    <TestTube className="h-3 w-3 mr-1" />
-                                  )}
-                                  {apiTestLoading['google--basic'] ? 'Testing...' : 'Test API'}
-                                </Button>
-                              </div>
-                            </div>
-                            {/* API Test Results Panel */}
-                            <div className="space-y-2">
-                              {apiTestResults['google--basic'] && renderApiTestResult('google--basic', apiTestResults['google--basic'], 'basic')}
-                            </div>
                           </div>
                         </div>
                       ) : null}
