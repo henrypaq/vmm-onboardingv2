@@ -139,21 +139,45 @@ export async function POST(request: NextRequest) {
       }
 
       case 'analytics_property': {
-        apiUrl = 'https://analyticsadmin.googleapis.com/v1/accountSummaries';
+        apiUrl = 'https://analyticsadmin.googleapis.com/v1beta/accountSummaries';
         summary = 'Analytics account summaries';
         
         try {
+          console.log(`[Google Test API] Making Analytics API request to: ${apiUrl}`);
           const response = await fetch(apiUrl, {
             headers: { 'Authorization': `Bearer ${connection.access_token}` }
           });
 
+          console.log(`[Google Test API] Analytics API response status: ${response.status}`);
+          
           if (!response.ok) {
             const errorText = await response.text();
+            console.error(`[Google Test API] Analytics API error: ${response.status} - ${errorText.substring(0, 200)}...`);
+            
+            // Try alternative endpoint if v1beta fails
+            if (response.status === 404 && apiUrl.includes('/v1beta/')) {
+              console.log('[Google Test API] v1beta endpoint failed, trying v1alpha...');
+              const fallbackUrl = apiUrl.replace('/v1beta/', '/v1alpha/');
+              const fallbackResponse = await fetch(fallbackUrl, {
+                headers: { 'Authorization': `Bearer ${connection.access_token}` }
+              });
+              
+              if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                return NextResponse.json({
+                  success: true,
+                  apiUrl: fallbackUrl,
+                  json: fallbackData,
+                  summary: `Found ${fallbackData.accountSummaries?.length || 0} Analytics accounts (using v1alpha endpoint)`
+                });
+              }
+            }
+            
             return NextResponse.json({
               success: false,
               apiUrl,
               json: { error: errorText, status: response.status },
-              summary: `Failed to fetch Analytics summaries: ${response.status}`
+              summary: `Failed to fetch Analytics summaries: ${response.status} - ${response.status === 404 ? 'Endpoint not found. Check API version.' : 'API call failed'}`
             });
           }
 
@@ -171,11 +195,12 @@ export async function POST(request: NextRequest) {
               : `Found ${data.accountSummaries?.length || 0} Analytics accounts`
           });
         } catch (error) {
+          console.error('[Google Test API] Analytics API catch block error:', error);
           return NextResponse.json({
             success: false,
             apiUrl,
             json: { error: error instanceof Error ? error.message : 'Unknown error' },
-            summary: 'Failed to fetch Analytics data'
+            summary: 'Failed to fetch Analytics data - Network or parsing error'
           });
         }
       }
