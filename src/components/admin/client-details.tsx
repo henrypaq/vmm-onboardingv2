@@ -190,17 +190,17 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       // Auto-expand the result panel
       setApiTestExpanded(prev => ({ ...prev, [testKey]: true }));
 
-      if (response.ok && data.success) {
+      if (response.ok && (data.success || data.ok)) {
         showToast({
           type: 'success',
           title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} API Test Successful`,
-          message: data.description || 'API call completed successfully'
+          message: data.description || data.summary || 'API call completed successfully'
         });
       } else {
         showToast({
           type: 'error',
           title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} API Test Failed`,
-          message: data.error || 'Unknown error occurred'
+          message: data.error || data.summary || 'Unknown error occurred'
         });
       }
     } catch (error) {

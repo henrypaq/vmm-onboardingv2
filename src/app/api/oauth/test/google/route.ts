@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         if (!response.ok) {
           const errorText = await response.text();
           return NextResponse.json({
-            ok: false,
+            success: false,
             apiUrl,
             json: { error: errorText, status: response.status },
             summary: `Failed to fetch user info: ${response.status}`
@@ -71,14 +71,14 @@ export async function POST(request: NextRequest) {
 
         const data = await response.json();
         return NextResponse.json({
-          ok: true,
+          success: true,
           apiUrl,
           json: data,
           summary: `User: ${data.name || data.email || 'Unknown'}, Email: ${data.email || 'N/A'}`
         });
       } catch (error) {
         return NextResponse.json({
-          ok: false,
+          success: false,
           apiUrl,
           json: { error: error instanceof Error ? error.message : 'Unknown error' },
           summary: 'Failed to fetch user info'
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         const devToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
         if (!devToken) {
           return NextResponse.json({
-            ok: false,
+            success: false,
             apiUrl: 'N/A',
             json: { error: 'Google Ads Developer Token not configured' },
             summary: 'Google Ads API requires developer token to test'
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
           if (!response.ok) {
             const errorText = await response.text();
             return NextResponse.json({
-              ok: false,
+              success: false,
               apiUrl,
               json: { error: errorText, status: response.status },
               summary: `Failed to fetch Google Ads customers: ${response.status}`
@@ -123,14 +123,14 @@ export async function POST(request: NextRequest) {
 
           const data = await response.json();
           return NextResponse.json({
-            ok: true,
+            success: true,
             apiUrl,
             json: data,
             summary: `Found ${data.resourceNames?.length || 0} accessible Google Ads customers`
           });
         } catch (error) {
           return NextResponse.json({
-            ok: false,
+            success: false,
             apiUrl,
             json: { error: error instanceof Error ? error.message : 'Unknown error' },
             summary: 'Failed to fetch Google Ads customers'
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
           if (!response.ok) {
             const errorText = await response.text();
             return NextResponse.json({
-              ok: false,
+              success: false,
               apiUrl,
               json: { error: errorText, status: response.status },
               summary: `Failed to fetch Analytics summaries: ${response.status}`
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
             .find((property: any) => property.property.replace('properties/', '') === assetId);
           
           return NextResponse.json({
-            ok: true,
+            success: true,
             apiUrl,
             json: matchingProperty || data,
             summary: matchingProperty 
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json({
-            ok: false,
+            success: false,
             apiUrl,
             json: { error: error instanceof Error ? error.message : 'Unknown error' },
             summary: 'Failed to fetch Analytics data'
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
           if (!response.ok) {
             const errorText = await response.text();
             return NextResponse.json({
-              ok: false,
+              success: false,
               apiUrl,
               json: { error: errorText, status: response.status },
               summary: `Failed to fetch Business Profile locations: ${response.status}`
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
           );
           
           return NextResponse.json({
-            ok: true,
+            success: true,
             apiUrl,
             json: matchingLocation || data,
             summary: matchingLocation
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json({
-            ok: false,
+            success: false,
             apiUrl,
             json: { error: error instanceof Error ? error.message : 'Unknown error' },
             summary: 'Failed to fetch Business Profile data'
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
           if (!response.ok) {
             const errorText = await response.text();
             return NextResponse.json({
-              ok: false,
+              success: false,
               apiUrl,
               json: { error: errorText, status: response.status },
               summary: `Failed to fetch Business Profile accounts: ${response.status}`
@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
           );
           
           return NextResponse.json({
-            ok: true,
+            success: true,
             apiUrl,
             json: matchingAccount || data,
             summary: matchingAccount
@@ -256,7 +256,7 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json({
-            ok: false,
+            success: false,
             apiUrl,
             json: { error: error instanceof Error ? error.message : 'Unknown error' },
             summary: 'Failed to fetch Business Profile account data'
@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
           if (!response.ok) {
             const errorText = await response.text();
             return NextResponse.json({
-              ok: false,
+              success: false,
               apiUrl,
               json: { error: errorText, status: response.status },
               summary: `Failed to fetch Tag Manager accounts: ${response.status}`
@@ -287,7 +287,7 @@ export async function POST(request: NextRequest) {
           const matchingAccount = data.account?.find((account: any) => account.accountId === assetId);
           
           return NextResponse.json({
-            ok: true,
+            success: true,
             apiUrl,
             json: matchingAccount || data,
             summary: matchingAccount
@@ -296,7 +296,7 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json({
-            ok: false,
+            success: false,
             apiUrl,
             json: { error: error instanceof Error ? error.message : 'Unknown error' },
             summary: 'Failed to fetch Tag Manager data'
@@ -316,7 +316,7 @@ export async function POST(request: NextRequest) {
           if (!response.ok) {
             const errorText = await response.text();
             return NextResponse.json({
-              ok: false,
+              success: false,
               apiUrl,
               json: { error: errorText, status: response.status },
               summary: `Failed to fetch Search Console sites: ${response.status}`
@@ -327,7 +327,7 @@ export async function POST(request: NextRequest) {
           const matchingSite = data.siteEntry?.find((site: any) => site.siteUrl === assetId);
           
           return NextResponse.json({
-            ok: true,
+            success: true,
             apiUrl,
             json: matchingSite || data,
             summary: matchingSite
@@ -336,7 +336,7 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json({
-            ok: false,
+            success: false,
             apiUrl,
             json: { error: error instanceof Error ? error.message : 'Unknown error' },
             summary: 'Failed to fetch Search Console data'
@@ -356,7 +356,7 @@ export async function POST(request: NextRequest) {
           if (!response.ok) {
             const errorText = await response.text();
             return NextResponse.json({
-              ok: false,
+              success: false,
               apiUrl,
               json: { error: errorText, status: response.status },
               summary: `Failed to fetch Merchant Center info: ${response.status}`
@@ -367,7 +367,7 @@ export async function POST(request: NextRequest) {
           const matchingAccount = data.accountIdentifiers?.find((account: any) => account.merchantId === assetId);
           
           return NextResponse.json({
-            ok: true,
+            success: true,
             apiUrl,
             json: matchingAccount || data,
             summary: matchingAccount
@@ -376,7 +376,7 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json({
-            ok: false,
+            success: false,
             apiUrl,
             json: { error: error instanceof Error ? error.message : 'Unknown error' },
             summary: 'Failed to fetch Merchant Center data'
@@ -386,7 +386,7 @@ export async function POST(request: NextRequest) {
 
       default:
         return NextResponse.json({
-          ok: false,
+          success: false,
           apiUrl: 'N/A',
           json: { error: `Unknown asset type: ${assetType}` },
           summary: `Unsupported asset type: ${assetType}`
@@ -397,7 +397,7 @@ export async function POST(request: NextRequest) {
     console.error('[Google Test API] Error:', error);
     return NextResponse.json(
       { 
-        ok: false,
+        success: false,
         apiUrl: 'N/A',
         json: { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
         summary: 'Internal server error'
