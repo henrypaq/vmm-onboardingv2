@@ -147,7 +147,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       'google analytics': '/logos/google.png',
       'google ads': '/logos/google.png',
       'tiktok': '/logos/tiktok.webp',
-      'shopify': '/logos/shopify.png',
+      'shopify': '/logos/shopify.webp',
     };
     return logoMap[platformId.toLowerCase()] || '/logos/meta.png';
   };

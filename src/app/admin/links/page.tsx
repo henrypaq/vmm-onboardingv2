@@ -221,7 +221,7 @@ function LinksPageContent() {
       'google-analytics': '/logos/google.png', // Added for robustness
       'google-ads': '/logos/google.png',     // Added for robustness
       'tiktok': '/logos/tiktok.webp',
-      'shopify': '/logos/shopify.png',
+      'shopify': '/logos/shopify.webp',
     };
 
     const logoPath = logoMap[platformId.toLowerCase()];

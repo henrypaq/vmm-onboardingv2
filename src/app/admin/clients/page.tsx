@@ -17,10 +17,13 @@ import {
   Globe,
   Grid3X3,
   List,
-  ChevronDown
+  ChevronDown,
+  MoreVertical,
+  Trash2
 } from 'lucide-react';
 import { ClientDetailsPanel } from '@/components/admin/client-details';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 interface Client {
   id: string;
@@ -87,7 +90,7 @@ const getPlatformLogo = (platformId: string) => {
     'google analytics': '/logos/google.png',
     'google ads': '/logos/google.png',
     'tiktok': '/logos/tiktok.webp',
-    'shopify': '/logos/shopify.png',
+      'shopify': '/logos/shopify.webp',
   };
 
   const logoPath = logoMap[platformId.toLowerCase()];
@@ -114,11 +117,19 @@ const getPlatformLogo = (platformId: string) => {
 interface ClientGridItemProps {
   client: ExtendedClientData;
   onView: () => void;
+  onDelete: (clientId: string) => void;
 }
 
-function ClientGridItem({ client, onView }: ClientGridItemProps) {
+function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(`Are you sure you want to delete ${client.full_name || 'this client'}? This action cannot be undone.`)) {
+      onDelete(client.id);
+    }
   };
 
   return (
@@ -128,7 +139,7 @@ function ClientGridItem({ client, onView }: ClientGridItemProps) {
     >
       <CardContent className="p-6">
         <div className="space-y-4">
-          {/* Header with Logo, Name, and Status */}
+          {/* Header with Logo, Name, Status, and Menu */}
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500">
               <span className="text-white font-bold text-lg">Ω</span>
@@ -137,20 +148,47 @@ function ClientGridItem({ client, onView }: ClientGridItemProps) {
               <h3 className="font-semibold text-lg text-gray-900">
                 {client.full_name || 'Unnamed Client'}
               </h3>
-              {/* Status Badge */}
-              <Badge 
-                className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${
-                  client.status === 'active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : client.status === 'inactive'
-                    ? 'bg-gray-100 text-gray-800'
-                    : client.status === 'suspended'
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-orange-100 text-orange-800'
-                }`}
-              >
-                {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {/* Status Badge */}
+                <Badge 
+                  className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${
+                    client.status === 'active' 
+                      ? 'bg-green-100 text-green-800' 
+                      : client.status === 'inactive'
+                      ? 'bg-gray-100 text-gray-800'
+                      : client.status === 'suspended'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-orange-100 text-orange-800'
+                  }`}
+                >
+                  {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
+                </Badge>
+                
+                {/* 3-dots Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Client Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleDelete}
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Client
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
 
@@ -454,6 +492,27 @@ export default function ClientsPage() {
     }
   };
 
+  const deleteClient = async (clientId: string) => {
+    try {
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete client');
+      }
+
+      // Remove client from local state
+      setClients(prev => prev.filter(client => client.id !== clientId));
+      
+      toast.success('Client deleted successfully');
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete client');
+    }
+  };
+
   useEffect(() => {
     fetchClients();
     return () => {};
@@ -671,6 +730,7 @@ export default function ClientsPage() {
                   key={client.id}
                   client={client}
                   onView={() => setSelectedClientId(client.id)}
+                  onDelete={deleteClient}
                 />
               ))
             )}

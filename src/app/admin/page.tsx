@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
       'facebook': '/logos/meta.png',
       'google': '/logos/google.png',
       'tiktok': '/logos/tiktok.webp',
-      'shopify': '/logos/shopify.png',
+      'shopify': '/logos/shopify.webp',
     };
 
     const logoPath = logoMap[platformId.toLowerCase()];

@@ -31,7 +31,7 @@ const getPlatformIcon = (platformId: string) => {
     'google analytics': '/logos/google.png',
     'google ads': '/logos/google.png',
     'tiktok': '/logos/tiktok.webp',
-    'shopify': '/logos/shopify.png',
+      'shopify': '/logos/shopify.webp',
   };
 
   const logoPath = logoMap[platformId.toLowerCase()];

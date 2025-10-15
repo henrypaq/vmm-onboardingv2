@@ -136,7 +136,7 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
     id: 'shopify',
     name: 'Shopify',
     icon: 'ShoppingCart',
-    logo: '/logos/shopify.png',
+    logo: '/logos/shopify.webp',
     color: 'bg-green-600',
     oauthScopes: ['store_access'],
     permissions: [
