@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if client exists
+    const supabase = getSupabaseAdmin();
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('id')
