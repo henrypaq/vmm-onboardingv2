@@ -10,6 +10,7 @@ export interface PlatformDefinition {
   id: string;
   name: string;
   icon: string;
+  logo: string;
   color: string;
   permissions: PlatformPermission[];
   oauthScopes: string[];
@@ -20,6 +21,7 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
     id: 'meta',
     name: 'Meta (Facebook)',
     icon: 'Users',
+    logo: '/logos/meta.png',
     color: 'bg-blue-600',
     oauthScopes: ['pages_read_engagement', 'pages_manage_posts', 'ads_read', 'pages_show_list'],
     permissions: [
@@ -57,6 +59,7 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
     id: 'google',
     name: 'Google',
     icon: 'Search',
+    logo: '/logos/google.png',
     color: 'bg-red-600',
     // Minimal safe scopes for now; expand after Google verification
     oauthScopes: ['openid', 'email', 'profile'],
@@ -95,6 +98,7 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
     id: 'tiktok',
     name: 'TikTok',
     icon: 'Video',
+    logo: '/logos/tiktok.webp',
     color: 'bg-black',
     oauthScopes: ['video_read', 'user_info', 'video_publish', 'ads_read'],
     permissions: [
@@ -132,6 +136,7 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
     id: 'shopify',
     name: 'Shopify',
     icon: 'ShoppingCart',
+    logo: '/logos/shopify.png',
     color: 'bg-green-600',
     oauthScopes: ['store_access'],
     permissions: [

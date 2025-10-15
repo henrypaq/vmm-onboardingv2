@@ -22,10 +22,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate collaborator code format (typically 6-8 characters)
-    if (collaboratorCode.length < 6 || collaboratorCode.length > 8) {
+    // Validate collaborator code format (typically 4-8 characters)
+    if (collaboratorCode.length < 4 || collaboratorCode.length > 8) {
       return NextResponse.json(
-        { error: 'Invalid collaborator code format. Must be 6-8 characters' },
+        { error: 'Invalid collaborator code format. Must be 4-8 characters' },
         { status: 400 }
       );
     }

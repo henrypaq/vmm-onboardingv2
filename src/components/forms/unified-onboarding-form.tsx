@@ -106,6 +106,11 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedPlatform, setExpandedPlatform] = useState<string>('');
   const [currentPlatformIndex, setCurrentPlatformIndex] = useState(0);
+  const [oauthConfirmation, setOauthConfirmation] = useState<{
+    platform: string;
+    platformName: string;
+    assets: any[];
+  } | null>(null);
   
   // Load onboarding link data
   useEffect(() => {
@@ -147,8 +152,21 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
             ...prev,
             [connectedPlatform]: { connected: true }
           }));
+          
+          // Find the platform name and mock assets for confirmation
+          const platform = platforms.find(p => p.id === connectedPlatform);
+          const platformName = platform?.name || connectedPlatform;
+          
+          // Mock assets based on platform (in real implementation, this would come from OAuth response)
+          const mockAssets = getMockAssetsForPlatform(connectedPlatform);
+          
+          setOauthConfirmation({
+            platform: connectedPlatform,
+            platformName,
+            assets: mockAssets
+          });
+          
           setCurrentStep('platforms');
-          toast.success(`${connectedPlatform} connected successfully!`);
         }
         
       } catch (error) {
@@ -350,6 +368,38 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
 
   const getCurrentPlatform = () => {
     return platforms[currentPlatformIndex] || null;
+  };
+
+  const getMockAssetsForPlatform = (platformId: string) => {
+    switch (platformId.toLowerCase()) {
+      case 'google':
+        return [
+          { id: 'gmail', name: 'Gmail', type: 'email', description: 'Email access' },
+          { id: 'drive', name: 'Google Drive', type: 'storage', description: 'File storage access' },
+          { id: 'calendar', name: 'Google Calendar', type: 'calendar', description: 'Calendar access' }
+        ];
+      case 'meta':
+        return [
+          { id: 'facebook', name: 'Facebook Page', type: 'page', description: 'Page management' },
+          { id: 'instagram', name: 'Instagram Account', type: 'account', description: 'Account access' },
+          { id: 'ads', name: 'Meta Ads', type: 'ads', description: 'Advertising access' }
+        ];
+      case 'tiktok':
+        return [
+          { id: 'tiktok', name: 'TikTok Account', type: 'account', description: 'Account access' },
+          { id: 'analytics', name: 'TikTok Analytics', type: 'analytics', description: 'Analytics access' }
+        ];
+      case 'shopify':
+        return [
+          { id: 'store', name: 'Shopify Store', type: 'store', description: 'Store access' },
+          { id: 'products', name: 'Products', type: 'products', description: 'Product management' },
+          { id: 'orders', name: 'Orders', type: 'orders', description: 'Order management' }
+        ];
+      default:
+        return [
+          { id: 'account', name: 'Account Access', type: 'account', description: 'General account access' }
+        ];
+    }
   };
 
   const handleCompleteOnboarding = async () => {
@@ -738,6 +788,56 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
               </div>
             )}
             
+          </div>
+        )}
+        
+        {/* OAuth Confirmation Screen */}
+        {oauthConfirmation && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                {getPlatformLogo(oauthConfirmation.platform)}
+              </div>
+              <h2 className="text-xl page-title text-gray-900 mb-2">
+                {oauthConfirmation.platformName} Connected Successfully!
+              </h2>
+              <p className="text-gray-600 text-sm">
+                You have granted access to the following assets:
+              </p>
+            </div>
+            
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="space-y-3">
+                {oauthConfirmation.assets.map((asset, index) => (
+                  <div key={asset.id} className="flex items-center space-x-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{asset.name}</p>
+                      <p className="text-xs text-gray-600">{asset.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex justify-center">
+              <Button
+                onClick={() => {
+                  setOauthConfirmation(null);
+                  // Move to next platform or complete if all done
+                  if (currentPlatformIndex < platforms.length - 1) {
+                    setCurrentPlatformIndex(currentPlatformIndex + 1);
+                  } else if (allPlatformsConnected()) {
+                    setCurrentStep('complete');
+                  }
+                }}
+                className="gradient-primary"
+                size="lg"
+              >
+                Continue to Next Platform
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
         
