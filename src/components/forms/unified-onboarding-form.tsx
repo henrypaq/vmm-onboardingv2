@@ -295,6 +295,48 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     }
     return getTotalSteps();
   };
+
+  const getProgressSteps = () => {
+    const steps = [
+      {
+        id: 'info',
+        name: 'Information',
+        number: 1,
+        completed: currentStep !== 'info',
+        current: currentStep === 'info',
+        logo: null
+      }
+    ];
+
+    // Add platform steps
+    platforms.forEach((platform, index) => {
+      const platformStepId = `platform-${platform.id}`;
+      const isCompleted = connectionStatus[platform.id]?.connected || false;
+      const isCurrent = currentStep === 'platforms' && !isCompleted && 
+        platforms.slice(0, index).every(p => connectionStatus[p.id]?.connected);
+
+      steps.push({
+        id: platformStepId,
+        name: platform.name,
+        number: index + 2,
+        completed: isCompleted,
+        current: isCurrent,
+        logo: platform.logo
+      });
+    });
+
+    // Add completion step
+    steps.push({
+      id: 'complete',
+      name: 'Complete',
+      number: steps.length + 1,
+      completed: currentStep === 'complete',
+      current: false,
+      logo: null
+    });
+
+    return steps;
+  };
   
   if (isLoading) {
     return (
@@ -309,53 +351,72 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="bg-white rounded-t-2xl border border-gray-200 shadow-sm">
-          <div className="px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Image 
-                  src="/logos/vast.webp" 
-                  alt="Vast Logo" 
-                  width={32} 
-                  height={32}
-                  style={{ width: 'auto', height: 'auto' }}
-                />
-                <div>
-                  <h1 className="text-lg font-bold text-gray-900">Client Onboarding</h1>
-                  {linkData?.link_name && (
-                    <p className="text-sm text-gray-600">{linkData.link_name}</p>
-                  )}
-                </div>
-              </div>
-              <div className="text-sm text-gray-600">
-                Step {getCurrentStepNumber()} of {getTotalSteps()}
-              </div>
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-center mb-4">
+              <Image 
+                src="/logos/vast.webp" 
+                alt="Vast Logo" 
+                width={24} 
+                height={24}
+                style={{ width: 'auto', height: 'auto' }}
+              />
+            </div>
+            <div className="text-center mb-4">
+              <h1 className="text-lg font-bold text-gray-900">Client Onboarding</h1>
+              {linkData?.link_name && (
+                <p className="text-sm text-gray-600">{linkData.link_name}</p>
+              )}
             </div>
             
-            {/* Progress bar */}
-            <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-primary h-2 rounded-full transition-all duration-300"
-                style={{ 
-                  width: `${(getCurrentStepNumber() / getTotalSteps()) * 100}%` 
-                }}
-              />
+            {/* Progress bar with circles */}
+            <div className="flex items-center justify-center space-x-2">
+              {getProgressSteps().map((step, index) => (
+                <div key={step.id} className="flex items-center">
+                  <div className={`
+                    w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium
+                    ${step.completed 
+                      ? 'bg-primary text-white' 
+                      : step.current 
+                        ? 'bg-primary/20 text-primary border-2 border-primary' 
+                        : 'bg-gray-200 text-gray-500'
+                    }
+                  `}>
+                    {step.logo ? (
+                      <Image 
+                        src={step.logo} 
+                        alt={step.name} 
+                        width={16} 
+                        height={16}
+                        className="object-contain"
+                      />
+                    ) : (
+                      step.number
+                    )}
+                  </div>
+                  {index < getProgressSteps().length - 1 && (
+                    <div className={`w-8 h-0.5 mx-1 ${
+                      step.completed ? 'bg-primary' : 'bg-gray-200'
+                    }`} />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
         
         {/* Main Content */}
         <div className="bg-white rounded-b-2xl border-x border-b border-gray-200 shadow-sm">
-          <div className="px-8 py-8">
+          <div className="px-6 py-6">
         {/* Step 1: Client Information */}
         {currentStep === 'info' && (
           <div>
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Your Information</h2>
-              <p className="text-gray-600 mt-2">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Your Information</h2>
+              <p className="text-gray-600 mt-1 text-sm">
                 Please provide your contact information to get started.
               </p>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name *</Label>
                 <Input
@@ -390,24 +451,26 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 />
               </div>
               
-              <Button 
-                onClick={handleClientInfoSubmit}
-                className="w-full gradient-primary"
-                size="lg"
-              >
-                Continue to Platform Connections
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              {clientInfo.name && clientInfo.email && clientInfo.company && (
+                <Button 
+                  onClick={handleClientInfoSubmit}
+                  className="w-full gradient-primary"
+                  size="lg"
+                >
+                  Continue to Platform Connections
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         )}
         
         {/* Step 2: Platform Connections */}
         {currentStep === 'platforms' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Connect Your Platforms</h2>
-              <p className="text-gray-600 mt-2">
+              <h2 className="text-xl font-bold text-gray-900">Connect Your Platforms</h2>
+              <p className="text-gray-600 mt-1 text-sm">
                 Connect each platform to grant access to your accounts.
               </p>
             </div>
@@ -572,49 +635,51 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
               })}
             </Accordion>
             
-            {/* Submit button */}
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Ready to Submit?
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {Object.values(connectionStatus).filter(s => s.connected).length} of {platforms.length} platforms connected
-                  </p>
+            {/* Submit button - only show when all platforms are connected */}
+            {Object.values(connectionStatus).every(s => s.connected) && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Ready to Submit?
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      All {platforms.length} platforms connected
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleFinalSubmit}
+                    disabled={isSubmitting}
+                    className="gradient-primary"
+                    size="lg"
+                  >
+                    {isSubmitting ? (
+                      <LoadingSpinner size="sm" text="Submitting..." />
+                    ) : (
+                      <>
+                        Complete Onboarding
+                        <CheckCircle className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <Button
-                  onClick={handleFinalSubmit}
-                  disabled={isSubmitting || !Object.values(connectionStatus).every(s => s.connected)}
-                  className="gradient-primary"
-                  size="lg"
-                >
-                  {isSubmitting ? (
-                    <LoadingSpinner size="sm" text="Submitting..." />
-                  ) : (
-                    <>
-                      Complete Onboarding
-                      <CheckCircle className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
               </div>
-            </div>
+            )}
           </div>
         )}
         
         {/* Step 3: Completion */}
         {currentStep === 'complete' && (
-          <div className="text-center py-12">
-            <div className="flex justify-center mb-6">
-              <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="h-12 w-12 text-green-600" />
+          <div className="text-center py-8">
+            <div className="flex justify-center mb-4">
+              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="h-10 w-10 text-green-600" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
               Onboarding Complete!
             </h2>
-            <p className="text-gray-600 mb-8">
+            <p className="text-gray-600 text-sm">
               Thank you for connecting your platforms. You'll be redirected shortly.
             </p>
           </div>
