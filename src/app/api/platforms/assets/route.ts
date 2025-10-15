@@ -24,10 +24,52 @@ export async function GET(request: NextRequest) {
 
     // Get the platform connection for this client
     console.log('Looking for platform connection:', { clientId, platform });
+    
+    // First try to find it as an onboarding request
+    const { data: onboardingRequest, error: onboardingError } = await supabase
+      .from('onboarding_requests')
+      .select('id, client_id, client_email, client_name, status')
+      .eq('id', clientId)
+      .single();
+
+    console.log('Onboarding request lookup:', { 
+      onboardingRequest, 
+      onboardingError,
+      errorCode: onboardingError?.code,
+      errorMessage: onboardingError?.message
+    });
+
+    let requestId = null;
+    if (onboardingRequest && !onboardingError) {
+      requestId = onboardingRequest.id;
+      console.log('Found onboarding request:', requestId);
+    } else {
+      // If not found in onboarding_requests, try clients table
+      const { data: client, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('id', clientId)
+        .single();
+
+      console.log('Client lookup:', { client, clientError });
+
+      if (clientError || !client) {
+        console.log('Neither onboarding request nor client found');
+        return NextResponse.json(
+          { error: 'Client or onboarding request not found' },
+          { status: 404 }
+        );
+      }
+      requestId = client.id;
+      console.log('Found client:', requestId);
+    }
+
+    // Now look for platform connection using the correct ID
+    console.log('Looking for platform connection with requestId:', { requestId, platform });
     const { data: connection, error: connectionError } = await supabase
       .from('client_platform_connections')
       .select('*')
-      .eq('client_id', clientId)
+      .eq('client_id', requestId)
       .eq('platform', platform)
       .eq('is_active', true)
       .single();
