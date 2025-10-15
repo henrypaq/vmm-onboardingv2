@@ -38,13 +38,16 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
     const logoPath = logoMap[platformId.toLowerCase()];
     
     if (logoPath) {
+      // Special styling for Shopify to crop white space
+      const isShopify = platformId.toLowerCase() === 'shopify';
       return (
         <Image 
           src={logoPath} 
           alt={platformId} 
           width={24} 
           height={24}
-          className="object-contain"
+          className={isShopify ? "object-contain scale-150" : "object-contain"}
+          style={isShopify ? { objectPosition: 'center' } : undefined}
         />
       );
     }

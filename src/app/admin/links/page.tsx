@@ -218,13 +218,16 @@ function LinksPageContent() {
     const logoPath = logoMap[platformId.toLowerCase()];
     
     if (logoPath) {
+      // Special styling for Shopify to crop white space
+      const isShopify = platformId.toLowerCase() === 'shopify';
       return (
         <Image 
           src={logoPath} 
           alt={platformId} 
           width={20} // Slightly smaller size
           height={20} // Slightly smaller size
-          className="object-contain"
+          className={isShopify ? "object-contain scale-150" : "object-contain"}
+          style={isShopify ? { objectPosition: 'center' } : undefined}
         />
       );
     }

@@ -93,13 +93,16 @@ const getPlatformLogo = (platformId: string) => {
   const logoPath = logoMap[platformId.toLowerCase()];
   
   if (logoPath) {
+    // Special styling for Shopify to crop white space
+    const isShopify = platformId.toLowerCase() === 'shopify';
     return (
       <Image 
         src={logoPath} 
         alt={platformId} 
         width={24} // Smaller size
         height={24} // Smaller size
-        className="object-contain"
+        className={isShopify ? "object-contain scale-150" : "object-contain"}
+        style={isShopify ? { objectPosition: 'center' } : undefined}
       />
     );
   }
