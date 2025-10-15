@@ -118,6 +118,14 @@ export async function POST(request: NextRequest) {
         });
         
         console.log('[Store OAuth] Successfully stored client platform connection with assets');
+        
+        // Update the onboarding request with the client_id
+        if (existingRequest) {
+          console.log('[Store OAuth] Updating onboarding request with client_id:', clientId);
+          await updateOnboardingRequest(existingRequest.id, {
+            client_id: clientId
+          });
+        }
       }
     } catch (e) {
       console.warn('[Store OAuth] Upsert to client_platform_connections failed (will not block flow):', e);

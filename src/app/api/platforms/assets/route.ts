@@ -80,11 +80,12 @@ export async function GET(request: NextRequest) {
 
     // If not found and this is an onboarding request, try to find the actual client ID
     if (connectionError && onboardingRequest) {
-      console.log('Connection not found with onboarding request ID, trying to find actual client...');
+      console.log('🔍 [ASSETS API] Connection not found with onboarding request ID, trying to find actual client...');
+      console.log('🔍 [ASSETS API] Onboarding request client_id:', onboardingRequest.client_id);
       
       // Get the actual client ID from the onboarding request
       const actualClientId = onboardingRequest.client_id;
-      console.log('Actual client ID from onboarding request:', actualClientId);
+      console.log('🔍 [ASSETS API] Actual client ID from onboarding request:', actualClientId);
       
       if (actualClientId) {
         // Try to find connection using the actual client ID
@@ -96,12 +97,32 @@ export async function GET(request: NextRequest) {
           .eq('is_active', true)
           .single();
 
-        console.log('Second attempt - actual client connection lookup:', { actualConnection, actualError });
+        console.log('🔍 [ASSETS API] Second attempt - actual client connection lookup:', { actualConnection, actualError });
         
         if (actualConnection && !actualError) {
           connection = actualConnection;
           connectionError = null;
-          console.log('Found connection using actual client ID!');
+          console.log('🔍 [ASSETS API] Found connection using actual client ID!');
+        }
+      } else {
+        console.log('🔍 [ASSETS API] No actual client ID found in onboarding request');
+        
+        // Try to find any connection for this platform by searching all connections
+        console.log('🔍 [ASSETS API] Searching all platform connections for platform:', platform);
+        const { data: allConnections, error: allError } = await supabase
+          .from('client_platform_connections')
+          .select('*')
+          .eq('platform', platform)
+          .eq('is_active', true)
+          .limit(10);
+        
+        console.log('🔍 [ASSETS API] All connections for platform:', { allConnections, allError });
+        
+        if (allConnections && allConnections.length > 0) {
+          // Use the most recent connection
+          connection = allConnections[0];
+          connectionError = null;
+          console.log('🔍 [ASSETS API] Using most recent connection:', connection);
         }
       }
     }
