@@ -1,16 +1,34 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   try {
-    // Create a Supabase client configured to use cookies
-    const supabase = await createClient();
+    // Create a Supabase client for middleware with proper cookie handling
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            // Don't set cookies in middleware
+          },
+        },
+      }
+    );
     
     // Get the session from the request
     const { data: { session } } = await supabase.auth.getSession();
+    
+    console.log('Middleware - Path:', pathname, 'Session exists:', !!session);
+    if (session) {
+      console.log('Session user:', session.user?.email);
+    }
     
     // Define protected routes
     const protectedRoutes = ['/admin', '/admin/clients', '/admin/links', '/admin/settings'];
