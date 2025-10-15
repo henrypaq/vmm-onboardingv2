@@ -101,7 +101,7 @@ const getPlatformLogo = (platformId: string) => {
         alt={platformId} 
         width={24} // Smaller size
         height={24} // Smaller size
-        className={isShopify ? "object-contain scale-150" : "object-contain"}
+        className={isShopify ? "object-contain scale-200" : "object-contain"}
         style={isShopify ? { objectPosition: 'center' } : undefined}
       />
     );
@@ -517,7 +517,7 @@ export default function ClientsPage() {
                     className="pl-10 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 transition-colors duration-200"
                   />
                 </div>
-              </div>
+      </div>
               <div className="flex items-center gap-2">
               <Button 
                 onClick={fetchClients} 
@@ -526,8 +526,8 @@ export default function ClientsPage() {
                 className="hover:bg-primary/10 hover:border-primary/30 transition-colors"
                 disabled={isLoading}
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
               </Button>
               <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
                 <Button
@@ -584,10 +584,10 @@ export default function ClientsPage() {
                       {platform}
                         </DropdownMenuItem>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
           </div>
         </motion.div>
       </div>

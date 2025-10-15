@@ -94,8 +94,16 @@ export function Header({ user, userRole }: HeaderProps) {
             .single();
           
           if (profile) {
+            // Capitalize first and last name
+            const capitalizeName = (name: string) => {
+              return name
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+            };
+            
             setCurrentUser({
-              name: profile.full_name || 'User',
+              name: profile.full_name ? capitalizeName(profile.full_name) : 'User',
               email: profile.email || session.user.email || '',
               role: profile.role || 'admin'
             });
@@ -755,9 +763,9 @@ export function Header({ user, userRole }: HeaderProps) {
                     placeholder="Confirm new password"
                   />
                 </div>
-              </div>
-            </div>
           </div>
+        </div>
+      </div>
 
           <div className="flex justify-end space-x-2 pt-6">
             <Button variant="outline" onClick={() => setProfileOpen(false)}>

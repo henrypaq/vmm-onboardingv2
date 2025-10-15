@@ -46,7 +46,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
           alt={platformId} 
           width={24} 
           height={24}
-          className={isShopify ? "object-contain scale-150" : "object-contain"}
+          className={isShopify ? "object-contain scale-200" : "object-contain"}
           style={isShopify ? { objectPosition: 'center' } : undefined}
         />
       );

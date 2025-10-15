@@ -196,9 +196,16 @@ function LinksPageContent() {
     return links.find(l => l.token === 'manage-permanent-link') || links[0];
   };
 
-  // Helper function to get the view link (permanent or first available)
+  // Helper function to get the view link (static permanent link)
   const getViewLinkData = () => {
-    return links.find(l => l.token === 'view-permanent-link') || links[0];
+    // Return a static view link that's not connected to generated links
+    return {
+      token: 'view-permanent-link',
+      status: 'active' as const,
+      expires_at: null as string | null,
+      is_used: false,
+      platforms: ['google', 'meta', 'tiktok', 'shopify']
+    };
   };
 
   // Helper function to get platform logo
@@ -226,7 +233,7 @@ function LinksPageContent() {
           alt={platformId} 
           width={20} // Slightly smaller size
           height={20} // Slightly smaller size
-          className={isShopify ? "object-contain scale-150" : "object-contain"}
+          className={isShopify ? "object-contain scale-200" : "object-contain"}
           style={isShopify ? { objectPosition: 'center' } : undefined}
         />
       );
@@ -279,7 +286,7 @@ function LinksPageContent() {
       </div>
       
       {/* Manage and View Link Boxes */}
-        {links.length > 0 && (() => {
+        {(() => {
           const manageLinkData = getManageLinkData();
           const viewLinkData = getViewLinkData();
           const isManageLinkDisabled = manageLinkData?.token === 'manage-permanent-link';
@@ -342,8 +349,8 @@ function LinksPageContent() {
                     <div className="mt-4 flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <span className="text-gray-500">Status:</span>
-                        <Badge variant={getStatusVariant(viewLinkData.status, viewLinkData.expires_at, viewLinkData.is_used)}>
-                          {getStatusText(viewLinkData.status, viewLinkData.expires_at, viewLinkData.is_used)}
+                        <Badge variant={getStatusVariant(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}>
+                          {getStatusText(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-1">
@@ -365,7 +372,7 @@ function LinksPageContent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <Card className={`relative bg-gray-50 border border-gray-300 rounded-lg shadow-sm transition-shadow duration-200 ${isManageLinkDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-md'}`}>
+                <Card className="relative bg-gray-50 border border-gray-300 rounded-lg shadow-sm">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
@@ -374,7 +381,7 @@ function LinksPageContent() {
                       </div>
               <div>
                         <p className="text-sm font-medium text-gray-900">Manage Link</p>
-                        <p className="text-xs text-gray-500">{isManageLinkDisabled ? 'Coming Soon' : 'Admin management'}</p>
+                        <p className="text-xs text-gray-500">Coming Soon</p>
                       </div>
                     </div>
                   </div>
@@ -382,31 +389,11 @@ function LinksPageContent() {
                   {/* Link Display */}
                   <div className="mt-4">
                     <div className="relative group">
-                      <div className={`bg-gray-100 border border-gray-400 rounded-lg px-4 py-3 pr-20 ${isManageLinkDisabled ? 'cursor-not-allowed opacity-70' : ''}`}>
+                      <div className="bg-gray-100 border border-gray-400 rounded-lg px-4 py-3 pr-20 cursor-not-allowed opacity-70">
                         <p className="text-sm font-mono text-gray-500 truncate">
                           {manageLinkData ? getManageUrl(manageLinkData.token) : ''}
                         </p>
                       </div>
-                      {!isManageLinkDisabled && manageLinkData && (
-                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
-                            onClick={(e) => copyToClipboard(getManageUrl(manageLinkData.token), e, manageLinkData.token)}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
-                            onClick={() => window.open(getManageUrl(manageLinkData.token), '_blank')}
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
                     </div>
                   </div>
 
