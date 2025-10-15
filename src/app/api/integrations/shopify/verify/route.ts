@@ -86,24 +86,18 @@ export async function POST(request: NextRequest) {
     const connectionData = {
       client_id: requestId,
       platform: 'shopify',
+      platform_user_id: storeDomain, // Use store domain as platform user ID
+      platform_username: storeDomain, // Use store domain as username
+      access_token: `shopify_${storeDomain}_${collaboratorCode}`, // Generate a token-like identifier
+      refresh_token: null, // Shopify doesn't use refresh tokens for collaborator access
+      token_expires_at: null, // Shopify collaborator access doesn't expire
       is_active: true,
-      assets: [
-        {
-          id: storeDomain,
-          name: storeDomain,
-          type: 'store',
-          url: `https://${storeDomain}`,
-        }
-      ],
-      metadata: {
-        store_domain: storeDomain,
-        collaborator_code: collaboratorCode,
-        connected_at: new Date().toISOString(),
-        verification_status: 'verified'
-      },
       scopes: ['store_access'],
-      expires_at: null, // Shopify connections don't expire
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
+
+    console.log('Connection data to insert:', connectionData);
 
     let result;
     if (existingConnection) {
@@ -116,8 +110,9 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
+        console.error('Failed to update Shopify connection:', error);
         return NextResponse.json(
-          { error: 'Failed to update Shopify connection' },
+          { error: 'Failed to update Shopify connection', details: error.message },
           { status: 500 }
         );
       }
@@ -131,8 +126,9 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
+        console.error('Failed to create Shopify connection:', error);
         return NextResponse.json(
-          { error: 'Failed to create Shopify connection' },
+          { error: 'Failed to create Shopify connection', details: error.message },
           { status: 500 }
         );
       }
@@ -146,8 +142,9 @@ export async function POST(request: NextRequest) {
         id: result.id,
         platform: 'shopify',
         store_domain: storeDomain,
-        connected_at: result.metadata.connected_at,
-        is_active: result.is_active
+        connected_at: result.created_at,
+        collaborator_code: collaboratorCode,
+        status: 'verified'
       }
     });
 
