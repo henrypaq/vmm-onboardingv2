@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useParams } from 'next/navigation';
-import { EnhancedOnboardingForm } from '@/components/forms/enhanced-onboarding-form';
+import { UnifiedOnboardingForm } from '@/components/forms/unified-onboarding-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 
 interface LinkValidation {
   valid: boolean;
@@ -51,13 +52,8 @@ export default function OnboardingPage() {
 
   if (isValidating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-            <p className="text-gray-600">Validating your onboarding link...</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <LoadingSpinner size="lg" text="Validating your onboarding link..." />
       </div>
     );
   }
@@ -105,9 +101,15 @@ export default function OnboardingPage() {
   }
 
   return (
-    <EnhancedOnboardingForm 
-      token={token}
-      onSubmissionComplete={handleSubmissionComplete}
-    />
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <LoadingSpinner size="lg" text="Loading onboarding form..." />
+      </div>
+    }>
+      <UnifiedOnboardingForm 
+        token={token}
+        onSubmissionComplete={handleSubmissionComplete}
+      />
+    </Suspense>
   );
 }
