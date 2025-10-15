@@ -105,6 +105,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedPlatform, setExpandedPlatform] = useState<string>('');
+  const [currentPlatformIndex, setCurrentPlatformIndex] = useState(0);
   
   // Load onboarding link data
   useEffect(() => {
@@ -196,7 +197,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       }
       const requestData = await requestResponse.json();
       
-      if (!requestData.client_id) {
+      // Get the most recent request to find client_id
+      const latestRequest = requestData.requests && requestData.requests.length > 0 
+        ? requestData.requests[0] 
+        : null;
+      
+      if (!latestRequest || !latestRequest.id) {
         throw new Error('Client ID not found');
       }
       
@@ -205,7 +211,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clientId: requestData.client_id,
+          clientId: latestRequest.id,
           storeDomain: `${shopifyStoreId}.myshopify.com`,
           collaboratorCode: shopifyCollaboratorCode,
         }),
@@ -313,8 +319,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     platforms.forEach((platform, index) => {
       const platformStepId = `platform-${platform.id}`;
       const isCompleted = connectionStatus[platform.id]?.connected || false;
-      const isCurrent = currentStep === 'platforms' && !isCompleted && 
-        platforms.slice(0, index).every(p => connectionStatus[p.id]?.connected);
+      const isCurrent = currentStep === 'platforms' && currentPlatformIndex === index;
 
       steps.push({
         id: platformStepId,
@@ -337,6 +342,31 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     });
 
     return steps;
+  };
+
+  const allPlatformsConnected = () => {
+    return platforms.every(platform => connectionStatus[platform.id]?.connected);
+  };
+
+  const getCurrentPlatform = () => {
+    return platforms[currentPlatformIndex] || null;
+  };
+
+  const handleCompleteOnboarding = async () => {
+    if (!allPlatformsConnected()) {
+      toast.error('Please connect all platforms before completing onboarding');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await handleFinalSubmit();
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+      toast.error('Failed to complete onboarding');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   if (isLoading) {
@@ -486,25 +516,18 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
               </p>
             </div>
             
-            <Accordion 
-              type="single" 
-              collapsible 
-              value={expandedPlatform}
-              onValueChange={setExpandedPlatform}
-              className="space-y-4"
-            >
-              {platforms.map((platform, index) => {
-                const status = connectionStatus[platform.id];
-                const isConnected = status?.connected;
-                const isShopify = platform.id === 'shopify';
+            {/* Current Platform */}
+            {platforms.length > 0 && currentPlatformIndex < platforms.length && (
+              <div className="space-y-4">
+                {(() => {
+                  const platform = platforms[currentPlatformIndex];
+                  const status = connectionStatus[platform.id];
+                  const isConnected = status?.connected;
+                  const isShopify = platform.id === 'shopify';
                 
                 return (
-                  <AccordionItem 
-                    key={platform.id} 
-                    value={platform.id}
-                    className="border border-gray-200 rounded-lg overflow-hidden shadow-sm"
-                  >
-                    <AccordionTrigger className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                  <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                    <div className="px-6 py-4 bg-gray-50">
                       <div className="flex items-center space-x-4 w-full">
                         <div className="flex-shrink-0">
                           {getPlatformLogo(platform.id)}
@@ -525,9 +548,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                           )}
                         </div>
                       </div>
-                    </AccordionTrigger>
+                    </div>
                     
-                    <AccordionContent className="px-6 py-4 bg-gray-50">
+                    <div className="px-6 py-4 bg-white">
                       {isShopify ? (
                         // Shopify inline two-step process
                         <div className="space-y-6">
@@ -669,53 +692,52 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                           )}
                         </div>
                       )}
-                    </AccordionContent>
-                  </AccordionItem>
+                    </div>
+                    
+                    {/* Navigation Buttons */}
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                      <div className="flex justify-between">
+                        <Button
+                          onClick={() => setCurrentPlatformIndex(Math.max(0, currentPlatformIndex - 1))}
+                          variant="outline"
+                          disabled={currentPlatformIndex === 0}
+                        >
+                          <ArrowLeft className="mr-2 h-4 w-4" />
+                          Previous
+                        </Button>
+                        
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">
+                            {currentPlatformIndex + 1} of {platforms.length}
+                          </span>
+                        </div>
+                        
+                        {currentPlatformIndex < platforms.length - 1 ? (
+                          <Button
+                            onClick={() => setCurrentPlatformIndex(currentPlatformIndex + 1)}
+                            variant="outline"
+                          >
+                            Next
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={handleCompleteOnboarding}
+                            disabled={!allPlatformsConnected()}
+                            className="gradient-primary"
+                          >
+                            Complete Onboarding
+                            <CheckCircle className="ml-2 h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 );
-              })}
-            </Accordion>
-            
-            {/* Submit button - only show when all platforms are connected */}
-            {Object.values(connectionStatus).every(s => s.connected) && (
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Ready to Submit?
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      All {platforms.length} platforms connected
-                    </p>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <Button 
-                      onClick={() => setCurrentStep('info')}
-                      variant="outline"
-                      size="lg"
-                      className="flex-1"
-                    >
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back
-                    </Button>
-                    <Button
-                      onClick={handleFinalSubmit}
-                      disabled={isSubmitting}
-                      className="flex-1 gradient-primary"
-                      size="lg"
-                    >
-                      {isSubmitting ? (
-                        <LoadingSpinner size="sm" text="Submitting..." />
-                      ) : (
-                        <>
-                          Complete Onboarding
-                          <CheckCircle className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
+                })()}
               </div>
             )}
+            
           </div>
         )}
         
