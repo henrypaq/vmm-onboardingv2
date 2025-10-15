@@ -326,41 +326,60 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
 
   // Fetch assets for a platform
   const fetchPlatformAssets = async (platformId: string) => {
+    console.log('=== CLIENT: FETCHING PLATFORM ASSETS ===');
+    console.log('Platform ID:', platformId);
+    
     try {
       setIsLoadingAssets(prev => ({ ...prev, [platformId]: true }));
       
       // Get client ID from onboarding request
+      console.log('Getting client ID from onboarding request...');
       const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
       if (!requestResponse.ok) {
         throw new Error('Failed to get client information');
       }
       const requestData = await requestResponse.json();
+      console.log('Request data received:', requestData);
+      
       const latestRequest = requestData.requests && requestData.requests.length > 0 
         ? requestData.requests[0] 
         : null;
+      
+      console.log('Latest request:', latestRequest);
       
       if (!latestRequest || !latestRequest.id) {
         throw new Error('Client ID not found');
       }
 
+      console.log('Making assets API call...');
+      const assetsUrl = `/api/platforms/assets?platform=${platformId}&clientId=${latestRequest.id}`;
+      console.log('Assets URL:', assetsUrl);
+
       // Fetch assets from platform API
-      const assetsResponse = await fetch(
-        `/api/platforms/assets?platform=${platformId}&clientId=${latestRequest.id}`
-      );
+      const assetsResponse = await fetch(assetsUrl);
+      
+      console.log('Assets response status:', assetsResponse.status);
       
       if (!assetsResponse.ok) {
-        throw new Error('Failed to fetch platform assets');
+        const errorText = await assetsResponse.text();
+        console.error('Assets API error:', assetsResponse.status, errorText);
+        throw new Error(`Failed to fetch platform assets: ${assetsResponse.status}`);
       }
       
       const assetsData = await assetsResponse.json();
+      console.log('Assets data received:', assetsData);
+      
       setPlatformAssets(prev => ({ ...prev, [platformId]: assetsData.assets || [] }));
+      console.log('Assets set in state:', assetsData.assets || []);
       
     } catch (error: any) {
+      console.error('=== CLIENT: ERROR FETCHING PLATFORM ASSETS ===');
       console.error('Error fetching platform assets:', error);
       toast.error(error.message || 'Failed to fetch platform assets');
       setPlatformAssets(prev => ({ ...prev, [platformId]: [] }));
     } finally {
       setIsLoadingAssets(prev => ({ ...prev, [platformId]: false }));
+      console.log('Loading state cleared for platform:', platformId);
     }
   };
 
