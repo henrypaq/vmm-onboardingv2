@@ -812,19 +812,41 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                             Enter Your Shopify Store ID
                           </h3>
                           <p className="text-gray-600">
-                            Provide your Shopify store ID to get the collaborator code link.
+                            Enter your store ID to continue with the connection process.
                           </p>
                         </div>
                         
                         <div className="space-y-4">
                           <div>
-                            <Label htmlFor="storeId">Store ID</Label>
-                            <Input
-                              id="storeId"
-                              value={shopifyData.storeId}
-                              onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
-                              placeholder="your-store-name"
-                            />
+                            <Label htmlFor="storeId" className="text-sm font-medium text-gray-700">
+                              Shopify Store ID
+                            </Label>
+                            <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                              <span className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border-r border-gray-300">
+                                https://
+                              </span>
+                              <Input
+                                id="storeId"
+                                value={shopifyData.storeId}
+                                onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
+                                placeholder="store-id"
+                                className="border-0 focus:ring-0 focus:border-0 rounded-none"
+                              />
+                              <span className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border-l border-gray-300">
+                                .myshopify.com
+                              </span>
+                            </div>
+                            <div className="flex items-center mt-2 text-sm text-gray-600">
+                              <div className="w-4 h-4 mr-2 text-gray-500">ℹ</div>
+                              <a 
+                                href="https://help.shopify.com/en/manual/your-account/accessing-your-shopify-admin" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline"
+                              >
+                                How to find your store ID
+                              </a>
+                            </div>
                           </div>
                         </div>
 
@@ -848,36 +870,39 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                     ) : (
                       // Step 2: Collaborator Code Entry
                       <div>
-                        <div className="text-center mb-6">
-                          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                            Get Your Collaborator Code
-                          </h3>
-                          <p className="text-gray-600">
-                            Click the link below to get your collaborator code from Shopify.
-                          </p>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="text-center">
-                            <a 
-                              href={`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center space-x-2 text-green-600 hover:text-green-700 font-medium"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                              <span>Open Shopify Users & Permissions</span>
-                            </a>
-                          </div>
-                          
+                        <div className="space-y-6">
                           <div>
-                            <Label htmlFor="collaboratorCode">Collaborator Code</Label>
-                            <Input
-                              id="collaboratorCode"
-                              value={shopifyData.collaboratorCode}
-                              onChange={(e) => setShopifyData(prev => ({ ...prev, collaboratorCode: e.target.value }))}
-                              placeholder="Enter the collaborator code"
-                            />
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                              1. Open your store's Users and permissions settings:
+                            </h3>
+                            <Button
+                              onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
+                              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md"
+                            >
+                              OPEN SHOPIFY
+                            </Button>
+                          </div>
+
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                              2. Enter your Collaborator Request Code
+                            </h3>
+                            <div className="space-y-2">
+                              <Label htmlFor="collaboratorCode" className="text-sm font-medium text-gray-700">
+                                Collaborator Request Code
+                              </Label>
+                              <Input
+                                id="collaboratorCode"
+                                value={shopifyData.collaboratorCode}
+                                onChange={(e) => setShopifyData(prev => ({ ...prev, collaboratorCode: e.target.value }))}
+                                placeholder="Enter your collaborator code"
+                                className="w-full"
+                              />
+                              <div className="flex items-start space-x-2 text-sm text-gray-600">
+                                <div className="w-4 h-4 mt-0.5 text-gray-500">ℹ</div>
+                                <p>Note: if no code is required enter 'none'</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
