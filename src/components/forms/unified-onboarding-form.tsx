@@ -356,8 +356,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
               <Image 
                 src="/logos/vast.webp" 
                 alt="Vast Logo" 
-                width={16} 
-                height={16}
+                width={32} 
+                height={32}
                 style={{ width: 'auto', height: 'auto' }}
               />
             </div>
@@ -537,34 +537,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                     />
                                     <span className="text-sm text-gray-700">.myshopify.com</span>
                                   </div>
-                                  
-                                  {/* Dynamic Shopify Button */}
-                                  {shopifyStoreId.trim() && (
-                                    <div className="mt-3">
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                          const storeId = shopifyStoreId.trim();
-                                          // Try admin.shopify.com format first, fallback to myshopify.com
-                                          const primaryUrl = `https://admin.shopify.com/store/${storeId}/settings/account`;
-                                          const fallbackUrl = `https://${storeId}.myshopify.com/admin/settings/account`;
-                                          
-                                          // Open primary URL first
-                                          const newWindow = window.open(primaryUrl, '_blank');
-                                          
-                                          // If window failed to open (older stores), try fallback
-                                          if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-                                            window.open(fallbackUrl, '_blank');
-                                          }
-                                        }}
-                                        className="text-sm"
-                                      >
-                                        Open Shopify to find your Collaborator Code
-                                      </Button>
-                                    </div>
-                                  )}
                                 </div>
                                 
                                 <Button
@@ -594,7 +566,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                       Open your Shopify admin, go to Users and Permissions → Collaborators, and find your collaborator code.
                                     </p>
                                     <Button
-                                      onClick={() => window.open(`https://${shopifyStoreId}.myshopify.com/admin/settings/users`, '_blank')}
+                                      onClick={() => window.open(`https://admin.shopify.com/store/${shopifyStoreId}/settings/account`, '_blank')}
                                       variant="outline"
                                       className="w-full mb-4"
                                     >
