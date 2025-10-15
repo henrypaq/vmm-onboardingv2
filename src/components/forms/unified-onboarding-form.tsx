@@ -358,7 +358,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 alt="Vast Logo" 
                 width={32} 
                 height={32}
-                style={{ width: 'auto', height: 'auto' }}
+                className="w-8 h-8"
               />
             </div>
             <div className="text-center mb-4">
@@ -534,6 +534,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                       onChange={(e) => setShopifyStoreId(e.target.value)}
                                       placeholder="your-store"
                                       className="w-40"
+                                      autoCapitalize="off"
+                                      autoCorrect="off"
+                                      spellCheck="false"
                                     />
                                     <span className="text-sm text-gray-700">.myshopify.com</span>
                                   </div>
