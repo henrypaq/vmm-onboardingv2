@@ -66,13 +66,45 @@ export async function GET(request: NextRequest) {
 
     // Now look for platform connection using the correct ID
     console.log('Looking for platform connection with requestId:', { requestId, platform });
-    const { data: connection, error: connectionError } = await supabase
+    
+    // First try to find connection using the onboarding request ID
+    let { data: connection, error: connectionError } = await supabase
       .from('client_platform_connections')
       .select('*')
       .eq('client_id', requestId)
       .eq('platform', platform)
       .eq('is_active', true)
       .single();
+
+    console.log('First attempt - connection lookup:', { connection, connectionError });
+
+    // If not found and this is an onboarding request, try to find the actual client ID
+    if (connectionError && onboardingRequest) {
+      console.log('Connection not found with onboarding request ID, trying to find actual client...');
+      
+      // Get the actual client ID from the onboarding request
+      const actualClientId = onboardingRequest.client_id;
+      console.log('Actual client ID from onboarding request:', actualClientId);
+      
+      if (actualClientId) {
+        // Try to find connection using the actual client ID
+        const { data: actualConnection, error: actualError } = await supabase
+          .from('client_platform_connections')
+          .select('*')
+          .eq('client_id', actualClientId)
+          .eq('platform', platform)
+          .eq('is_active', true)
+          .single();
+
+        console.log('Second attempt - actual client connection lookup:', { actualConnection, actualError });
+        
+        if (actualConnection && !actualError) {
+          connection = actualConnection;
+          connectionError = null;
+          console.log('Found connection using actual client ID!');
+        }
+      }
+    }
 
     console.log('Connection query result:', { connection, connectionError });
 

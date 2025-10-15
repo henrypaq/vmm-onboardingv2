@@ -190,8 +190,14 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
           // Show asset selection for this platform
           setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: true }));
           
-          // Fetch assets for this platform
-          await fetchPlatformAssets(connectedPlatform);
+          // Try to fetch assets for this platform, but don't block the flow if it fails
+          try {
+            await fetchPlatformAssets(connectedPlatform);
+          } catch (error) {
+            console.log('Asset fetching failed during OAuth callback, but continuing...');
+            // Hide asset selection and continue
+            setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: false }));
+          }
           
           setCurrentStep('platforms');
         }
@@ -308,8 +314,14 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       // Show asset selection for Shopify
       setShowAssetSelection(prev => ({ ...prev, shopify: true }));
       
-      // Fetch assets for Shopify
-      await fetchPlatformAssets('shopify');
+      // Try to fetch assets for Shopify, but don't block the flow if it fails
+      try {
+        await fetchPlatformAssets('shopify');
+      } catch (error) {
+        console.log('Shopify asset fetching failed, but continuing...');
+        // Hide asset selection and continue
+        setShowAssetSelection(prev => ({ ...prev, shopify: false }));
+      }
       
       // Reset Shopify data
       setShopifyStoreId('');
@@ -375,8 +387,16 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     } catch (error: any) {
       console.error('=== CLIENT: ERROR FETCHING PLATFORM ASSETS ===');
       console.error('Error fetching platform assets:', error);
-      toast.error(error.message || 'Failed to fetch platform assets');
+      
+      // Don't show error toast for asset fetching failures - just log and continue
+      console.log('Asset fetching failed, but continuing with onboarding flow...');
+      
+      // Set empty assets array and continue
       setPlatformAssets(prev => ({ ...prev, [platformId]: [] }));
+      
+      // Hide asset selection and allow user to continue
+      setShowAssetSelection(prev => ({ ...prev, [platformId]: false }));
+      
     } finally {
       setIsLoadingAssets(prev => ({ ...prev, [platformId]: false }));
       console.log('Loading state cleared for platform:', platformId);
