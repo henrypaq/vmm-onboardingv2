@@ -165,6 +165,7 @@ function LinksPageContent() {
     if (status === 'expired' || new Date(expiresAt) < new Date()) return 'destructive';
     if (isUsed) return 'secondary'; // Used but still active
     if (status === 'in_progress') return 'default';
+    if (status === 'active') return 'default'; // Active should be green
     return 'default'; // pending
   };
 
@@ -353,7 +354,7 @@ function LinksPageContent() {
                           {getStatusText(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         {viewLinkData.platforms.map((platform, index) => (
                           <div key={index} className="w-4 h-4 flex items-center justify-center">
                             {getPlatformLogo(platform)}
@@ -397,24 +398,6 @@ function LinksPageContent() {
                     </div>
                   </div>
 
-                  {/* Link Info */}
-                  {manageLinkData && (
-                    <div className="mt-4 flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500">Status:</span>
-                        <Badge variant={getStatusVariant(manageLinkData.status, manageLinkData.expires_at, manageLinkData.is_used)}>
-                          {getStatusText(manageLinkData.status, manageLinkData.expires_at, manageLinkData.is_used)}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {manageLinkData.platforms.map((platform, index) => (
-                          <div key={index} className="w-4 h-4 flex items-center justify-center">
-                            {getPlatformLogo(platform)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
               </motion.div>

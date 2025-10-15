@@ -385,15 +385,15 @@ export function Header({ user, userRole }: HeaderProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-auto px-3 rounded-full flex items-center gap-2">
+                <ChevronDown className="h-3 w-3 opacity-50" />
+                <span className="hidden sm:inline-block text-sm font-medium">
+                  {currentUser?.name || user?.name || 'Guest User'}
+                </span>
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:inline-block text-sm font-medium">
-                  {currentUser?.name || user?.name || 'Guest User'}
-                </span>
-                <ChevronDown className="h-3 w-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
