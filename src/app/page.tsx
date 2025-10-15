@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -22,7 +23,18 @@ export default function Home() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Auth check is now handled by middleware
+  useEffect(() => {
+    // Check if user is already authenticated
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        router.push('/admin');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

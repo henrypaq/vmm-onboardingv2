@@ -69,12 +69,8 @@ function LoginForm() {
       }
 
       if (data.user) {
-        console.log('Login successful, user:', data.user);
-        console.log('Session data:', data.session);
         toast.success('Welcome back!');
-        
-        // Force a hard redirect
-        window.location.replace('/admin');
+        router.push('/admin');
       }
     } catch (error: any) {
       console.error('Login error:', error);
