@@ -8,7 +8,8 @@ import { AuthLayout } from '@/components/layout/auth-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 
 function LoginForm() {
@@ -157,10 +158,7 @@ function LoginForm() {
           disabled={isLoading}
         >
           {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing in...
-            </>
+            <LoadingSpinner size="sm" text="Signing in..." />
           ) : (
             <>
               <LogIn className="mr-2 h-4 w-4" />
@@ -184,9 +182,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <AuthLayout title="Welcome Back" subtitle="Sign in to your admin dashboard">
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </div>
+        <LoadingSpinner text="Loading..." />
       </AuthLayout>
     }>
       <LoginForm />

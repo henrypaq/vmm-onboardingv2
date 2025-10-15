@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SignUpPage() {
@@ -238,10 +239,7 @@ export default function SignUpPage() {
           disabled={isLoading}
         >
           {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating Account...
-            </>
+            <LoadingSpinner size="sm" text="Creating Account..." />
           ) : (
             <>
               <CheckCircle className="mr-2 h-4 w-4" />

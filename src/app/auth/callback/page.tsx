@@ -3,7 +3,8 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { LoadingDialog } from '@/components/ui/loading-spinner';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 function AuthCallbackContent() {
@@ -59,15 +60,10 @@ function AuthCallbackContent() {
         <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
           <div className="text-center">
             {status === 'loading' && (
-              <>
-                <Loader2 className="mx-auto h-12 w-12 text-primary animate-spin" />
-                <h2 className="mt-4 text-lg font-medium text-gray-900">
-                  Verifying your email...
-                </h2>
-                <p className="mt-2 text-sm text-gray-600">
-                  Please wait while we confirm your account.
-                </p>
-              </>
+              <LoadingDialog 
+                title="Verifying your email..." 
+                description="Please wait while we confirm your account."
+              />
             )}
 
             {status === 'success' && (
@@ -102,20 +98,7 @@ function AuthCallbackContent() {
 
 export default function AuthCallback() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
-            <div className="text-center">
-              <Loader2 className="mx-auto h-12 w-12 text-primary animate-spin" />
-              <h2 className="mt-4 text-lg font-medium text-gray-900">
-                Loading...
-              </h2>
-            </div>
-          </div>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<LoadingDialog title="Loading..." />}>
       <AuthCallbackContent />
     </Suspense>
   );

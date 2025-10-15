@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 import { getScopeDescription, scopes } from '@/lib/scopes';
-import { ArrowRight, ArrowLeft, ExternalLink, CheckCircle, Users, Search, Video, ShoppingBag } from 'lucide-react';
+import { ArrowRight, ArrowLeft, ExternalLink, CheckCircle, Users, Search, Video, ShoppingBag, Globe } from 'lucide-react';
 
 interface OnboardingFormProps {
   token: string;
@@ -24,13 +24,34 @@ interface LinkData {
 
 // Platform icons and colors (matching demo)
 const getPlatformIcon = (platformId: string) => {
-  switch (platformId) {
-    case 'meta': return <Users className="h-8 w-8" />;
-    case 'google': return <Search className="h-8 w-8" />;
-    case 'tiktok': return <Video className="h-8 w-8" />;
-    case 'shopify': return <ShoppingBag className="h-8 w-8" />;
-    default: return <Users className="h-8 w-8" />;
+  const logoMap: { [key: string]: string } = {
+    'meta': '/logos/meta.png',
+    'facebook': '/logos/meta.png',
+    'google': '/logos/google.png',
+    'google analytics': '/logos/google.png',
+    'google ads': '/logos/google.png',
+    'tiktok': '/logos/tiktok.webp',
+    'shopify': '/logos/shopify.png',
+  };
+
+  const logoPath = logoMap[platformId.toLowerCase()];
+  
+  if (logoPath) {
+    // Special styling for Shopify to crop white space
+    const isShopify = platformId.toLowerCase() === 'shopify';
+    return (
+      <Image 
+        src={logoPath} 
+        alt={platformId} 
+        width={32} 
+        height={32} 
+        className={isShopify ? "object-contain scale-200" : "object-contain"}
+        style={isShopify ? { objectPosition: 'center' } : undefined}
+      />
+    );
   }
+  
+  return <Globe className="h-8 w-8" />;
 };
 
 const getPlatformColor = (platformId: string) => {

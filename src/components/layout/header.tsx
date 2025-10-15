@@ -400,7 +400,6 @@ export function Header({ user, userRole }: HeaderProps) {
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">{currentUser?.name || user?.name || 'Guest User'}</p>
-                  <p className="text-xs text-gray-500">{currentUser?.email || user?.email || ''}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
