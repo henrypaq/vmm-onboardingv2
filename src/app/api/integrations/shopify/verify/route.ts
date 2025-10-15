@@ -30,26 +30,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if client exists
+    // Check if onboarding request exists (for new clients) or client exists (for existing clients)
     const supabase = getSupabaseAdmin();
-    const { data: client, error: clientError } = await supabase
-      .from('clients')
+    
+    // First try to find it as an onboarding request
+    const { data: onboardingRequest, error: onboardingError } = await supabase
+      .from('onboarding_requests')
       .select('id')
       .eq('id', clientId)
       .single();
 
-    if (clientError || !client) {
-      return NextResponse.json(
-        { error: 'Client not found' },
-        { status: 404 }
-      );
+    let requestId = null;
+    if (onboardingRequest && !onboardingError) {
+      requestId = onboardingRequest.id;
+    } else {
+      // If not found in onboarding_requests, try clients table
+      const { data: client, error: clientError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('id', clientId)
+        .single();
+
+      if (clientError || !client) {
+        return NextResponse.json(
+          { error: 'Client or onboarding request not found' },
+          { status: 404 }
+        );
+      }
+      requestId = client.id;
     }
 
-    // Check if Shopify connection already exists for this client
+    // Check if Shopify connection already exists for this request
     const { data: existingConnection, error: existingError } = await supabase
       .from('client_platform_connections')
       .select('id')
-      .eq('client_id', clientId)
+      .eq('client_id', requestId)
       .eq('platform', 'shopify')
       .single();
 
@@ -61,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     const connectionData = {
-      client_id: clientId,
+      client_id: requestId,
       platform: 'shopify',
       is_active: true,
       assets: [
