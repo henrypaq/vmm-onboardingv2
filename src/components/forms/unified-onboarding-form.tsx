@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { 
@@ -102,9 +102,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   const [expandedPlatform, setExpandedPlatform] = useState<string>('');
   const [currentPlatformIndex, setCurrentPlatformIndex] = useState(0);
   
-  // Asset selection state
+  // Asset selection state - now using dropdown selections
   const [platformAssets, setPlatformAssets] = useState<Record<string, any[]>>({});
-  const [selectedAssets, setSelectedAssets] = useState<Record<string, string[]>>({});
+  const [selectedAssets, setSelectedAssets] = useState<Record<string, Record<string, string>>>({});
   const [isLoadingAssets, setIsLoadingAssets] = useState<Record<string, boolean>>({});
   const [showAssetSelection, setShowAssetSelection] = useState<Record<string, boolean>>({});
   const [oauthConfirmation, setOauthConfirmation] = useState<{
@@ -339,52 +339,81 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     }
   };
 
-  // Handle asset selection
-  const handleAssetSelection = (platformId: string, assetId: string, checked: boolean) => {
-    setSelectedAssets(prev => {
-      const current = prev[platformId] || [];
-      if (checked) {
-        return { ...prev, [platformId]: [...current, assetId] };
-      } else {
-        return { ...prev, [platformId]: current.filter(id => id !== assetId) };
+  // Group assets by type for dropdown display
+  const groupAssetsByType = (assets: any[]) => {
+    const grouped: Record<string, any[]> = {};
+    assets.forEach(asset => {
+      const type = asset.type || 'other';
+      if (!grouped[type]) {
+        grouped[type] = [];
       }
+      grouped[type].push(asset);
     });
+    return grouped;
+  };
+
+  // Get display name for asset type
+  const getAssetTypeDisplayName = (type: string) => {
+    const typeMap: Record<string, string> = {
+      'page': 'Pages',
+      'ad_account': 'Ad Accounts',
+      'catalog': 'Catalogs',
+      'business_dataset': 'Datasets',
+      'instagram_account': 'Instagram Accounts',
+      'other': 'Other Assets'
+    };
+    return typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  // Handle asset selection (dropdown-based)
+  const handleAssetSelection = (platformId: string, assetType: string, assetId: string) => {
+    setSelectedAssets(prev => ({
+      ...prev,
+      [platformId]: {
+        ...prev[platformId],
+        [assetType]: assetId
+      }
+    }));
   };
 
   // Save selected assets and continue
   const handleAssetSelectionComplete = async (platformId: string) => {
     console.log('🟣 [UNIFIED FORM] ===========================================');
     console.log('🟣 [UNIFIED FORM] SAVING SELECTED ASSETS');
-    console.log('🟣 [UNIFIED FORM] Platform:', platformId);
-    console.log('🟣 [UNIFIED FORM] Selected assets:', selectedAssets[platformId]);
-    console.log('🟣 [UNIFIED FORM] ===========================================');
-    
-    try {
-      // Get client ID from onboarding request
-      const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
-      if (!requestResponse.ok) {
-        throw new Error('Failed to get client information');
-      }
-      const requestData = await requestResponse.json();
-      const latestRequest = requestData.requests && requestData.requests.length > 0 
-        ? requestData.requests[0] 
-        : null;
+      console.log('🟣 [UNIFIED FORM] Platform:', platformId);
+      console.log('🟣 [UNIFIED FORM] Selected assets:', selectedAssets[platformId]);
+      console.log('🟣 [UNIFIED FORM] ===========================================');
       
-      if (!latestRequest || !latestRequest.id) {
-        throw new Error('Client ID not found');
-      }
+      try {
+        // Get client ID from onboarding request
+        const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
+        if (!requestResponse.ok) {
+          throw new Error('Failed to get client information');
+        }
+        const requestData = await requestResponse.json();
+        const latestRequest = requestData.requests && requestData.requests.length > 0 
+          ? requestData.requests[0] 
+          : null;
+        
+        if (!latestRequest || !latestRequest.id) {
+          throw new Error('Client ID not found');
+        }
 
-      console.log('🟣 [UNIFIED FORM] Calling save-assets API...');
-      // Save selected assets
-      const saveResponse = await fetch('/api/platforms/save-assets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId: latestRequest.id,
-          platform: platformId,
-          selectedAssets: selectedAssets[platformId] || []
-        }),
-      });
+        console.log('🟣 [UNIFIED FORM] Calling save-assets API...');
+        
+        // Convert dropdown selections to array format for API
+        const selectedAssetsArray = Object.values(selectedAssets[platformId] || {}).filter(Boolean);
+        
+        // Save selected assets
+        const saveResponse = await fetch('/api/platforms/save-assets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientId: latestRequest.id,
+            platform: platformId,
+            selectedAssets: selectedAssetsArray
+          }),
+        });
 
       console.log('🟣 [UNIFIED FORM] Save-assets response status:', saveResponse.status);
 
@@ -798,29 +827,51 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               <LoadingSpinner size="md" text="Loading assets..." />
                             </div>
                           ) : platformAssets[platform.id] && platformAssets[platform.id].length > 0 ? (
-                            <div className="space-y-3">
-                              {platformAssets[platform.id].map((asset) => (
-                                <div key={asset.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200">
-                                  <Checkbox
-                                    id={`asset-${asset.id}`}
-                                    checked={selectedAssets[platform.id]?.includes(asset.id) || false}
-                                    onCheckedChange={(checked) => 
-                                      handleAssetSelection(platform.id, asset.id, checked as boolean)
-                                    }
-                                  />
-                                  <div className="flex-1">
-                                    <Label 
-                                      htmlFor={`asset-${asset.id}`}
-                                      className="text-sm font-medium text-gray-900 cursor-pointer"
-                                    >
-                                      {asset.name}
-                                    </Label>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      {asset.description}
-                                    </p>
-                                  </div>
+                            <div className="space-y-4">
+                              {Object.entries(groupAssetsByType(platformAssets[platform.id])).map(([assetType, assets]) => (
+                                <div key={assetType} className="space-y-2">
+                                  <Label className="text-sm font-medium text-gray-700">
+                                    {getAssetTypeDisplayName(assetType)}
+                                    {assetType === 'catalog' && (
+                                      <span className="ml-1 text-gray-400">?</span>
+                                    )}
+                                    {assetType === 'business_dataset' && (
+                                      <span className="ml-1 text-gray-400">?</span>
+                                    )}
+                                  </Label>
+                                  <Select
+                                    value={selectedAssets[platform.id]?.[assetType] || ''}
+                                    onValueChange={(value) => handleAssetSelection(platform.id, assetType, value)}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {assets.map((asset) => (
+                                        <SelectItem key={asset.id} value={asset.id}>
+                                          <div className="flex flex-col">
+                                            <span className="font-medium">{asset.name}</span>
+                                            <span className="text-xs text-gray-500">{asset.description}</span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               ))}
+                              
+                              {/* Instagram Account Help Text */}
+                              {Object.keys(groupAssetsByType(platformAssets[platform.id])).includes('instagram_account') && (
+                                <div className="flex items-start space-x-2 p-3 bg-blue-50 rounded-lg">
+                                  <div className="flex-shrink-0 w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
+                                    <span className="text-blue-600 text-xs font-bold">i</span>
+                                  </div>
+                                  <p className="text-sm text-blue-800">
+                                    Missing your Instagram Account? Make sure to connect your Instagram Account to one of your pages.{' '}
+                                    <a href="#" className="text-blue-600 underline">Click here to learn how.</a>
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <div className="text-center py-8">
@@ -842,7 +893,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               onClick={() => handleAssetSelectionComplete(platform.id)}
                               className="gradient-primary"
                               size="sm"
-                              disabled={!selectedAssets[platform.id] || selectedAssets[platform.id].length === 0}
+                              disabled={!selectedAssets[platform.id] || Object.keys(selectedAssets[platform.id] || {}).length === 0}
                             >
                               Continue
                               <ArrowRight className="ml-2 h-4 w-4" />
