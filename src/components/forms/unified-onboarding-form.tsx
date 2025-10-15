@@ -115,11 +115,16 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         }
         
         const data = await response.json();
+        
+        if (!data.link) {
+          throw new Error('Link data not found in response');
+        }
+        
         setLinkData(data.link);
         
         // Get platform details
         const allPlatforms = getAllPlatforms();
-        const requestedPlatforms = data.link.platforms
+        const requestedPlatforms = (data.link.platforms || [])
           .map((platformId: string) => allPlatforms.find(p => p.id === platformId))
           .filter(Boolean);
         setPlatforms(requestedPlatforms);
@@ -300,55 +305,57 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   }
   
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Image 
-                src="/logos/vast.webp" 
-                alt="Vast Logo" 
-                width={40} 
-                height={40}
-                style={{ width: 'auto', height: 'auto' }}
-              />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Client Onboarding</h1>
-                {linkData?.link_name && (
-                  <p className="text-sm text-gray-600">{linkData.link_name}</p>
-                )}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl">
+        {/* Header */}
+        <div className="bg-white rounded-t-2xl border border-gray-200 shadow-sm">
+          <div className="px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Image 
+                  src="/logos/vast.webp" 
+                  alt="Vast Logo" 
+                  width={32} 
+                  height={32}
+                  style={{ width: 'auto', height: 'auto' }}
+                />
+                <div>
+                  <h1 className="text-lg font-bold text-gray-900">Client Onboarding</h1>
+                  {linkData?.link_name && (
+                    <p className="text-sm text-gray-600">{linkData.link_name}</p>
+                  )}
+                </div>
+              </div>
+              <div className="text-sm text-gray-600">
+                Step {getCurrentStepNumber()} of {getTotalSteps()}
               </div>
             </div>
-            <div className="text-sm text-gray-600">
-              Step {getCurrentStepNumber()} of {getTotalSteps()}
+            
+            {/* Progress bar */}
+            <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-primary h-2 rounded-full transition-all duration-300"
+                style={{ 
+                  width: `${(getCurrentStepNumber() / getTotalSteps()) * 100}%` 
+                }}
+              />
             </div>
           </div>
-          
-          {/* Progress bar */}
-          <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-primary h-2 rounded-full transition-all duration-300"
-              style={{ 
-                width: `${(getCurrentStepNumber() / getTotalSteps()) * 100}%` 
-              }}
-            />
-          </div>
         </div>
-      </div>
-      
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-12">
+        
+        {/* Main Content */}
+        <div className="bg-white rounded-b-2xl border-x border-b border-gray-200 shadow-sm">
+          <div className="px-8 py-8">
         {/* Step 1: Client Information */}
         {currentStep === 'info' && (
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-2xl">Your Information</CardTitle>
+          <div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Your Information</h2>
               <p className="text-gray-600 mt-2">
                 Please provide your contact information to get started.
               </p>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            </div>
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name *</Label>
                 <Input
@@ -391,8 +398,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 Continue to Platform Connections
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
         
         {/* Step 2: Platform Connections */}
@@ -566,56 +573,54 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
             </Accordion>
             
             {/* Submit button */}
-            <Card className="shadow-sm border-primary/20">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Ready to Submit?
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {Object.values(connectionStatus).filter(s => s.connected).length} of {platforms.length} platforms connected
-                    </p>
-                  </div>
-                  <Button
-                    onClick={handleFinalSubmit}
-                    disabled={isSubmitting || !Object.values(connectionStatus).every(s => s.connected)}
-                    className="gradient-primary"
-                    size="lg"
-                  >
-                    {isSubmitting ? (
-                      <LoadingSpinner size="sm" text="Submitting..." />
-                    ) : (
-                      <>
-                        Complete Onboarding
-                        <CheckCircle className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Ready to Submit?
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {Object.values(connectionStatus).filter(s => s.connected).length} of {platforms.length} platforms connected
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+                <Button
+                  onClick={handleFinalSubmit}
+                  disabled={isSubmitting || !Object.values(connectionStatus).every(s => s.connected)}
+                  className="gradient-primary"
+                  size="lg"
+                >
+                  {isSubmitting ? (
+                    <LoadingSpinner size="sm" text="Submitting..." />
+                  ) : (
+                    <>
+                      Complete Onboarding
+                      <CheckCircle className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
         
         {/* Step 3: Completion */}
         {currentStep === 'complete' && (
-          <Card className="shadow-sm text-center">
-            <CardContent className="p-12">
-              <div className="flex justify-center mb-6">
-                <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center">
-                  <CheckCircle className="h-12 w-12 text-green-600" />
-                </div>
+          <div className="text-center py-12">
+            <div className="flex justify-center mb-6">
+              <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="h-12 w-12 text-green-600" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Onboarding Complete!
-              </h2>
-              <p className="text-gray-600 mb-8">
-                Thank you for connecting your platforms. You'll be redirected shortly.
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Onboarding Complete!
+            </h2>
+            <p className="text-gray-600 mb-8">
+              Thank you for connecting your platforms. You'll be redirected shortly.
+            </p>
+          </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

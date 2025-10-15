@@ -26,7 +26,14 @@ export async function GET(request: NextRequest) {
     // Then get requests for this link
     const requests = await getOnboardingRequests(link.id);
     
-    return NextResponse.json({ requests });
+    return NextResponse.json({ 
+      link: {
+        platforms: link.platforms,
+        requested_permissions: link.requested_permissions,
+        link_name: link.link_name
+      },
+      requests 
+    });
   } catch (error) {
     console.error('Error fetching onboarding request:', error);
     return NextResponse.json(
