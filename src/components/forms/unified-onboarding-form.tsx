@@ -486,66 +486,64 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        {/* Header */}
-        <div className="bg-white rounded-t-2xl border border-gray-200 shadow-sm">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-center mb-4">
-              <Image 
-                src="/logos/vast.webp" 
-                alt="Vast Logo" 
-                width={40} 
-                height={40}
-                className="w-10 h-10"
-              />
-            </div>
-            <div className="text-center mb-4">
-              <h1 className="text-lg page-title text-gray-900">Client Onboarding</h1>
-              {linkData?.link_name && (
-                <p className="text-sm text-gray-600">{linkData.link_name}</p>
-              )}
-            </div>
-            
-            {/* Progress bar with circles */}
-            <div className="flex items-center justify-center space-x-2">
-              {getProgressSteps().map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div className={`
-                    w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium
-                    ${step.completed 
-                      ? 'bg-primary text-white' 
-                      : step.current 
-                        ? 'bg-primary/20 text-primary border-2 border-primary' 
-                        : 'bg-gray-200 text-gray-500'
-                    }
-                  `}>
-                    {step.logo ? (
-                      <Image 
-                        src={step.logo} 
-                        alt={step.name} 
-                        width={20} 
-                        height={20}
-                        className="object-contain"
-                      />
-                    ) : (
-                      step.number
-                    )}
-                  </div>
-                  {index < getProgressSteps().length - 1 && (
-                    <div className={`w-8 h-0.5 mx-1 ${
-                      step.completed ? 'bg-primary' : 'bg-gray-200'
-                    }`} />
-                  )}
-                </div>
-              ))}
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Top Bar with Logo */}
+      <div className="bg-white border-b border-gray-200 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center">
+            <Image 
+              src="/logos/vast.webp" 
+              alt="Vast Logo" 
+              width={48} 
+              height={48}
+              className="w-12 h-12"
+            />
           </div>
         </div>
-        
-        {/* Main Content */}
-        <div className="bg-white rounded-b-2xl border-x border-b border-gray-200 shadow-sm">
-          <div className="px-6 py-6">
+      </div>
+
+      {/* Steps Bar */}
+      <div className="bg-white border-b border-gray-200 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center space-x-4">
+            {getProgressSteps().map((step, index) => (
+              <div key={step.id} className="flex items-center">
+                <div className={`
+                  w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
+                  ${step.completed 
+                    ? 'bg-primary text-white' 
+                    : step.current 
+                      ? 'bg-primary/20 text-primary border-2 border-primary' 
+                      : 'bg-gray-200 text-gray-500'
+                  }
+                `}>
+                  {step.logo ? (
+                    <Image 
+                      src={step.logo} 
+                      alt={step.name} 
+                      width={24} 
+                      height={24}
+                      className="object-contain"
+                    />
+                  ) : (
+                    step.number
+                  )}
+                </div>
+                {index < getProgressSteps().length - 1 && (
+                  <div className={`w-12 h-0.5 mx-2 ${
+                    step.completed ? 'bg-primary' : 'bg-gray-200'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-8 py-8">
         {/* Step 1: Client Information */}
         {currentStep === 'info' && (
           <div>
