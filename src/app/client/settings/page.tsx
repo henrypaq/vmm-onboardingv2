@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Header } from '@/components/layout/header';
-import { User, Mail, Save, Eye, EyeOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function ClientSettingsPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -35,21 +35,21 @@ export default function ClientSettingsPage() {
   const handleSaveProfile = () => {
     // TODO: Implement profile update API call
     console.log('Saving profile:', formData);
-    alert('Profile updated successfully!');
+    toast.success('Profile updated successfully!');
   };
 
   const handleChangePassword = () => {
     if (formData.newPassword !== formData.confirmPassword) {
-      alert('New passwords do not match!');
+      toast.error('New passwords do not match!');
       return;
     }
     if (formData.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long!');
+      toast.error('Password must be at least 8 characters long!');
       return;
     }
     // TODO: Implement password change API call
     console.log('Changing password');
-    alert('Password changed successfully!');
+    toast.success('Password changed successfully!');
     setFormData(prev => ({
       ...prev,
       currentPassword: '',

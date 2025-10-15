@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Save, Bell, Shield, Globe, Plus, Trash2 } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 
@@ -176,15 +176,15 @@ export default function AdminSettingsPage() {
                                       prev.filter(conn => conn.id !== platform.id)
                                     );
                                     // Show success message
-                                    alert(`${platform.name} disconnected successfully!`);
+                                    toast.success(`${platform.name} disconnected successfully!`);
                                   } else {
                                     const errorData = await response.json();
                                     console.error('Failed to disconnect platform:', errorData);
-                                    alert(`Failed to disconnect ${platform.name}: ${errorData.error || 'Unknown error'}`);
+                                    toast.error(`Failed to disconnect ${platform.name}: ${errorData.error || 'Unknown error'}`);
                                   }
                                 } catch (error) {
                                   console.error('Error disconnecting platform:', error);
-                                  alert(`Error disconnecting ${platform.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                                  toast.error(`Error disconnecting ${platform.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
                                 }
                               }}
                             >

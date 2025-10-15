@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 import { getScopeDescription, scopes } from '@/lib/scopes';
 import { ArrowRight, ArrowLeft, ExternalLink, CheckCircle, Users, Search, Video, ShoppingBag, Globe } from 'lucide-react';
@@ -342,7 +342,7 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
       
     } catch (error) {
       console.error('Shopify verification error:', error);
-      alert(`Failed to verify Shopify store access: ${error.message}`);
+      toast.error(`Failed to verify Shopify store access: ${error.message}`);
     }
   };
 

@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider, getGoogleScopesWithRequired, getGoogleServiceName, metaAssetGroups, areAllSubScopesSelected } from '@/lib/scopes';
 
@@ -79,7 +79,7 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
           }));
         } else {
           console.warn(`No available scopes for platform: ${platformId}`);
-          alert(`Warning: ${platformId} has no available scopes for testing. This platform will be skipped.`);
+          toast.warning(`${platformId} has no available scopes for testing. This platform will be skipped.`);
           return;
         }
       } else {
@@ -136,19 +136,19 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
     
     // Validation
     if (!linkName.trim()) {
-      alert('Please enter a Link Name');
+      toast.error('Please enter a Link Name');
       return;
     }
     
     if (selectedPlatforms.length === 0) {
-      alert('Please select at least one platform');
+      toast.error('Please select at least one platform');
       return;
     }
     
     // Validate that each selected platform has at least one scope (except Google which always has openid/email/profile)
     for (const platform of selectedPlatforms) {
       if (platform !== 'google' && (!selectedScopes[platform] || selectedScopes[platform].length === 0)) {
-        alert(`Please select at least one scope for ${platform}`);
+        toast.error(`Please select at least one scope for ${platform}`);
         return;
       }
     }
@@ -200,10 +200,10 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
           setSelectedPlatforms([]);
           setSelectedScopes({});
       
-      alert('Link generated successfully!');
+      toast.success('Link generated successfully!');
     } catch (error) {
       console.error('Error generating link:', error);
-      alert(`Error generating link: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error generating link: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGenerating(false);
     }

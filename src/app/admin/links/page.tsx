@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // Import Dialog components
 import { LinkGeneratorDialog } from '@/components/admin/link-generator-dialog'; // Import new dialog component
@@ -92,7 +93,7 @@ function LinksPageContent() {
     // Find the link to check if it's permanent
     const link = links.find(l => l.id === linkId);
     if (link && isPermanentLink(link.token)) {
-      alert('This is a permanent link and cannot be deleted.');
+      toast.error('This is a permanent link and cannot be deleted.');
       return;
     }
 
@@ -112,11 +113,11 @@ function LinksPageContent() {
       } else {
         const data = await response.json();
         console.error('Error deleting link:', data.error);
-        alert('Failed to delete link. Please try again.');
+        toast.error('Failed to delete link. Please try again.');
       }
     } catch (error) {
       console.error('Error deleting link:', error);
-      alert('Failed to delete link. Please try again.');
+      toast.error('Failed to delete link. Please try again.');
     } finally {
       setIsDeleting(null);
     }
@@ -152,10 +153,10 @@ function LinksPageContent() {
       textArea.select();
       try {
         document.execCommand('copy');
-        alert('Link copied to clipboard!');
+        toast.success('Link copied to clipboard!');
       } catch (fallbackErr) {
         console.error('Fallback copy failed: ', fallbackErr);
-        alert('Failed to copy link. Please copy manually: ' + text);
+        toast.error('Failed to copy link. Please copy manually: ' + text);
       }
       document.body.removeChild(textArea);
     }

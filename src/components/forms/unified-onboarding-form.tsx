@@ -666,7 +666,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                         // Try opening the first URL, if it fails, try the next one
                                         const tryOpenUrl = (index: number) => {
                                           if (index >= urls.length) {
-                                            alert('Unable to open Shopify admin. Please manually navigate to your store settings.');
+                                            toast.error('Unable to open Shopify admin. Please manually navigate to your store settings.');
                                             return;
                                           }
                                           
