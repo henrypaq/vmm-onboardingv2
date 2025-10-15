@@ -161,11 +161,11 @@ function LinksPageContent() {
     }
   };
 
-  const getStatusVariant = (status: string, expiresAt: string, isUsed: boolean) => {
+  const getStatusVariant = (status: string, expiresAt: string, isUsed: boolean): 'default' | 'secondary' | 'destructive' | 'outline' => {
     if (status === 'expired' || new Date(expiresAt) < new Date()) return 'destructive';
     if (isUsed) return 'secondary'; // Used but still active
     if (status === 'in_progress') return 'default';
-    if (status === 'active') return 'default'; // Active should be green
+    if (status === 'active') return 'outline'; // Active will be styled green with custom class
     return 'default'; // pending
   };
 
@@ -300,7 +300,7 @@ function LinksPageContent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <Card className="relative bg-green-50 border border-green-300 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                <Card className="relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
@@ -350,7 +350,10 @@ function LinksPageContent() {
                     <div className="mt-4 flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <span className="text-gray-500">Status:</span>
-                        <Badge variant={getStatusVariant(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}>
+                        <Badge 
+                          variant={getStatusVariant(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}
+                          className={getStatusText(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used) === 'Active' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : ''}
+                        >
                           {getStatusText(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}
                         </Badge>
                       </div>
@@ -616,8 +619,11 @@ function LinksPageContent() {
                     </div>
                     
                     {/* Status */}
-                    <div className="min-w-0 flex-[1] text-right">
-                      <Badge variant={getStatusVariant(link.status, link.expires_at, link.is_used)}>
+                    <div className="min-w-0 flex-[1] flex justify-center">
+                      <Badge 
+                        variant={getStatusVariant(link.status, link.expires_at, link.is_used)}
+                        className={getStatusText(link.status, link.expires_at, link.is_used) === 'Active' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : ''}
+                      >
                         {getStatusText(link.status, link.expires_at, link.is_used)}
                       </Badge>
                     </div>
