@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { Bell, User, LogOut, Settings, LayoutDashboard, Users, Link as LinkIcon, Globe, Shield, Save, Plus, Trash2, ChevronDown, RefreshCw } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -445,10 +446,7 @@ export function Header({ user, userRole }: HeaderProps) {
                 </CardHeader>
                 <CardContent>
                   {loading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      <span className="ml-2 text-gray-500">Loading...</span>
-                    </div>
+                    <LoadingSpinner size="md" text="Loading..." />
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                       {platforms.map((platform) => {
@@ -641,15 +639,15 @@ export function Header({ user, userRole }: HeaderProps) {
 
       {/* Profile Dialog */}
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
-        <DialogContent className="w-[90vw] max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="w-[90vw] max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Profile Settings</DialogTitle>
             <DialogDescription>
               Update your personal information and profile picture.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-y-auto flex-1 pr-2">
             {/* Profile Picture Section */}
             <div className="flex items-center space-x-6">
               <div className="relative">

@@ -11,6 +11,7 @@ import { Globe } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider, getGoogleScopesWithRequired, getGoogleServiceName, metaAssetGroups, areAllSubScopesSelected } from '@/lib/scopes';
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 interface LinkGeneratorDialogProps {
   onLinkGenerated: (link: { url: string; token: string; platforms: string[]; requestedScopes: Record<string, string[]> }) => void;
@@ -78,7 +79,7 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
           }));
         } else {
           console.warn(`No available scopes for platform: ${platformId}`);
-          alert(`Warning: ${platformId} has no available scopes for testing. This platform will be skipped.`);
+          toast.warning(`${platformId} has no available scopes for testing. This platform will be skipped.`);
           return;
         }
       } else {
@@ -135,19 +136,19 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
     
     // Validation
     if (!linkName.trim()) {
-      alert('Please enter a Link Name');
+      toast.error('Please enter a Link Name');
       return;
     }
     
     if (selectedPlatforms.length === 0) {
-      alert('Please select at least one platform');
+      toast.error('Please select at least one platform');
       return;
     }
     
     // Validate that each selected platform has at least one scope (except Google which always has openid/email/profile)
     for (const platform of selectedPlatforms) {
       if (platform !== 'google' && (!selectedScopes[platform] || selectedScopes[platform].length === 0)) {
-        alert(`Please select at least one scope for ${platform}`);
+        toast.error(`Please select at least one scope for ${platform}`);
         return;
       }
     }
@@ -199,11 +200,11 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
           setSelectedPlatforms([]);
           setSelectedScopes({});
       
-      alert('Link generated successfully!');
+      toast.success('Link generated successfully!');
       onClose(); // Close dialog on successful generation
     } catch (error) {
       console.error('Error generating link:', error);
-      alert(`Error generating link: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error generating link: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGenerating(false);
     }

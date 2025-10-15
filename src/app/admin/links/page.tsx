@@ -567,7 +567,7 @@ function LinksPageContent() {
 
                     {/* URL Display */}
                     <div className="min-w-0 flex-[3.5]">
-                      <div className="relative group max-w-lg">
+                      <div className="relative group max-w-2xl">
                         <div 
                           className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 pr-20 cursor-pointer hover:bg-gray-100 transition-colors"
                           onClick={(e) => {
@@ -619,7 +619,7 @@ function LinksPageContent() {
                     </div>
                     
                     {/* Status */}
-                    <div className="min-w-0 flex-[1] flex justify-center">
+                    <div className="min-w-0 flex-[1] flex justify-start">
                       <Badge 
                         variant={getStatusVariant(link.status, link.expires_at, link.is_used)}
                         className={getStatusText(link.status, link.expires_at, link.is_used) === 'Active' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : ''}
