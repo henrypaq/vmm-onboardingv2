@@ -38,11 +38,17 @@ export async function POST(request: NextRequest) {
     // First try to find it as an onboarding request
     const { data: onboardingRequest, error: onboardingError } = await supabase
       .from('onboarding_requests')
-      .select('id')
+      .select('id, client_id, client_email, client_name, status')
       .eq('id', clientId)
       .single();
 
-    console.log('Onboarding request lookup:', { onboardingRequest, onboardingError });
+    console.log('Onboarding request lookup:', { 
+      clientId, 
+      onboardingRequest, 
+      onboardingError,
+      errorCode: onboardingError?.code,
+      errorMessage: onboardingError?.message
+    });
 
     let requestId = null;
     if (onboardingRequest && !onboardingError) {

@@ -273,9 +273,14 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         ? requestData.requests[0] 
         : null;
       
+      console.log('Request data from API:', requestData);
+      console.log('Latest request:', latestRequest);
+      
       if (!latestRequest || !latestRequest.id) {
         throw new Error('Client ID not found');
       }
+      
+      console.log('Using clientId for Shopify verification:', latestRequest.id);
       
       // Verify Shopify access
       const verifyResponse = await fetch('/api/integrations/shopify/verify', {
