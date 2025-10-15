@@ -1,4 +1,5 @@
 import { Header } from '@/components/layout/header';
+import { ToastContainer } from '@/components/ui/toast';
 
 export default function ClientLayout({
   children,
@@ -13,11 +14,12 @@ export default function ClientLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header user={user} />
-      <main className="flex-1">
+    <div className="flex h-screen flex-col overflow-hidden">
+      <Header user={user} userRole="client" />
+      <main className="flex-1 overflow-y-auto bg-white">
         {children}
       </main>
+      <ToastContainer />
     </div>
   );
 }

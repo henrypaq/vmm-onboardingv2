@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Save, Bell, Shield, Globe, Users, Search, Video, Plus, Trash2 } from 'lucide-react';
+import { Save, Bell, Shield, Globe, Plus, Trash2 } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 
 interface PlatformConnection {
@@ -71,13 +72,30 @@ export default function AdminSettingsPage() {
     }
   }, [hasLoadedOnce]);
 
-  const getPlatformIcon = (platformId: string) => {
-    switch (platformId) {
-      case 'meta': return <Users className="h-5 w-5" />;
-      case 'google': return <Search className="h-5 w-5" />;
-      case 'tiktok': return <Video className="h-5 w-5" />;
-      default: return <Globe className="h-5 w-5" />;
+  const getPlatformLogo = (platformId: string) => {
+    const logoMap: { [key: string]: string } = {
+      'meta': '/logos/meta.png',
+      'facebook': '/logos/meta.png',
+      'google': '/logos/google.png',
+      'tiktok': '/logos/tiktok.webp',
+      'shopify': '/logos/shopify.png',
+    };
+
+    const logoPath = logoMap[platformId.toLowerCase()];
+    
+    if (logoPath) {
+      return (
+        <Image 
+          src={logoPath} 
+          alt={platformId} 
+          width={32} 
+          height={32}
+          className="object-contain"
+        />
+      );
     }
+    
+    return <Globe className="h-6 w-6" />;
   };
 
   const getPlatformColor = (platformId: string) => {
@@ -122,8 +140,8 @@ export default function AdminSettingsPage() {
                   <div key={platform.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg ${getPlatformColor(platform.id)} text-white`}>
-                          {getPlatformIcon(platform.id)}
+                        <div className="p-2 rounded-lg">
+                          {getPlatformLogo(platform.id)}
                         </div>
                         <div>
                           <h3 className="font-medium">{platform.name}</h3>

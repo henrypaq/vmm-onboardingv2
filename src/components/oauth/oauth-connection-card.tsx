@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { CheckCircle2, Loader2, ShieldCheck, Info, Globe } from 'lucide-react';
 import { PlatformDefinition } from '@/lib/platforms/platform-definitions';
 
 interface OAuthConnectionCardProps {
@@ -13,6 +16,32 @@ interface OAuthConnectionCardProps {
   onConnect: (platformId: string) => void;
   isLoading?: boolean;
 }
+
+const getPlatformLogo = (platformId: string) => {
+  const logoMap: { [key: string]: string } = {
+    'meta': '/logos/meta.png',
+    'facebook': '/logos/meta.png',
+    'google': '/logos/google.png',
+    'tiktok': '/logos/tiktok.webp',
+    'shopify': '/logos/shopify.png',
+  };
+
+  const logoPath = logoMap[platformId.toLowerCase()];
+  
+  if (logoPath) {
+    return (
+      <Image 
+        src={logoPath} 
+        alt={platformId} 
+        width={40} 
+        height={40}
+        className="object-contain"
+      />
+    );
+  }
+  
+  return <Globe className="h-10 w-10" />;
+};
 
 export function OAuthConnectionCard({ 
   platform, 
@@ -34,59 +63,71 @@ export function OAuthConnectionCard({
   };
 
   return (
-    <Card className={`${platform.color} text-white`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <ExternalLink className="h-6 w-6" />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="group relative overflow-hidden bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200">
+        {/* Status Indicator */}
+        {isConnected && (
+          <div className="absolute top-3 right-3">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              Connected
+            </Badge>
+          </div>
+        )}
+
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl">
+              {getPlatformLogo(platform.id)}
             </div>
-            <div>
+            <div className="flex-1">
               <CardTitle className="text-lg">{platform.name}</CardTitle>
-              <CardDescription className="text-white/80">
-                Connect your {platform.name} account
+              <CardDescription>
+                {isConnected ? 'Account connected' : `Connect your ${platform.name} account`}
               </CardDescription>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            {isConnected ? (
-              <Badge variant="secondary" className="bg-green-500 text-white">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Connected
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="border-white/50 text-white">
-                Not Connected
-              </Badge>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          <div>
-            <h4 className="text-sm font-medium mb-2">Required Permissions:</h4>
-            <div className="space-y-1">
+        </CardHeader>
+        
+        <Separator />
+
+        <CardContent className="pt-4 space-y-4">
+          {/* Required Permissions */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+              Required Permissions
+            </div>
+            <div className="space-y-1.5 pl-6">
               {platform.permissions
                 .filter(perm => perm.required)
+                .slice(0, 3)
                 .map((permission) => (
-                  <div key={permission.id} className="text-sm text-white/90">
-                    • {permission.name}
+                  <div key={permission.id} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <div className="mt-1.5 h-1 w-1 rounded-full bg-primary" />
+                    <span className="flex-1">{permission.name}</span>
                   </div>
                 ))}
+              {platform.permissions.filter(p => p.required).length > 3 && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground pl-3">
+                  <Info className="h-3 w-3" />
+                  +{platform.permissions.filter(p => p.required).length - 3} more permissions
+                </div>
+              )}
             </div>
           </div>
           
+          {/* Connect Button */}
           <Button
             onClick={handleConnect}
             disabled={isConnected || isConnecting || isLoading}
             variant={isConnected ? "outline" : "default"}
-            className={`w-full ${
-              isConnected 
-                ? "bg-white/20 border-white/50 text-white hover:bg-white/30" 
-                : "bg-white text-gray-900 hover:bg-white/90"
-            }`}
+            className="w-full"
+            size="lg"
           >
             {isConnecting || isLoading ? (
               <>
@@ -94,14 +135,20 @@ export function OAuthConnectionCard({
                 Connecting...
               </>
             ) : isConnected ? (
-              'Reconnect'
+              <>
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Reconnect
+              </>
             ) : (
-              'Connect Account'
+              <>
+                <ShieldCheck className="h-4 w-4 mr-2" />
+                Connect Account
+              </>
             )}
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 

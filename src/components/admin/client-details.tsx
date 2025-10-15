@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { showToast } from '@/components/ui/toast';
-import { X, ExternalLink, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
+import { X, ExternalLink, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube, ChevronDown, ChevronRight, Copy, Check, Globe } from 'lucide-react';
 
 interface ClientDetails {
   id: string;
@@ -369,6 +370,32 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
     }
   };
 
+  const getPlatformLogo = (platformId: string) => {
+    const logoMap: { [key: string]: string } = {
+      'meta': '/logos/meta.png',
+      'facebook': '/logos/meta.png',
+      'google': '/logos/google.png',
+      'tiktok': '/logos/tiktok.webp',
+      'shopify': '/logos/shopify.png',
+    };
+
+    const logoPath = logoMap[platformId.toLowerCase()];
+    
+    if (logoPath) {
+      return (
+        <Image 
+          src={logoPath} 
+          alt={platformId} 
+          width={20} 
+          height={20}
+          className="object-contain"
+        />
+      );
+    }
+    
+    return <Globe className="h-5 w-5" />;
+  };
+
   const getPlatformColor = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'meta':
@@ -524,7 +551,9 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                     <div key={connection.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
-                          <span className="text-2xl">{getPlatformIcon(connection.platform)}</span>
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg">
+                            {getPlatformLogo(connection.platform)}
+                          </div>
                           <div>
                             <h4 className="font-semibold capitalize">{connection.platform}</h4>
                             <p className="text-sm text-gray-500">@{connection.platform_username}</p>

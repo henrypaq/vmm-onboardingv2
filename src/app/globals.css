@@ -1,3 +1,4 @@
+@import '@fontsource/geist-sans';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,7 +11,7 @@
   --card-foreground: 240 10% 3.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
+  --primary: 253 91% 60%;
   --primary-foreground: 0 0% 98%;
   --secondary: 240 4.8% 95.9%;
   --secondary-foreground: 240 5.9% 10%;
@@ -22,7 +23,7 @@
   --destructive-foreground: 0 0% 98%;
   --border: 240 5.9% 90%;
   --input: 240 5.9% 90%;
-  --ring: 240 5.9% 10%;
+  --ring: 253 91% 60%;
   --chart-1: 12 76% 61%;
   --chart-2: 173 58% 39%;
   --chart-3: 197 37% 24%;
@@ -37,8 +38,8 @@
   --card-foreground: 0 0% 98%;
   --popover: 240 10% 3.9%;
   --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
+  --primary: 253 91% 60%;
+  --primary-foreground: 0 0% 98%;
   --secondary: 240 3.7% 15.9%;
   --secondary-foreground: 0 0% 98%;
   --muted: 240 3.7% 15.9%;
@@ -49,7 +50,7 @@
   --destructive-foreground: 0 0% 98%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
+  --ring: 253 91% 60%;
   --chart-1: 220 70% 50%;
   --chart-2: 160 60% 45%;
   --chart-3: 30 80% 55%;
@@ -62,6 +63,167 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   }
+  
+  /* Typography hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  
+  h1 {
+    font-weight: 700;
+    letter-spacing: -0.035em;
+  }
+  
+  h2 {
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+  
+  h3 {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  
+  /* Body text */
+  p, span, div, button, input, textarea, select {
+    font-family: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  
+  /* Captions, labels, small UI text */
+  .text-xs, .text-sm, label, .caption {
+    font-family: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+  }
+  
+  /* Medium weight for emphasis */
+  .font-medium {
+    font-weight: 500;
+  }
+  
+  .font-semibold {
+    font-weight: 600;
+  }
+  
+  .font-bold {
+    font-weight: 700;
+  }
+}
+
+@layer utilities {
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Purple hover effects for buttons */
+  .hover-purple {
+    @apply hover:bg-primary/10 hover:border-primary/20 transition-colors duration-200;
+  }
+  
+  /* Purple focus effects for inputs */
+  .focus-purple {
+    @apply focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors duration-200;
+  }
+  
+  /* Gradient button styling */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(253, 91%, 60%) 0%, hsl(253, 91%, 50%) 100%);
+    @apply hover:shadow-lg hover:scale-[1.02] transition-all duration-200;
+  }
+  
+  /* Quick Action button gradients - White boxes with colored outlines */
+  .gradient-generate {
+    background: white;
+    border: 2px solid hsla(142, 76%, 36%, 0.6);
+    color: #000000;
+    @apply hover:bg-green-50 hover:border-green-400 hover:shadow-lg hover:scale-[1.02] transition-all duration-200;
+  }
+  
+  .gradient-connections {
+    background: white;
+    border: 2px solid hsla(217, 91%, 60%, 0.6);
+    color: #000000;
+    @apply hover:bg-blue-50 hover:border-blue-400 hover:shadow-lg hover:scale-[1.02] transition-all duration-200;
+  }
+  
+  .gradient-clients {
+    background: white;
+    border: 2px solid hsla(280, 100%, 70%, 0.6);
+    color: #000000;
+    @apply hover:bg-purple-50 hover:border-purple-400 hover:shadow-lg hover:scale-[1.02] transition-all duration-200;
+  }
+  
+  /* Fade in animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  /* Slide in from right */
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight 0.4s ease-out;
+  }
+  
+  /* Scale in */
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted/20;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/40;
 }

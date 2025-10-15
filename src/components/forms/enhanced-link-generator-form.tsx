@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Users, Search, Video, ShoppingBag } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider, getGoogleScopesWithRequired, getGoogleServiceName, metaAssetGroups, areAllSubScopesSelected } from '@/lib/scopes';
 
@@ -23,14 +24,32 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
 
   const platforms = getAllPlatforms();
 
-  const getPlatformIcon = (platformId: string) => {
-    switch (platformId) {
-      case 'meta': return <Users className="h-5 w-5" />;
-      case 'google': return <Search className="h-5 w-5" />;
-      case 'tiktok': return <Video className="h-5 w-5" />;
-      case 'shopify': return <ShoppingBag className="h-5 w-5" />;
-      default: return null;
+  const getPlatformLogo = (platformId: string) => {
+    const logoMap: { [key: string]: string } = {
+      'meta': '/logos/meta.png',
+      'facebook': '/logos/meta.png',
+      'google': '/logos/google.png',
+      'google analytics': '/logos/google.png',
+      'google ads': '/logos/google.png',
+      'tiktok': '/logos/tiktok.webp',
+      'shopify': '/logos/shopify.png',
+    };
+
+    const logoPath = logoMap[platformId.toLowerCase()];
+    
+    if (logoPath) {
+      return (
+        <Image 
+          src={logoPath} 
+          alt={platformId} 
+          width={24} 
+          height={24}
+          className="object-contain"
+        />
+      );
     }
+    
+    return <Globe className="h-6 w-6" />;
   };
 
   const getPlatformColor = (platformId: string) => {
@@ -245,8 +264,8 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                         disabled={!isAvailable}
                         onCheckedChange={(checked) => handlePlatformToggle(platform.id, checked as boolean)}
                       />
-                      <div className={`p-2 rounded-lg ${getPlatformColor(platform.id)} text-white`}>
-                        {getPlatformIcon(platform.id)}
+                      <div className="p-2 rounded-lg">
+                        {getPlatformLogo(platform.id)}
                       </div>
                       <div>
                         <h3 className="font-medium">{platform.name}</h3>
@@ -370,37 +389,39 @@ export function EnhancedLinkGeneratorForm({ onLinkGenerated }: EnhancedLinkGener
                           </div>
                         ) : (
                           // Other platforms (TikTok, Shopify, etc.)
-                          getScopesForProvider(platform.id as keyof typeof scopes).map((scope) => {
-                            const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
-                            const isScopeAvailable = getAvailableScopesForProvider(platform.id as keyof typeof scopes).includes(scope);
-                            
-                            return (
-                              <div key={scope} className={`flex items-start space-x-2 ${!isScopeAvailable ? 'opacity-50' : ''}`}>
-                                <Checkbox
-                                  id={`scope-${platform.id}-${scope}`}
-                                  checked={isScopeSelected}
-                                  disabled={!isScopeAvailable}
-                                  onCheckedChange={(checked) => 
-                                    isScopeAvailable ? handleScopeToggle(platform.id, scope, checked as boolean) : undefined
-                                  }
-                                />
-                                <div className="flex-1">
-                                  <label 
-                                    htmlFor={`scope-${platform.id}-${scope}`}
-                                    className={`text-sm font-medium ${isScopeAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                                  >
-                                    {scope}
-                                    {!isScopeAvailable && (
-                                      <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
-                                    )}
-                                  </label>
-                                  <p className="text-xs text-gray-500">
-                                    {getScopeDescription(platform.id as keyof typeof scopes, scope)}
-                                  </p>
+                          <div className="space-y-3">
+                            {getScopesForProvider(platform.id as keyof typeof scopes).map((scope) => {
+                              const isScopeSelected = selectedScopes[platform.id]?.includes(scope) || false;
+                              const isScopeAvailable = getAvailableScopesForProvider(platform.id as keyof typeof scopes).includes(scope);
+                              
+                              return (
+                                <div key={scope} className={`flex items-start space-x-2 ${!isScopeAvailable ? 'opacity-50' : ''}`}>
+                                  <Checkbox
+                                    id={`scope-${platform.id}-${scope}`}
+                                    checked={isScopeSelected}
+                                    disabled={!isScopeAvailable}
+                                    onCheckedChange={(checked) => 
+                                      isScopeAvailable ? handleScopeToggle(platform.id, scope, checked as boolean) : undefined
+                                    }
+                                  />
+                                  <div className="flex-1">
+                                    <label 
+                                      htmlFor={`scope-${platform.id}-${scope}`}
+                                      className={`text-sm font-medium ${isScopeAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                                    >
+                                      {scope}
+                                      {!isScopeAvailable && (
+                                        <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
+                                      )}
+                                    </label>
+                                    <p className="text-xs text-gray-500">
+                                      {getScopeDescription(platform.id as keyof typeof scopes, scope)}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
                     )}

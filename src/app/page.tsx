@@ -1,135 +1,222 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Image from 'next/image';
+import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Mountain, Users, User, Settings, Link as LinkIcon, FileText } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Eye, EyeOff, Loader2, LogIn, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
-export default function HomePage() {
+export default function Home() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Auth check is now handled by middleware
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        toast.success('Welcome back!');
+        router.push('/admin');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setErrors({
+        general: error.message || 'An error occurred during login. Please try again.'
+      });
+      toast.error(error.message || 'Invalid email or password. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center justify-center w-8 h-8 bg-gray-800 rounded-lg">
-              <Mountain className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-800">VAST</span>
-          </div>
-          <div className="text-sm text-gray-500">
-            Onboarding Platform
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        {/* Logo */}
+        <div className="flex justify-center">
+          <div className="flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg">
+            <Image 
+              src="/logos/vast.webp" 
+              alt="Vast Logo" 
+              width={48} 
+              height={48}
+              className="rounded-lg"
+              style={{ width: 'auto', height: 'auto' }}
+            />
           </div>
         </div>
-      </header>
+        
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          Sign in to your account
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Or{' '}
+          <Link href="/signup" className="font-medium text-primary hover:text-primary/80">
+            create a new admin account
+          </Link>
+        </p>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to VAST Onboarding Platform
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Streamline your client onboarding process with our comprehensive platform. 
-            Generate secure links, manage permissions, and track progress all in one place.
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <Card className="shadow-lg">
+          <CardContent className="py-8 px-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {errors.general && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">
+                  {errors.general}
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email address
+                </Label>
+                <div className="mt-1">
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={errors.email ? 'border-red-300 focus:border-red-500' : ''}
+                    placeholder="Enter your email"
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </Label>
+                <div className="mt-1 relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    required
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className={errors.password ? 'border-red-300 focus:border-red-500 pr-10' : 'pr-10'}
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="text-sm">
+                  <Link href="/forgot-password" className="font-medium text-primary hover:text-primary/80">
+                    Forgot your password?
+                  </Link>
+                </div>
+              </div>
+
+              <div>
+                <Button
+                  type="submit"
+                  className="w-full gradient-primary h-11"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Sign in
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-500">
+            By signing in, you agree to our{' '}
+            <Link href="/terms" className="text-primary hover:text-primary/80">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-primary hover:text-primary/80">
+              Privacy Policy
+            </Link>
           </p>
         </div>
-
-        {/* Dashboard Selection */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Admin Dashboard */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Admin Dashboard</CardTitle>
-                  <CardDescription>Manage clients, generate links, and oversee onboarding</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Users className="h-4 w-4" />
-                  <span>Client Management</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <LinkIcon className="h-4 w-4" />
-                  <span>Link Generation</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Settings className="h-4 w-4" />
-                  <span>Platform Settings</span>
-                </div>
-              </div>
-              <Link href="/admin" className="block">
-                <Button className="w-full">
-                  Access Admin Dashboard
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Client Dashboard */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <User className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Client Dashboard</CardTitle>
-                  <CardDescription>View requests, submit permissions, and track status</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <FileText className="h-4 w-4" />
-                  <span>Request Management</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <User className="h-4 w-4" />
-                  <span>Profile Settings</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Settings className="h-4 w-4" />
-                  <span>Account Settings</span>
-                </div>
-              </div>
-              <Link href="/client" className="block">
-                <Button className="w-full" variant="outline">
-                  Access Client Dashboard
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-
-
-        {/* Additional Info */}
-        <div className="mt-16 text-center">
-          <div className="bg-white rounded-lg shadow-sm border p-8 max-w-2xl mx-auto">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              Getting Started
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Choose your role above to access the appropriate dashboard. 
-              Admins can manage clients and generate onboarding links, 
-              while clients can view their requests and submit permissions.
-            </p>
-            <div className="flex justify-center space-x-4 text-sm text-gray-500">
-              <span>• Secure link generation</span>
-              <span>• Permission management</span>
-              <span>• Real-time tracking</span>
-            </div>
-          </div>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

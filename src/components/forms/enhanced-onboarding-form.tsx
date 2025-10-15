@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -613,9 +614,18 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
           <div className="text-center">
             <button 
               onClick={() => window.location.href = '/'}
-              className="text-2xl font-bold text-gray-900 hover:text-purple-600 transition-colors duration-200 cursor-pointer"
+              className="flex items-center justify-center mx-auto"
             >
-              VAST
+              <div className="flex items-center justify-center w-12 h-12">
+                  <Image 
+                    src="/logos/vast.webp" 
+                    alt="Vast Logo" 
+                    width={48} 
+                    height={48}
+                    className="rounded-lg"
+                    style={{ width: 'auto', height: 'auto' }}
+                  />
+              </div>
             </button>
           </div>
         </div>

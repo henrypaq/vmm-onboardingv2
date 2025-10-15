@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, Globe } from 'lucide-react';
 import { PlatformDefinition } from '@/lib/platforms/platform-definitions';
 
 interface ClientOAuthButtonProps {
@@ -34,12 +35,38 @@ export function ClientOAuthButton({
     }
   };
 
+  const getPlatformLogo = (platformId: string) => {
+    const logoMap: { [key: string]: string } = {
+      'meta': '/logos/meta.png',
+      'facebook': '/logos/meta.png',
+      'google': '/logos/google.png',
+      'tiktok': '/logos/tiktok.webp',
+      'shopify': '/logos/shopify.png',
+    };
+
+    const logoPath = logoMap[platformId.toLowerCase()];
+    
+    if (logoPath) {
+      return (
+        <Image 
+          src={logoPath} 
+          alt={platformId} 
+          width={40} 
+          height={40}
+          className="object-contain"
+        />
+      );
+    }
+    
+    return <Globe className="h-10 w-10" />;
+  };
+
   return (
     <div className={`${platform.color} text-white rounded-lg p-4`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-white/20 rounded-lg">
-            <ExternalLink className="h-5 w-5" />
+          <div className="p-2">
+            {getPlatformLogo(platform.id)}
           </div>
           <div>
             <h3 className="font-medium text-lg">{platform.name}</h3>
