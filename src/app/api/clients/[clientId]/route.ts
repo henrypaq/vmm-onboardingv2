@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { updateClient, deleteAdminPlatformConnectionByAdminAndPlatform } from '@/lib/db/database';
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = getSupabaseAdmin();
     const { clientId } = await params;
 
     console.log('[Client Details API] Fetching client details for:', clientId);
@@ -73,7 +73,7 @@ export async function DELETE(
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = getSupabaseAdmin();
     const { clientId } = await params;
 
     // Get client to know admin owner

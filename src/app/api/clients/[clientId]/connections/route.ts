@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = getSupabaseAdmin();
     const { clientId } = await params;
 
     console.log('[Client Connections API] ===========================================');
