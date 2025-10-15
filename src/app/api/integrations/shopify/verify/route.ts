@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Check if onboarding request exists (for new clients) or client exists (for existing clients)
     const supabase = getSupabaseAdmin();
+    console.log('Supabase admin client created successfully');
     
     // First try to find it as an onboarding request
     const { data: onboardingRequest, error: onboardingError } = await supabase
