@@ -356,9 +356,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
               <Image 
                 src="/logos/vast.webp" 
                 alt="Vast Logo" 
-                width={32} 
-                height={32}
-                className="w-8 h-8"
+                width={40} 
+                height={40}
+                className="w-10 h-10"
               />
             </div>
             <div className="text-center mb-4">
@@ -385,8 +385,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                       <Image 
                         src={step.logo} 
                         alt={step.name} 
-                        width={16} 
-                        height={16}
+                        width={20} 
+                        height={20}
                         className="object-contain"
                       />
                     ) : (
@@ -566,10 +566,36 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                       Step 2: Get your Collaborator Request Code
                                     </h4>
                                     <p className="text-sm text-gray-600 mb-4">
-                                      Open your Shopify admin, go to Users and Permissions → Collaborators, and find your collaborator code.
+                                      Open your Shopify admin and navigate to Settings → Users and Permissions → Collaborators. 
+                                      Look for your collaborator request code in the "Collaborator access" section.
                                     </p>
                                     <Button
-                                      onClick={() => window.open(`https://admin.shopify.com/store/${shopifyStoreId}/settings/account`, '_blank')}
+                                      onClick={() => {
+                                        // Try multiple URL formats for different Shopify store types
+                                        const urls = [
+                                          `https://${shopifyStoreId}.myshopify.com/admin/settings/account`,
+                                          `https://admin.shopify.com/store/${shopifyStoreId}/settings/account`,
+                                          `https://${shopifyStoreId}.myshopify.com/admin/settings/users`
+                                        ];
+                                        
+                                        // Try opening the first URL, if it fails, try the next one
+                                        const tryOpenUrl = (index: number) => {
+                                          if (index >= urls.length) {
+                                            alert('Unable to open Shopify admin. Please manually navigate to your store settings.');
+                                            return;
+                                          }
+                                          
+                                          const newWindow = window.open(urls[index], '_blank');
+                                          
+                                          // Check if window opened successfully
+                                          if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                                            // Try next URL
+                                            setTimeout(() => tryOpenUrl(index + 1), 100);
+                                          }
+                                        };
+                                        
+                                        tryOpenUrl(0);
+                                      }}
                                       variant="outline"
                                       className="w-full mb-4"
                                     >
