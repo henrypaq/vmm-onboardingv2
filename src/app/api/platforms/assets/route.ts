@@ -137,11 +137,6 @@ export async function GET(request: NextRequest) {
         assets = await fetchGoogleAssets(connection.access_token);
         console.log('Google assets fetched:', assets);
         break;
-      case 'shopify':
-        console.log('Fetching Shopify assets...');
-        assets = await fetchShopifyAssets(connection);
-        console.log('Shopify assets fetched:', assets);
-        break;
       default:
         console.log('Unsupported platform:', platform);
         return NextResponse.json(
@@ -341,25 +336,3 @@ async function fetchGoogleAssets(accessToken: string) {
   }
 }
 
-async function fetchShopifyAssets(connection: any) {
-  try {
-    const assets = [];
-    
-    // For Shopify, we use the store domain from the connection
-    const storeDomain = connection.platform_user_id;
-    
-    if (storeDomain) {
-      assets.push({
-        id: storeDomain,
-        name: storeDomain,
-        type: 'store',
-        description: 'Shopify Store'
-      });
-    }
-
-    return assets;
-  } catch (error) {
-    console.error('Error fetching Shopify assets:', error);
-    return [];
-  }
-}

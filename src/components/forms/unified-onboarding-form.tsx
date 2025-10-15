@@ -55,21 +55,18 @@ const getPlatformLogo = (platformId: string) => {
     'google analytics': '/logos/google.png',
     'google ads': '/logos/google.png',
     'tiktok': '/logos/tiktok.webp',
-    'shopify': '/logos/shopify.png',
   };
 
   const logoPath = logoMap[platformId.toLowerCase()];
   
   if (logoPath) {
-    const isShopify = platformId.toLowerCase() === 'shopify';
     return (
       <Image 
         src={logoPath} 
         alt={platformId} 
         width={32} 
         height={32} 
-        className={isShopify ? "object-contain scale-200" : "object-contain"}
-        style={isShopify ? { objectPosition: 'center' } : undefined}
+        className="object-contain"
       />
     );
   }
@@ -98,10 +95,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   // Platform connection status
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({});
   
-  // Shopify specific state
-  const [shopifyStoreId, setShopifyStoreId] = useState('');
-  const [shopifyCollaboratorCode, setShopifyCollaboratorCode] = useState('');
-  const [shopifyStep, setShopifyStep] = useState<1 | 2>(1);
   
   // UI state
   const [isLoading, setIsLoading] = useState(true);
@@ -190,14 +183,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
           // Show asset selection for this platform
           setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: true }));
           
-          // Try to fetch assets for this platform, but don't block the flow if it fails
-          try {
-            await fetchPlatformAssets(connectedPlatform);
-          } catch (error) {
-            console.log('Asset fetching failed during OAuth callback, but continuing...');
-            // Hide asset selection and continue
-            setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: false }));
-          }
+          // Fetch assets for this platform
+          await fetchPlatformAssets(connectedPlatform);
           
           setCurrentStep('platforms');
         }
@@ -260,81 +247,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     window.location.href = `/api/oauth/client/connect/${platformId}?token=${token}`;
   };
   
-  // Handle Shopify verification
-  const handleShopifyVerify = async () => {
-    if (!shopifyStoreId || !shopifyCollaboratorCode) {
-      toast.error('Please fill in all Shopify fields');
-      return;
-    }
-    
-    try {
-      // Get client ID from onboarding request
-      const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
-      if (!requestResponse.ok) {
-        throw new Error('Failed to get client information');
-      }
-      const requestData = await requestResponse.json();
-      
-      // Get the most recent request to find client_id
-      const latestRequest = requestData.requests && requestData.requests.length > 0 
-        ? requestData.requests[0] 
-        : null;
-      
-      console.log('Request data from API:', requestData);
-      console.log('Latest request:', latestRequest);
-      
-      if (!latestRequest || !latestRequest.id) {
-        throw new Error('Client ID not found');
-      }
-      
-      console.log('Using clientId for Shopify verification:', latestRequest.id);
-      
-      // Verify Shopify access
-      const verifyResponse = await fetch('/api/integrations/shopify/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId: latestRequest.id,
-          storeDomain: `${shopifyStoreId}.myshopify.com`,
-          collaboratorCode: shopifyCollaboratorCode,
-        }),
-      });
-      
-      if (!verifyResponse.ok) {
-        const errorData = await verifyResponse.json();
-        throw new Error(errorData.error || 'Failed to verify Shopify store access');
-      }
-      
-      // Mark as connected
-      setConnectionStatus(prev => ({
-        ...prev,
-        shopify: { connected: true }
-      }));
-      
-      // Show asset selection for Shopify
-      setShowAssetSelection(prev => ({ ...prev, shopify: true }));
-      
-      // Try to fetch assets for Shopify, but don't block the flow if it fails
-      try {
-        await fetchPlatformAssets('shopify');
-      } catch (error) {
-        console.log('Shopify asset fetching failed, but continuing...');
-        // Hide asset selection and continue
-        setShowAssetSelection(prev => ({ ...prev, shopify: false }));
-      }
-      
-      // Reset Shopify data
-      setShopifyStoreId('');
-      setShopifyCollaboratorCode('');
-      setShopifyStep(1);
-      
-      toast.success('Shopify store connected successfully!');
-      
-    } catch (error: any) {
-      console.error('Shopify verification error:', error);
-      toast.error(error.message || 'Failed to verify Shopify store');
-    }
-  };
 
   // Fetch assets for a platform
   const fetchPlatformAssets = async (platformId: string) => {
@@ -387,16 +299,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     } catch (error: any) {
       console.error('=== CLIENT: ERROR FETCHING PLATFORM ASSETS ===');
       console.error('Error fetching platform assets:', error);
-      
-      // Don't show error toast for asset fetching failures - just log and continue
-      console.log('Asset fetching failed, but continuing with onboarding flow...');
-      
-      // Set empty assets array and continue
+      toast.error(error.message || 'Failed to fetch platform assets');
       setPlatformAssets(prev => ({ ...prev, [platformId]: [] }));
-      
-      // Hide asset selection and allow user to continue
-      setShowAssetSelection(prev => ({ ...prev, [platformId]: false }));
-      
     } finally {
       setIsLoadingAssets(prev => ({ ...prev, [platformId]: false }));
       console.log('Loading state cleared for platform:', platformId);
@@ -594,12 +498,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         return [
           { id: 'tiktok', name: 'TikTok Account', type: 'account', description: 'Account access' },
           { id: 'analytics', name: 'TikTok Analytics', type: 'analytics', description: 'Analytics access' }
-        ];
-      case 'shopify':
-        return [
-          { id: 'store', name: 'Shopify Store', type: 'store', description: 'Store access' },
-          { id: 'products', name: 'Products', type: 'products', description: 'Product management' },
-          { id: 'orders', name: 'Orders', type: 'orders', description: 'Order management' }
         ];
       default:
         return [
@@ -805,125 +703,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                     </div>
                     
                     <div className="px-6 py-4 bg-white">
-                      {isShopify ? (
-                        // Shopify inline two-step process
-                        <div className="space-y-6">
-                          {!isConnected ? (
-                            <>
-                              {/* Step 1: Store ID */}
-                              <div className="space-y-4">
-                                <div>
-                                  <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                                    Step 1: Enter your Shopify Store URL
-                                  </h4>
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-sm text-gray-700">https://</span>
-                                    <Input
-                                      value={shopifyStoreId}
-                                      onChange={(e) => setShopifyStoreId(e.target.value)}
-                                      placeholder="your-store"
-                                      className="w-40"
-                                      autoCapitalize="off"
-                                      autoCorrect="off"
-                                      spellCheck="false"
-                                    />
-                                    <span className="text-sm text-gray-700">.myshopify.com</span>
-                                  </div>
-                                </div>
-                                
-                                <Button
-                                  onClick={() => {
-                                    if (shopifyStoreId.trim()) {
-                                      setShopifyStep(2);
-                                    } else {
-                                      toast.error('Please enter your store ID');
-                                    }
-                                  }}
-                                  className="gradient-primary"
-                                  disabled={!shopifyStoreId.trim()}
-                                >
-                                  Next
-                                  <ArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
-                              </div>
-                              
-                              {/* Step 2: Collaborator Code */}
-                              {shopifyStep === 2 && (
-                                <div className="space-y-4 border-t border-gray-200 pt-6">
-                                  <div>
-                                    <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                                      Step 2: Get your Collaborator Request Code
-                                    </h4>
-                                    <p className="text-sm text-gray-600 mb-4">
-                                      Open your Shopify admin and navigate to Settings → Users and Permissions → Collaborators. 
-                                      Look for your collaborator request code in the "Collaborator access" section.
-                                    </p>
-                                    <Button
-                                      onClick={() => {
-                                        // Try multiple URL formats for different Shopify store types
-                                        const urls = [
-                                          `https://${shopifyStoreId}.myshopify.com/admin/settings/account`,
-                                          `https://admin.shopify.com/store/${shopifyStoreId}/settings/account`,
-                                          `https://${shopifyStoreId}.myshopify.com/admin/settings/users`
-                                        ];
-                                        
-                                        // Try opening the first URL, if it fails, try the next one
-                                        const tryOpenUrl = (index: number) => {
-                                          if (index >= urls.length) {
-                                            toast.error('Unable to open Shopify admin. Please manually navigate to your store settings.');
-                                            return;
-                                          }
-                                          
-                                          const newWindow = window.open(urls[index], '_blank');
-                                          
-                                          // Check if window opened successfully
-                                          if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-                                            // Try next URL
-                                            setTimeout(() => tryOpenUrl(index + 1), 100);
-                                          }
-                                        };
-                                        
-                                        tryOpenUrl(0);
-                                      }}
-                                      variant="outline"
-                                      className="w-full mb-4"
-                                    >
-                                      <ExternalLink className="mr-2 h-4 w-4" />
-                                      Open Shopify Admin
-                                    </Button>
-                                    
-                                    <Label htmlFor="collaboratorCode">
-                                      Collaborator Request Code
-                                    </Label>
-                                    <Input
-                                      id="collaboratorCode"
-                                      value={shopifyCollaboratorCode}
-                                      onChange={(e) => setShopifyCollaboratorCode(e.target.value)}
-                                      placeholder="Enter code or 'none'"
-                                      className="mt-2"
-                                    />
-                                  </div>
-                                  
-                                  <Button
-                                    onClick={handleShopifyVerify}
-                                    className="w-full gradient-primary"
-                                    disabled={!shopifyCollaboratorCode.trim()}
-                                  >
-                                    Verify Shopify Access
-                                  </Button>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="flex items-center space-x-3 text-green-600">
-                              <CheckCircle className="h-5 w-5" />
-                              <span className="font-medium">Shopify store connected successfully</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        // OAuth platforms (Google, Meta, TikTok)
-                        <div className="space-y-4">
+                      {/* OAuth platforms (Google, Meta, TikTok) */}
+                      <div className="space-y-4">
                           {!isConnected ? (
                             <>
                               <p className="text-sm text-gray-700">
@@ -945,8 +726,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                      </div>
                     
                     {/* Asset Selection */}
                     {isConnected && showAssetSelection[platform.id] && (
