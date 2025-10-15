@@ -128,6 +128,43 @@ export const PLATFORM_DEFINITIONS: Record<string, PlatformDefinition> = {
       },
     ],
   },
+  shopify: {
+    id: 'shopify',
+    name: 'Shopify',
+    icon: 'ShoppingCart',
+    color: 'bg-green-600',
+    oauthScopes: ['store_access'],
+    permissions: [
+      {
+        id: 'store_access',
+        name: 'Store Access',
+        description: 'Access to your Shopify store data and analytics',
+        required: true,
+        category: 'E-commerce',
+      },
+      {
+        id: 'products_read',
+        name: 'Read Products',
+        description: 'View product catalog and inventory data',
+        required: false,
+        category: 'Products',
+      },
+      {
+        id: 'orders_read',
+        name: 'Read Orders',
+        description: 'View order history and sales data',
+        required: false,
+        category: 'Orders',
+      },
+      {
+        id: 'analytics_read',
+        name: 'Store Analytics',
+        description: 'Access store performance and sales analytics',
+        required: false,
+        category: 'Analytics',
+      },
+    ],
+  },
 };
 
 export function getPlatformDefinition(platformId: string): PlatformDefinition | null {

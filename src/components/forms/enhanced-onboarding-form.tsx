@@ -272,12 +272,57 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
     }
   };
 
-  const handleShopifyComplete = () => {
-    setConnectedPlatforms(prev => ({
-      ...prev,
-      shopify: true
-    }));
-    setShopifyStep(1);
+  const handleShopifyComplete = async () => {
+    try {
+      // Get the client ID from the current request
+      const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
+      if (!requestResponse.ok) {
+        throw new Error('Failed to get client information');
+      }
+      const requestData = await requestResponse.json();
+      
+      if (!requestData.client_id) {
+        throw new Error('Client ID not found');
+      }
+
+      // Call the Shopify verification API
+      const verifyResponse = await fetch('/api/integrations/shopify/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientId: requestData.client_id,
+          storeDomain: `${shopifyData.storeId}.myshopify.com`,
+          collaboratorCode: shopifyData.collaboratorCode
+        }),
+      });
+
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json();
+        throw new Error(errorData.error || 'Failed to verify Shopify store access');
+      }
+
+      const verifyData = await verifyResponse.json();
+      console.log('Shopify verification successful:', verifyData);
+
+      // Mark platform as connected
+      setConnectedPlatforms(prev => ({
+        ...prev,
+        shopify: true
+      }));
+      
+      // Reset Shopify data and step
+      setShopifyData({
+        storeId: '',
+        collaboratorCode: ''
+      });
+      setShopifyStep(1);
+      
+    } catch (error) {
+      console.error('Shopify verification error:', error);
+      alert(`Failed to verify Shopify store access: ${error.message}`);
+    }
   };
 
   const handleSubmit = async () => {
