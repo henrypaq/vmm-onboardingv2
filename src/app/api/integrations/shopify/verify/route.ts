@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
+  console.log('=== SHOPIFY VERIFICATION API START ===');
+  
   try {
     const { clientId, storeDomain, collaboratorCode } = await request.json();
     
@@ -141,6 +143,9 @@ export async function POST(request: NextRequest) {
       result = data;
     }
 
+    console.log('=== SHOPIFY VERIFICATION API SUCCESS ===');
+    console.log('Connection created successfully:', result);
+
     return NextResponse.json({
       success: true,
       message: 'Shopify store access verified and saved successfully',
@@ -155,6 +160,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
+    console.error('=== SHOPIFY VERIFICATION API ERROR ===');
     console.error('Shopify verification error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
