@@ -81,7 +81,7 @@ export default function RequestsPage() {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Requests</h1>
+        <h1 className="text-3xl page-title text-gray-900">My Requests</h1>
         <p className="text-gray-600 mt-2">View and manage your onboarding requests</p>
       </div>
       

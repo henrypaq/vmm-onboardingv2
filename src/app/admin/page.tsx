@@ -209,7 +209,7 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl page-title tracking-tight">Dashboard</h1>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={fetchDashboardData} variant="outline" size="sm" disabled={isLoading}>

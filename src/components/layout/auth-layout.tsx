@@ -31,7 +31,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
               />
             </div>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{title}</h1>
+          <h1 className="text-3xl page-title text-gray-900 mb-2">{title}</h1>
           {subtitle && (
             <p className="text-gray-600 text-sm">{subtitle}</p>
           )}

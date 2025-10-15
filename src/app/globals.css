@@ -1,4 +1,4 @@
-@import '@fontsource/geist-sans';
+@import '@fontsource/inter';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -64,12 +64,12 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
-    font-family: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   }
   
   /* Typography hierarchy */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     font-weight: 600;
     letter-spacing: -0.025em;
   }
@@ -91,14 +91,14 @@
   
   /* Body text */
   p, span, div, button, input, textarea, select {
-    font-family: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     font-weight: 400;
     letter-spacing: 0;
   }
   
   /* Captions, labels, small UI text */
   .text-xs, .text-sm, label, .caption {
-    font-family: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     font-weight: 500;
     letter-spacing: 0.025em;
   }
@@ -114,6 +114,13 @@
   
   .font-bold {
     font-weight: 700;
+  }
+  
+  /* Page titles - uniform Inter font with consistent weight */
+  .page-title {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 }
 

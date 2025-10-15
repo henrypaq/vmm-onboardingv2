@@ -363,7 +363,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
               />
             </div>
             <div className="text-center mb-4">
-              <h1 className="text-lg font-bold text-gray-900">Client Onboarding</h1>
+              <h1 className="text-lg page-title text-gray-900">Client Onboarding</h1>
               {linkData?.link_name && (
                 <p className="text-sm text-gray-600">{linkData.link_name}</p>
               )}
@@ -412,7 +412,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         {currentStep === 'info' && (
           <div>
             <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Your Information</h2>
+              <h2 className="text-xl page-title text-gray-900">Your Information</h2>
               <p className="text-gray-600 mt-1 text-sm">
                 Please provide your contact information to get started.
               </p>
@@ -480,7 +480,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         {currentStep === 'platforms' && (
           <div className="space-y-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Connect Your Platforms</h2>
+              <h2 className="text-xl page-title text-gray-900">Connect Your Platforms</h2>
               <p className="text-gray-600 mt-1 text-sm">
                 Connect each platform to grant access to your accounts.
               </p>

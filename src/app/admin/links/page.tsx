@@ -273,7 +273,7 @@ function LinksPageContent() {
       <div className="flex-none p-4 md:p-6 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Links</h1>
+          <h1 className="text-3xl page-title tracking-tight">Links</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button size="default" className="h-10 gradient-primary">

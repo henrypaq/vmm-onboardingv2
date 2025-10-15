@@ -495,7 +495,7 @@ export default function ClientsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
+          <h1 className="text-3xl page-title tracking-tight">Clients</h1>
         </motion.div>
 
         {/* Search and Filter Bar */}
