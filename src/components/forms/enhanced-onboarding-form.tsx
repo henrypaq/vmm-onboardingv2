@@ -821,8 +821,8 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                             <Label htmlFor="storeId" className="text-sm font-medium text-gray-700">
                               Shopify Store ID
                             </Label>
-                            <div className="flex items-center border border-gray-300 rounded-md bg-white">
-                              <span className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border-r border-gray-300">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-medium text-gray-700">
                                 https://
                               </span>
                               <Input
@@ -830,9 +830,9 @@ export function EnhancedOnboardingForm({ token, onSubmissionComplete }: Onboardi
                                 value={shopifyData.storeId}
                                 onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
                                 placeholder="store-id"
-                                className="border-0 focus:ring-0 focus:border-0 rounded-none"
+                                className="w-32 border border-gray-300 rounded-md"
                               />
-                              <span className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border-l border-gray-300">
+                              <span className="text-sm font-medium text-gray-700">
                                 .myshopify.com
                               </span>
                             </div>
