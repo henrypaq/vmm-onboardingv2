@@ -106,6 +106,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedPlatform, setExpandedPlatform] = useState<string>('');
   const [currentPlatformIndex, setCurrentPlatformIndex] = useState(0);
+  
+  // Asset selection state
+  const [platformAssets, setPlatformAssets] = useState<Record<string, any[]>>({});
+  const [selectedAssets, setSelectedAssets] = useState<Record<string, string[]>>({});
+  const [isLoadingAssets, setIsLoadingAssets] = useState<Record<string, boolean>>({});
+  const [showAssetSelection, setShowAssetSelection] = useState<Record<string, boolean>>({});
   const [oauthConfirmation, setOauthConfirmation] = useState<{
     platform: string;
     platformName: string;
@@ -179,18 +185,11 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
             [connectedPlatform]: { connected: true }
           }));
           
-          // Find the platform name and mock assets for confirmation
-          const platform = platforms.find(p => p.id === connectedPlatform);
-          const platformName = platform?.name || connectedPlatform;
+          // Show asset selection for this platform
+          setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: true }));
           
-          // Mock assets based on platform (in real implementation, this would come from OAuth response)
-          const mockAssets = getMockAssetsForPlatform(connectedPlatform);
-          
-          setOauthConfirmation({
-            platform: connectedPlatform,
-            platformName,
-            assets: mockAssets
-          });
+          // Fetch assets for this platform
+          await fetchPlatformAssets(connectedPlatform);
           
           setCurrentStep('platforms');
         }
@@ -304,6 +303,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         shopify: { connected: true }
       }));
       
+      // Show asset selection for Shopify
+      setShowAssetSelection(prev => ({ ...prev, shopify: true }));
+      
+      // Fetch assets for Shopify
+      await fetchPlatformAssets('shopify');
+      
       // Reset Shopify data
       setShopifyStoreId('');
       setShopifyCollaboratorCode('');
@@ -314,6 +319,108 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     } catch (error: any) {
       console.error('Shopify verification error:', error);
       toast.error(error.message || 'Failed to verify Shopify store');
+    }
+  };
+
+  // Fetch assets for a platform
+  const fetchPlatformAssets = async (platformId: string) => {
+    try {
+      setIsLoadingAssets(prev => ({ ...prev, [platformId]: true }));
+      
+      // Get client ID from onboarding request
+      const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
+      if (!requestResponse.ok) {
+        throw new Error('Failed to get client information');
+      }
+      const requestData = await requestResponse.json();
+      const latestRequest = requestData.requests && requestData.requests.length > 0 
+        ? requestData.requests[0] 
+        : null;
+      
+      if (!latestRequest || !latestRequest.id) {
+        throw new Error('Client ID not found');
+      }
+
+      // Fetch assets from platform API
+      const assetsResponse = await fetch(
+        `/api/platforms/assets?platform=${platformId}&clientId=${latestRequest.id}`
+      );
+      
+      if (!assetsResponse.ok) {
+        throw new Error('Failed to fetch platform assets');
+      }
+      
+      const assetsData = await assetsResponse.json();
+      setPlatformAssets(prev => ({ ...prev, [platformId]: assetsData.assets || [] }));
+      
+    } catch (error: any) {
+      console.error('Error fetching platform assets:', error);
+      toast.error(error.message || 'Failed to fetch platform assets');
+      setPlatformAssets(prev => ({ ...prev, [platformId]: [] }));
+    } finally {
+      setIsLoadingAssets(prev => ({ ...prev, [platformId]: false }));
+    }
+  };
+
+  // Handle asset selection
+  const handleAssetSelection = (platformId: string, assetId: string, checked: boolean) => {
+    setSelectedAssets(prev => {
+      const current = prev[platformId] || [];
+      if (checked) {
+        return { ...prev, [platformId]: [...current, assetId] };
+      } else {
+        return { ...prev, [platformId]: current.filter(id => id !== assetId) };
+      }
+    });
+  };
+
+  // Save selected assets and continue
+  const handleAssetSelectionComplete = async (platformId: string) => {
+    try {
+      // Get client ID from onboarding request
+      const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
+      if (!requestResponse.ok) {
+        throw new Error('Failed to get client information');
+      }
+      const requestData = await requestResponse.json();
+      const latestRequest = requestData.requests && requestData.requests.length > 0 
+        ? requestData.requests[0] 
+        : null;
+      
+      if (!latestRequest || !latestRequest.id) {
+        throw new Error('Client ID not found');
+      }
+
+      // Save selected assets
+      const saveResponse = await fetch('/api/platforms/save-assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: latestRequest.id,
+          platform: platformId,
+          selectedAssets: selectedAssets[platformId] || []
+        }),
+      });
+
+      if (!saveResponse.ok) {
+        throw new Error('Failed to save selected assets');
+      }
+
+      // Hide asset selection and move to next platform
+      setShowAssetSelection(prev => ({ ...prev, [platformId]: false }));
+      
+      if (currentPlatformIndex < platforms.length - 1) {
+        setCurrentPlatformIndex(currentPlatformIndex + 1);
+      } else {
+        // All platforms completed
+        setCurrentStep('complete');
+      }
+      
+      toast.success('Assets selected successfully!');
+      
+    } catch (error: any) {
+      console.error('Error saving selected assets:', error);
+      toast.error(error.message || 'Failed to save selected assets');
     }
   };
   
@@ -800,6 +907,82 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                       )}
                     </div>
                     
+                    {/* Asset Selection */}
+                    {isConnected && showAssetSelection[platform.id] && (
+                      <div className="px-6 py-4 bg-blue-50 border-t border-blue-200">
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <h4 className="text-lg font-semibold text-gray-900">
+                              Select Assets to Share
+                            </h4>
+                            <Badge variant="outline" className="text-blue-600 border-blue-300">
+                              {platform.name}
+                            </Badge>
+                          </div>
+                          
+                          <p className="text-sm text-gray-600">
+                            Choose which {platform.name} assets you'd like to share with your team.
+                          </p>
+                          
+                          {isLoadingAssets[platform.id] ? (
+                            <div className="flex items-center justify-center py-8">
+                              <LoadingSpinner size="md" text="Loading assets..." />
+                            </div>
+                          ) : platformAssets[platform.id] && platformAssets[platform.id].length > 0 ? (
+                            <div className="space-y-3">
+                              {platformAssets[platform.id].map((asset) => (
+                                <div key={asset.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200">
+                                  <Checkbox
+                                    id={`asset-${asset.id}`}
+                                    checked={selectedAssets[platform.id]?.includes(asset.id) || false}
+                                    onCheckedChange={(checked) => 
+                                      handleAssetSelection(platform.id, asset.id, checked as boolean)
+                                    }
+                                  />
+                                  <div className="flex-1">
+                                    <Label 
+                                      htmlFor={`asset-${asset.id}`}
+                                      className="text-sm font-medium text-gray-900 cursor-pointer"
+                                    >
+                                      {asset.name}
+                                    </Label>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {asset.description}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-sm text-gray-500">
+                                No assets available to select
+                              </p>
+                            </div>
+                          )}
+                          
+                          <div className="flex justify-end space-x-3 pt-4">
+                            <Button
+                              onClick={() => setShowAssetSelection(prev => ({ ...prev, [platform.id]: false }))}
+                              variant="outline"
+                              size="sm"
+                            >
+                              Skip
+                            </Button>
+                            <Button
+                              onClick={() => handleAssetSelectionComplete(platform.id)}
+                              className="gradient-primary"
+                              size="sm"
+                              disabled={!selectedAssets[platform.id] || selectedAssets[platform.id].length === 0}
+                            >
+                              Continue
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Navigation Buttons */}
                     <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                       <div className="flex justify-between">
@@ -818,23 +1001,25 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                           </span>
                         </div>
                         
-                        {currentPlatformIndex < platforms.length - 1 ? (
-                          <Button
-                            onClick={() => setCurrentPlatformIndex(currentPlatformIndex + 1)}
-                            variant="outline"
-                          >
-                            Next
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={handleCompleteOnboarding}
-                            disabled={!allPlatformsConnected()}
-                            className="gradient-primary"
-                          >
-                            Complete Onboarding
-                            <CheckCircle className="ml-2 h-4 w-4" />
-                          </Button>
+                        {!showAssetSelection[platform.id] && (
+                          currentPlatformIndex < platforms.length - 1 ? (
+                            <Button
+                              onClick={() => setCurrentPlatformIndex(currentPlatformIndex + 1)}
+                              variant="outline"
+                            >
+                              Next
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={handleCompleteOnboarding}
+                              disabled={!allPlatformsConnected()}
+                              className="gradient-primary"
+                            >
+                              Complete Onboarding
+                              <CheckCircle className="ml-2 h-4 w-4" />
+                            </Button>
+                          )
                         )}
                       </div>
                     </div>
