@@ -174,20 +174,31 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         const connectedPlatform = searchParams.get('connected');
         const success = searchParams.get('success');
         
-        if (connectedPlatform && success === 'true') {
-          setConnectionStatus(prev => ({
-            ...prev,
-            [connectedPlatform]: { connected: true }
-          }));
-          
-          // Show asset selection for this platform
-          setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: true }));
-          
-          // Fetch assets for this platform
-          await fetchPlatformAssets(connectedPlatform);
-          
-          setCurrentStep('platforms');
-        }
+      if (connectedPlatform && success === 'true') {
+        console.log('🔵 [UNIFIED FORM] ===========================================');
+        console.log('🔵 [UNIFIED FORM] OAUTH CALLBACK DETECTED');
+        console.log('🔵 [UNIFIED FORM] Connected Platform:', connectedPlatform);
+        console.log('🔵 [UNIFIED FORM] Success:', success);
+        console.log('🔵 [UNIFIED FORM] Setting connection status for:', connectedPlatform);
+        console.log('🔵 [UNIFIED FORM] ===========================================');
+        
+        setConnectionStatus(prev => ({
+          ...prev,
+          [connectedPlatform]: { connected: true }
+        }));
+        
+        // Show asset selection for this platform
+        setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: true }));
+        
+        console.log('🔵 [UNIFIED FORM] Initiating asset fetch for:', connectedPlatform);
+        
+        // Fetch assets for this platform
+        await fetchPlatformAssets(connectedPlatform);
+        
+        setCurrentStep('platforms');
+        
+        console.log('🔵 [UNIFIED FORM] OAuth callback processing complete');
+      }
         
       } catch (error) {
         console.error('Error loading link data:', error);
@@ -250,60 +261,81 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
 
   // Fetch assets for a platform
   const fetchPlatformAssets = async (platformId: string) => {
-    console.log('=== CLIENT: FETCHING PLATFORM ASSETS ===');
-    console.log('Platform ID:', platformId);
+    console.log('🟢 [UNIFIED FORM] ===========================================');
+    console.log('🟢 [UNIFIED FORM] FETCHING PLATFORM ASSETS');
+    console.log('🟢 [UNIFIED FORM] Platform ID:', platformId);
+    console.log('🟢 [UNIFIED FORM] Token:', token);
+    console.log('🟢 [UNIFIED FORM] ===========================================');
     
     try {
       setIsLoadingAssets(prev => ({ ...prev, [platformId]: true }));
       
       // Get client ID from onboarding request
-      console.log('Getting client ID from onboarding request...');
+      console.log('🟢 [UNIFIED FORM] Step 1: Getting client ID from onboarding request...');
       const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
+      console.log('🟢 [UNIFIED FORM] Request response status:', requestResponse.status);
+      
       if (!requestResponse.ok) {
+        const errorText = await requestResponse.text();
+        console.error('🔴 [UNIFIED FORM] Failed to get client information:', errorText);
         throw new Error('Failed to get client information');
       }
+      
       const requestData = await requestResponse.json();
-      console.log('Request data received:', requestData);
+      console.log('🟢 [UNIFIED FORM] Request data received:', requestData);
+      console.log('🟢 [UNIFIED FORM] Request data.requests:', requestData.requests);
+      console.log('🟢 [UNIFIED FORM] Request data.requests length:', requestData.requests?.length);
       
       const latestRequest = requestData.requests && requestData.requests.length > 0 
         ? requestData.requests[0] 
         : null;
       
-      console.log('Latest request:', latestRequest);
+      console.log('🟢 [UNIFIED FORM] Latest request:', latestRequest);
+      console.log('🟢 [UNIFIED FORM] Latest request ID:', latestRequest?.id);
+      console.log('🟢 [UNIFIED FORM] Latest request platform_connections:', latestRequest?.platform_connections);
       
       if (!latestRequest || !latestRequest.id) {
+        console.error('🔴 [UNIFIED FORM] Client ID not found in request data');
         throw new Error('Client ID not found');
       }
 
-      console.log('Making assets API call...');
+      console.log('🟢 [UNIFIED FORM] Step 2: Making assets API call...');
       const assetsUrl = `/api/platforms/assets?platform=${platformId}&clientId=${latestRequest.id}`;
-      console.log('Assets URL:', assetsUrl);
+      console.log('🟢 [UNIFIED FORM] Assets URL:', assetsUrl);
 
       // Fetch assets from platform API
       const assetsResponse = await fetch(assetsUrl);
       
-      console.log('Assets response status:', assetsResponse.status);
+      console.log('🟢 [UNIFIED FORM] Assets response status:', assetsResponse.status);
+      console.log('🟢 [UNIFIED FORM] Assets response ok:', assetsResponse.ok);
       
       if (!assetsResponse.ok) {
         const errorText = await assetsResponse.text();
-        console.error('Assets API error:', assetsResponse.status, errorText);
+        console.error('🔴 [UNIFIED FORM] Assets API error:', assetsResponse.status, errorText);
         throw new Error(`Failed to fetch platform assets: ${assetsResponse.status}`);
       }
       
       const assetsData = await assetsResponse.json();
-      console.log('Assets data received:', assetsData);
+      console.log('🟢 [UNIFIED FORM] Assets data received:', assetsData);
+      console.log('🟢 [UNIFIED FORM] Assets array:', assetsData.assets);
+      console.log('🟢 [UNIFIED FORM] Assets count:', assetsData.assets?.length || 0);
       
       setPlatformAssets(prev => ({ ...prev, [platformId]: assetsData.assets || [] }));
-      console.log('Assets set in state:', assetsData.assets || []);
+      console.log('🟢 [UNIFIED FORM] Assets set in state for', platformId, ':', assetsData.assets || []);
       
     } catch (error: any) {
-      console.error('=== CLIENT: ERROR FETCHING PLATFORM ASSETS ===');
-      console.error('Error fetching platform assets:', error);
+      console.error('🔴 [UNIFIED FORM] ===========================================');
+      console.error('🔴 [UNIFIED FORM] ERROR FETCHING PLATFORM ASSETS');
+      console.error('🔴 [UNIFIED FORM] Platform:', platformId);
+      console.error('🔴 [UNIFIED FORM] Error:', error);
+      console.error('🔴 [UNIFIED FORM] Error message:', error.message);
+      console.error('🔴 [UNIFIED FORM] Error stack:', error.stack);
+      console.error('🔴 [UNIFIED FORM] ===========================================');
       toast.error(error.message || 'Failed to fetch platform assets');
       setPlatformAssets(prev => ({ ...prev, [platformId]: [] }));
     } finally {
       setIsLoadingAssets(prev => ({ ...prev, [platformId]: false }));
-      console.log('Loading state cleared for platform:', platformId);
+      console.log('🟢 [UNIFIED FORM] Loading state cleared for platform:', platformId);
     }
   };
 
@@ -321,6 +353,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
 
   // Save selected assets and continue
   const handleAssetSelectionComplete = async (platformId: string) => {
+    console.log('🟣 [UNIFIED FORM] ===========================================');
+    console.log('🟣 [UNIFIED FORM] SAVING SELECTED ASSETS');
+    console.log('🟣 [UNIFIED FORM] Platform:', platformId);
+    console.log('🟣 [UNIFIED FORM] Selected assets:', selectedAssets[platformId]);
+    console.log('🟣 [UNIFIED FORM] ===========================================');
+    
     try {
       // Get client ID from onboarding request
       const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
@@ -336,6 +374,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         throw new Error('Client ID not found');
       }
 
+      console.log('🟣 [UNIFIED FORM] Calling save-assets API...');
       // Save selected assets
       const saveResponse = await fetch('/api/platforms/save-assets', {
         method: 'POST',
@@ -347,24 +386,33 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         }),
       });
 
+      console.log('🟣 [UNIFIED FORM] Save-assets response status:', saveResponse.status);
+
       if (!saveResponse.ok) {
+        const errorText = await saveResponse.text();
+        console.error('🔴 [UNIFIED FORM] Failed to save assets:', errorText);
         throw new Error('Failed to save selected assets');
       }
+
+      const responseData = await saveResponse.json();
+      console.log('🟣 [UNIFIED FORM] Save-assets response:', responseData);
 
       // Hide asset selection and move to next platform
       setShowAssetSelection(prev => ({ ...prev, [platformId]: false }));
       
       if (currentPlatformIndex < platforms.length - 1) {
+        console.log('🟣 [UNIFIED FORM] Moving to next platform...');
         setCurrentPlatformIndex(currentPlatformIndex + 1);
       } else {
         // All platforms completed
+        console.log('🟣 [UNIFIED FORM] All platforms completed! Setting current step to complete');
         setCurrentStep('complete');
       }
       
       toast.success('Assets selected successfully!');
       
     } catch (error: any) {
-      console.error('Error saving selected assets:', error);
+      console.error('🔴 [UNIFIED FORM] Error saving selected assets:', error);
       toast.error(error.message || 'Failed to save selected assets');
     }
   };

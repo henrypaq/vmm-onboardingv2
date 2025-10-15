@@ -75,6 +75,11 @@ export default function OnboardingPage() {
   }
 
   if (isSubmitted) {
+    // Redirect to home page after showing success message
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 3000);
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
@@ -93,6 +98,9 @@ export default function OnboardingPage() {
           <CardContent className="text-center">
             <p className="text-sm text-gray-600">
               You will receive an email notification once your request has been reviewed.
+            </p>
+            <p className="text-sm text-gray-500 mt-4">
+              Redirecting you now...
             </p>
           </CardContent>
         </Card>
