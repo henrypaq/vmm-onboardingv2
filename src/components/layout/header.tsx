@@ -61,6 +61,7 @@ export function Header({ user, userRole }: HeaderProps) {
   const router = useRouter();
   const role = userRole || user?.role;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
   const [loading, setLoading] = useState(false);
@@ -394,6 +395,10 @@ export function Header({ user, userRole }: HeaderProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setProfileOpen(true)}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
@@ -621,6 +626,144 @@ export function Header({ user, userRole }: HeaderProps) {
             <Button className="flex items-center space-x-2">
               <Save className="h-4 w-4" />
               <span>Save Settings</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Dialog */}
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent className="w-[90vw] max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Profile Settings</DialogTitle>
+            <DialogDescription>
+              Update your personal information and profile picture.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Profile Picture Section */}
+            <div className="flex items-center space-x-6">
+              <div className="relative">
+                <Avatar className="h-20 w-20">
+                  <AvatarFallback className="text-lg">
+                    {currentUser?.name?.charAt(0) || user?.name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <Button
+                  size="sm"
+                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                  variant="outline"
+                >
+                  <User className="h-4 w-4" />
+                </Button>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium">{currentUser?.name || user?.name || 'Guest User'}</h3>
+                <p className="text-sm text-gray-500">{currentUser?.email || user?.email || ''}</p>
+                <Button variant="outline" size="sm" className="mt-2">
+                  Change Photo
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Personal Information Form */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Personal Information</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    placeholder="Enter your first name"
+                    defaultValue={currentUser?.name?.split(' ')[0] || ''}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    placeholder="Enter your last name"
+                    defaultValue={currentUser?.name?.split(' ').slice(1).join(' ') || ''}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  defaultValue={currentUser?.email || user?.email || ''}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company">Company</Label>
+                <Input
+                  id="company"
+                  placeholder="Enter your company name"
+                  defaultValue=""
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  defaultValue=""
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Security Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Security</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  placeholder="Enter current password"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="Enter new password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirm new password"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-6">
+            <Button variant="outline" onClick={() => setProfileOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setProfileOpen(false)}>
+              Save Changes
             </Button>
           </div>
         </DialogContent>
