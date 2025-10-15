@@ -143,6 +143,32 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         });
         setConnectionStatus(initialStatus);
         
+        // If no requests exist, create one with basic info
+        if (!data.requests || data.requests.length === 0) {
+          console.log('No onboarding requests found, creating one...');
+          try {
+            const createResponse = await fetch('/api/onboarding/request', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                token,
+                client_email: '',
+                client_name: '',
+                company_name: '',
+              }),
+            });
+            
+            if (createResponse.ok) {
+              const createData = await createResponse.json();
+              console.log('Onboarding request created:', createData);
+            }
+          } catch (createError) {
+            console.error('Error creating initial onboarding request:', createError);
+          }
+        }
+        
         // Check for OAuth callback
         const connectedPlatform = searchParams.get('connected');
         const success = searchParams.get('success');
@@ -181,16 +207,43 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   }, [token, searchParams]);
   
   // Handle client info submission
-  const handleClientInfoSubmit = () => {
+  const handleClientInfoSubmit = async () => {
     if (!clientInfo.name || !clientInfo.email) {
       toast.error('Please fill in all required fields');
       return;
     }
     
-    setCurrentStep('platforms');
-    // Auto-expand first platform
-    if (platforms.length > 0) {
-      setExpandedPlatform(platforms[0].id);
+    try {
+      // Create or update onboarding request
+      const response = await fetch('/api/onboarding/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          client_email: clientInfo.email,
+          client_name: clientInfo.name,
+          company_name: clientInfo.company || '',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create onboarding request');
+      }
+
+      const data = await response.json();
+      console.log('Onboarding request created/updated:', data);
+      
+      setCurrentStep('platforms');
+      // Auto-expand first platform
+      if (platforms.length > 0) {
+        setExpandedPlatform(platforms[0].id);
+      }
+    } catch (error) {
+      console.error('Error creating onboarding request:', error);
+      toast.error('Failed to start onboarding. Please try again.');
     }
   };
   

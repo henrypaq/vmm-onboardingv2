@@ -4,6 +4,8 @@ import { getSupabaseAdmin } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const { clientId, storeDomain, collaboratorCode } = await request.json();
+    
+    console.log('Shopify verification request:', { clientId, storeDomain, collaboratorCode });
 
     // Validate required fields
     if (!clientId || !storeDomain || !collaboratorCode) {
@@ -40,9 +42,12 @@ export async function POST(request: NextRequest) {
       .eq('id', clientId)
       .single();
 
+    console.log('Onboarding request lookup:', { onboardingRequest, onboardingError });
+
     let requestId = null;
     if (onboardingRequest && !onboardingError) {
       requestId = onboardingRequest.id;
+      console.log('Found onboarding request:', requestId);
     } else {
       // If not found in onboarding_requests, try clients table
       const { data: client, error: clientError } = await supabase
@@ -51,6 +56,8 @@ export async function POST(request: NextRequest) {
         .eq('id', clientId)
         .single();
 
+      console.log('Client lookup:', { client, clientError });
+
       if (clientError || !client) {
         return NextResponse.json(
           { error: 'Client or onboarding request not found' },
@@ -58,6 +65,7 @@ export async function POST(request: NextRequest) {
         );
       }
       requestId = client.id;
+      console.log('Found client:', requestId);
     }
 
     // Check if Shopify connection already exists for this request
