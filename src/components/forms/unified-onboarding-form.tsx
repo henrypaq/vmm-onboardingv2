@@ -356,8 +356,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
               <Image 
                 src="/logos/vast.webp" 
                 alt="Vast Logo" 
-                width={24} 
-                height={24}
+                width={16} 
+                height={16}
                 style={{ width: 'auto', height: 'auto' }}
               />
             </div>
@@ -451,16 +451,15 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 />
               </div>
               
-              {clientInfo.name && clientInfo.email && clientInfo.company && (
-                <Button 
-                  onClick={handleClientInfoSubmit}
-                  className="w-full gradient-primary"
-                  size="lg"
-                >
-                  Continue to Platform Connections
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              )}
+              <Button 
+                onClick={handleClientInfoSubmit}
+                disabled={!clientInfo.name || !clientInfo.email}
+                className="w-full gradient-primary"
+                size="lg"
+              >
+                Continue to Platform Connections
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </div>
           </div>
         )}
