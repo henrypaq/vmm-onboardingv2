@@ -268,7 +268,7 @@ function LinksPageContent() {
   ));
 
   return (
-    <div className="flex flex-1 flex-col h-full overflow-hidden bg-white">
+    <div className="flex flex-1 flex-col min-h-screen bg-white">
       {/* Fixed Header Section */}
       <div className="flex-none p-4 md:p-6 space-y-4">
         {/* Header */}
@@ -526,7 +526,7 @@ function LinksPageContent() {
 
       {/* Scrollable Link List */}
       <motion.div 
-        className="flex-1 overflow-y-auto px-6 pb-6 pt-0"
+        className="flex-1 px-6 pb-6 pt-0"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}

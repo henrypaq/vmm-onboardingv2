@@ -537,6 +537,34 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                     />
                                     <span className="text-sm text-gray-700">.myshopify.com</span>
                                   </div>
+                                  
+                                  {/* Dynamic Shopify Button */}
+                                  {shopifyStoreId.trim() && (
+                                    <div className="mt-3">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          const storeId = shopifyStoreId.trim();
+                                          // Try admin.shopify.com format first, fallback to myshopify.com
+                                          const primaryUrl = `https://admin.shopify.com/store/${storeId}/settings/account`;
+                                          const fallbackUrl = `https://${storeId}.myshopify.com/admin/settings/account`;
+                                          
+                                          // Open primary URL first
+                                          const newWindow = window.open(primaryUrl, '_blank');
+                                          
+                                          // If window failed to open (older stores), try fallback
+                                          if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                                            window.open(fallbackUrl, '_blank');
+                                          }
+                                        }}
+                                        className="text-sm"
+                                      >
+                                        Open Shopify to find your Collaborator Code
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
                                 
                                 <Button
