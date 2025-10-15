@@ -19,6 +19,7 @@ import {
   Circle, 
   ExternalLink, 
   ArrowRight,
+  ArrowLeft,
   Globe 
 } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
@@ -451,15 +452,26 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 />
               </div>
               
-              <Button 
-                onClick={handleClientInfoSubmit}
-                disabled={!clientInfo.name || !clientInfo.email}
-                className="w-full gradient-primary"
-                size="lg"
-              >
-                Continue to Platform Connections
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="flex justify-between gap-4">
+                <Button 
+                  onClick={() => setCurrentStep('info')}
+                  variant="outline"
+                  size="lg"
+                  className="flex-1"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleClientInfoSubmit}
+                  disabled={!clientInfo.name || !clientInfo.email}
+                  className="flex-1 gradient-primary"
+                  size="lg"
+                >
+                  Continue to Platform Connections
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -675,21 +687,32 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                       All {platforms.length} platforms connected
                     </p>
                   </div>
-                  <Button
-                    onClick={handleFinalSubmit}
-                    disabled={isSubmitting}
-                    className="gradient-primary"
-                    size="lg"
-                  >
-                    {isSubmitting ? (
-                      <LoadingSpinner size="sm" text="Submitting..." />
-                    ) : (
-                      <>
-                        Complete Onboarding
-                        <CheckCircle className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex justify-between gap-4">
+                    <Button 
+                      onClick={() => setCurrentStep('info')}
+                      variant="outline"
+                      size="lg"
+                      className="flex-1"
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleFinalSubmit}
+                      disabled={isSubmitting}
+                      className="flex-1 gradient-primary"
+                      size="lg"
+                    >
+                      {isSubmitting ? (
+                        <LoadingSpinner size="sm" text="Submitting..." />
+                      ) : (
+                        <>
+                          Complete Onboarding
+                          <CheckCircle className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}

@@ -619,7 +619,7 @@ function LinksPageContent() {
                     </div>
                     
                     {/* Status */}
-                    <div className="min-w-0 flex-[1] flex justify-start">
+                    <div className="min-w-0 flex-[1] flex justify-center">
                       <Badge 
                         variant={getStatusVariant(link.status, link.expires_at, link.is_used)}
                         className={getStatusText(link.status, link.expires_at, link.is_used) === 'Active' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : ''}
