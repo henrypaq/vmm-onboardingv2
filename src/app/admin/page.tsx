@@ -78,13 +78,24 @@ export default function AdminDashboardPage() {
     try {
       setIsLoading(true);
       
-      // Mock client data since we removed the API
-      const totalClients = 1; // Mock data
+      // Fetch actual client data
+      const clientsResponse = await fetch('/api/clients/detailed');
+      const clientsData = await clientsResponse.json();
+      const totalClients = clientsData.clients?.length || 0;
 
       // Fetch links
       const linksResponse = await fetch('/api/admin/links');
       const linksData = await linksResponse.json();
       const activeLinks = linksData.links?.length || 0;
+
+      // Calculate completed and pending onboardings from actual data
+      const completedOnboardings = clientsData.clients?.filter((client: any) => 
+        client.status === 'active' || client.last_onboarding_at
+      ).length || 0;
+      
+      const pendingRequests = clientsData.clients?.filter((client: any) => 
+        client.status === 'pending' || !client.last_onboarding_at
+      ).length || 0;
 
       // Fetch platform connections with assets
       const connectionsResponse = await fetch('/api/admin/platform-connections/assets');
@@ -94,8 +105,8 @@ export default function AdminDashboardPage() {
       setStats({
         totalClients,
         activeLinks,
-        completedOnboardings: Math.floor(totalClients * 0.7), // Mock calculation
-        pendingRequests: Math.floor(totalClients * 0.3) // Mock calculation
+        completedOnboardings,
+        pendingRequests
       });
 
       setPlatformConnections(connections);
@@ -287,43 +298,49 @@ export default function AdminDashboardPage() {
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="relative">
+          <CardContent className="h-[280px] overflow-hidden">
+            <div className="relative h-full">
               {/* Timeline line */}
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-purple-200"></div>
               
-              <div className="space-y-6">
-                {recentActivity.map((activity, index) => (
-                  <div key={activity.id} className="relative flex items-start space-x-4">
-                    {/* Timeline dot */}
-                    <div className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full ${
-                      index === 0 
-                        ? 'bg-purple-500' 
-                        : 'bg-white border-2 border-purple-200'
-                    }`}>
-                      <div className={`${
-                        index === 0 ? 'text-white' : 'text-purple-500'
-                      }`}>
-                        {getActivityIcon(activity.type)}
-                      </div>
-                    </div>
-                    
-                    {/* Activity content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900">
-                          {activity.title}
-                        </p>
-                        <p className="text-xs text-gray-500 ml-4">
-                          {new Date(activity.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {activity.description}
-                      </p>
-                    </div>
+              <div className="h-full overflow-y-auto pr-2 space-y-6">
+                {recentActivity.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500 text-sm">No recent activity</p>
                   </div>
-                ))}
+                ) : (
+                  recentActivity.map((activity, index) => (
+                    <div key={activity.id} className="relative flex items-start space-x-4">
+                      {/* Timeline dot */}
+                      <div className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full ${
+                        index === 0 
+                          ? 'bg-purple-500' 
+                          : 'bg-white border-2 border-purple-200'
+                      }`}>
+                        <div className={`${
+                          index === 0 ? 'text-white' : 'text-purple-500'
+                        }`}>
+                          {getActivityIcon(activity.type)}
+                        </div>
+                      </div>
+                      
+                      {/* Activity content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-gray-900">
+                            {activity.title}
+                          </p>
+                          <p className="text-xs text-gray-500 ml-4">
+                            {new Date(activity.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {activity.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </CardContent>
