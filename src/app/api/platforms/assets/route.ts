@@ -277,18 +277,26 @@ async function fetchMetaAssets(accessToken: string) {
       console.error('Instagram API error:', instagramResponse.status, errorText);
     }
 
-    // Fetch Catalogs (Product Catalogs) - Try different endpoints
+    // Fetch Catalogs (Product Catalogs) - Try multiple endpoints
     console.log('🔍 [META ASSETS] Fetching Meta Catalogs...');
     console.log('🔍 [META ASSETS] Access token length:', accessToken?.length);
-    try {
-      // First try the business account catalogs endpoint
-      const catalogsUrl = `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,catalogs{id,name,vertical}`;
-      console.log('🔍 [META ASSETS] Catalogs URL:', catalogsUrl);
+    
+    // Try multiple catalog endpoints
+    const catalogEndpoints = [
+      `https://graph.facebook.com/v18.0/me/catalogs?access_token=${accessToken}&fields=id,name,vertical`,
+      `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,catalogs{id,name,vertical}`,
+      `https://graph.facebook.com/v18.0/me?access_token=${accessToken}&fields=catalogs{id,name,vertical}`
+    ];
+    
+    for (let i = 0; i < catalogEndpoints.length; i++) {
+      const catalogsUrl = catalogEndpoints[i];
+      console.log(`🔍 [META ASSETS] Trying Catalogs endpoint ${i + 1}:`, catalogsUrl);
       
-      const catalogsResponse = await fetch(catalogsUrl);
-      
-      console.log('🔍 [META ASSETS] Catalogs response status:', catalogsResponse.status);
-      console.log('🔍 [META ASSETS] Catalogs response headers:', Object.fromEntries(catalogsResponse.headers.entries()));
+      try {
+        const catalogsResponse = await fetch(catalogsUrl);
+        
+        console.log(`🔍 [META ASSETS] Catalogs endpoint ${i + 1} response status:`, catalogsResponse.status);
+        console.log(`🔍 [META ASSETS] Catalogs endpoint ${i + 1} response headers:`, Object.fromEntries(catalogsResponse.headers.entries()));
       
       if (catalogsResponse.ok) {
         const catalogsData = await catalogsResponse.json();
@@ -307,30 +315,51 @@ async function fetchMetaAssets(accessToken: string) {
                 console.log('🔍 [META ASSETS] Adding catalog asset:', asset);
                 assets.push(asset);
               });
+            } else if (catalog.id) {
+              // Direct catalog object
+              const asset = {
+                id: catalog.id,
+                name: catalog.name,
+                type: 'catalog',
+                description: `Product Catalog (${catalog.vertical || 'E-commerce'})`
+              };
+              console.log('🔍 [META ASSETS] Adding catalog asset:', asset);
+              assets.push(asset);
             }
           });
+          console.log(`🔍 [META ASSETS] Successfully found catalogs with endpoint ${i + 1}`);
+          break; // Exit loop if we found catalogs
         } else {
-          console.log('🔍 [META ASSETS] No business accounts with catalogs found in response');
+          console.log(`🔍 [META ASSETS] No catalogs found with endpoint ${i + 1}`);
         }
       } else {
         const errorText = await catalogsResponse.text();
-        console.error('🔍 [META ASSETS] Catalogs API error:', catalogsResponse.status, errorText);
+        console.error(`🔍 [META ASSETS] Catalogs endpoint ${i + 1} API error:`, catalogsResponse.status, errorText);
       }
-    } catch (catalogError) {
-      console.error('🔍 [META ASSETS] Error fetching catalogs:', catalogError);
+      } catch (catalogError) {
+        console.error(`🔍 [META ASSETS] Error with catalogs endpoint ${i + 1}:`, catalogError);
+      }
     }
 
-    // Fetch Business Datasets - Try different approach
+    // Fetch Business Datasets - Try multiple endpoints
     console.log('🔍 [META ASSETS] Fetching Meta Business Datasets...');
-    try {
-      // Try to get datasets from business accounts
-      const datasetsUrl = `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,datasets{id,name,description}`;
-      console.log('🔍 [META ASSETS] Datasets URL:', datasetsUrl);
+    
+    // Try multiple dataset endpoints
+    const datasetEndpoints = [
+      `https://graph.facebook.com/v18.0/me/business_datasets?access_token=${accessToken}&fields=id,name,description`,
+      `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,datasets{id,name,description}`,
+      `https://graph.facebook.com/v18.0/me?access_token=${accessToken}&fields=datasets{id,name,description}`
+    ];
+    
+    for (let i = 0; i < datasetEndpoints.length; i++) {
+      const datasetsUrl = datasetEndpoints[i];
+      console.log(`🔍 [META ASSETS] Trying Datasets endpoint ${i + 1}:`, datasetsUrl);
       
-      const datasetsResponse = await fetch(datasetsUrl);
-      
-      console.log('🔍 [META ASSETS] Datasets response status:', datasetsResponse.status);
-      console.log('🔍 [META ASSETS] Datasets response headers:', Object.fromEntries(datasetsResponse.headers.entries()));
+      try {
+        const datasetsResponse = await fetch(datasetsUrl);
+        
+        console.log(`🔍 [META ASSETS] Datasets endpoint ${i + 1} response status:`, datasetsResponse.status);
+        console.log(`🔍 [META ASSETS] Datasets endpoint ${i + 1} response headers:`, Object.fromEntries(datasetsResponse.headers.entries()));
       
       if (datasetsResponse.ok) {
         const datasetsData = await datasetsResponse.json();
@@ -349,17 +378,30 @@ async function fetchMetaAssets(accessToken: string) {
                 console.log('🔍 [META ASSETS] Adding dataset asset:', asset);
                 assets.push(asset);
               });
+            } else if (dataset.id) {
+              // Direct dataset object
+              const asset = {
+                id: dataset.id,
+                name: dataset.name,
+                type: 'business_dataset',
+                description: dataset.description || 'Business Dataset'
+              };
+              console.log('🔍 [META ASSETS] Adding dataset asset:', asset);
+              assets.push(asset);
             }
           });
+          console.log(`🔍 [META ASSETS] Successfully found datasets with endpoint ${i + 1}`);
+          break; // Exit loop if we found datasets
         } else {
-          console.log('🔍 [META ASSETS] No business accounts with datasets found in response');
+          console.log(`🔍 [META ASSETS] No datasets found with endpoint ${i + 1}`);
         }
       } else {
         const errorText = await datasetsResponse.text();
-        console.error('🔍 [META ASSETS] Datasets API error:', datasetsResponse.status, errorText);
+        console.error(`🔍 [META ASSETS] Datasets endpoint ${i + 1} API error:`, datasetsResponse.status, errorText);
       }
-    } catch (datasetError) {
-      console.error('🔍 [META ASSETS] Error fetching datasets:', datasetError);
+      } catch (datasetError) {
+        console.error(`🔍 [META ASSETS] Error with datasets endpoint ${i + 1}:`, datasetError);
+      }
     }
 
     console.log('=== META ASSETS FETCH COMPLETE ===');
