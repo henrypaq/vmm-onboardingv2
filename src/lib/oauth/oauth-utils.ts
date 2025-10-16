@@ -1045,10 +1045,11 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
         }
       } else {
         const errorText = await response.text();
-        console.log('[Google] Google Ads fetch failed:', response.status, errorText);
+        console.error('[Google] Google Ads fetch failed:', response.status, errorText);
+        console.error('[Google] Google Ads API URL:', adsUrl.replace(accessToken, '[TOKEN]'));
       }
     } catch (error) {
-      console.log('[Google] Failed to fetch Google Ads accounts:', error);
+      console.error('[Google] Failed to fetch Google Ads accounts:', error);
     }
 
     // 2. Fetch Analytics properties
@@ -1078,10 +1079,11 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
         }
       } else {
         const errorText = await response.text();
-        console.log('[Google] Analytics fetch failed:', response.status, errorText);
+        console.error('[Google] Analytics fetch failed:', response.status, errorText);
+        console.error('[Google] Analytics API URL:', analyticsUrl.replace(accessToken, '[TOKEN]'));
       }
     } catch (error) {
-      console.log('[Google] Failed to fetch Analytics properties:', error);
+      console.error('[Google] Failed to fetch Analytics properties:', error);
     }
 
     // 3. Fetch Business Profile locations
@@ -1111,10 +1113,11 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
         }
       } else {
         const errorText = await response.text();
-        console.log('[Google] Business Profile fetch failed:', response.status, errorText);
+        console.error('[Google] Business Profile fetch failed:', response.status, errorText);
+        console.error('[Google] Business Profile API URL:', businessUrl.replace(accessToken, '[TOKEN]'));
       }
     } catch (error) {
-      console.log('[Google] Failed to fetch Business Profile locations:', error);
+      console.error('[Google] Failed to fetch Business Profile locations:', error);
     }
 
     // 4. Fetch Tag Manager containers
@@ -1144,10 +1147,11 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
         }
       } else {
         const errorText = await response.text();
-        console.log('[Google] Tag Manager fetch failed:', response.status, errorText);
+        console.error('[Google] Tag Manager fetch failed:', response.status, errorText);
+        console.error('[Google] Tag Manager API URL:', tagmanagerUrl.replace(accessToken, '[TOKEN]'));
       }
     } catch (error) {
-      console.log('[Google] Failed to fetch Tag Manager containers:', error);
+      console.error('[Google] Failed to fetch Tag Manager containers:', error);
     }
 
     // 5. Fetch Search Console sites
@@ -1177,10 +1181,11 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
         }
       } else {
         const errorText = await response.text();
-        console.log('[Google] Search Console fetch failed:', response.status, errorText);
+        console.error('[Google] Search Console fetch failed:', response.status, errorText);
+        console.error('[Google] Search Console API URL:', searchconsoleUrl.replace(accessToken, '[TOKEN]'));
       }
     } catch (error) {
-      console.log('[Google] Failed to fetch Search Console sites:', error);
+      console.error('[Google] Failed to fetch Search Console sites:', error);
     }
 
     // 6. Fetch Merchant Center accounts
@@ -1210,10 +1215,11 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
         }
       } else {
         const errorText = await response.text();
-        console.log('[Google] Merchant Center fetch failed:', response.status, errorText);
+        console.error('[Google] Merchant Center fetch failed:', response.status, errorText);
+        console.error('[Google] Merchant Center API URL:', merchantUrl.replace(accessToken, '[TOKEN]'));
       }
     } catch (error) {
-      console.log('[Google] Failed to fetch Merchant Center accounts:', error);
+      console.error('[Google] Failed to fetch Merchant Center accounts:', error);
     }
 
     // If no assets found, add placeholder
@@ -1226,8 +1232,22 @@ async function fetchGoogleAssets(accessToken: string, scopes: string[]): Promise
       });
     }
     
+    console.log('[Google] ===== ASSET FETCH SUMMARY =====');
     console.log('[Google] Total assets found:', assets.length);
-    console.log('[Google] Asset types:', [...new Set(assets.map(a => a.type))]);
+    console.log('[Google] Asset types found:', [...new Set(assets.map(a => a.type))]);
+    console.log('[Google] Expected asset types: ads_account, analytics_property, business_profile, tag_manager, search_console_site, merchant_center');
+    
+    // Check which asset types are missing
+    const expectedTypes = ['ads_account', 'analytics_property', 'business_profile', 'tag_manager', 'search_console_site', 'merchant_center'];
+    const foundTypes = [...new Set(assets.map(a => a.type))];
+    const missingTypes = expectedTypes.filter(type => !foundTypes.includes(type));
+    
+    if (missingTypes.length > 0) {
+      console.error('[Google] Missing asset types:', missingTypes);
+      console.error('[Google] This suggests API calls failed for these services. Check error logs above.');
+    } else {
+      console.log('[Google] All expected asset types found successfully!');
+    }
     
     console.log('[Google] Final assets list:', assets);
   } catch (error) {
