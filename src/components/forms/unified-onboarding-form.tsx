@@ -495,7 +495,23 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     const requestedScopes = linkData.requested_permissions[platformId];
     console.log(`🔍 [SCOPE FILTER] Requested scopes for ${platformId}:`, requestedScopes);
 
-    // Map asset types to required scopes
+    // For Google platform, show all assets if any Google scopes are requested
+    if (platformId === 'google') {
+      const hasGoogleScopes = requestedScopes.some(scope => 
+        scope.includes('googleapis.com') || 
+        scope.includes('google') ||
+        scope.includes('analytics') ||
+        scope.includes('adwords') ||
+        scope.includes('tagmanager') ||
+        scope.includes('webmasters') ||
+        scope.includes('content') ||
+        scope.includes('business')
+      );
+      console.log(`🔍 [SCOPE FILTER] Google platform - has Google scopes:`, hasGoogleScopes);
+      return hasGoogleScopes;
+    }
+
+    // Map asset types to required scopes (for Meta and other platforms)
     const assetTypeToScopes: Record<string, string[]> = {
       // Meta asset types
       'page': ['pages_show_list', 'pages_read_engagement'],
@@ -503,7 +519,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       'catalog': ['catalog_management', 'business_management'],
       'business_dataset': ['business_management', 'ads_read'],
       'instagram_account': ['instagram_basic', 'pages_show_list'],
-      // Google asset types
+      // Google asset types (kept for reference but not used due to flexible filtering above)
       'ads_account': ['https://www.googleapis.com/auth/adwords'],
       'analytics_property': ['https://www.googleapis.com/auth/analytics.readonly'],
       'business_profile': ['https://www.googleapis.com/auth/business.manage'],
@@ -1262,9 +1278,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                             // Handle Shopify sub-step navigation
                             if (platforms[currentPlatformIndex]?.id === 'shopify' && shopifyStep === 2) {
                               setShopifyStep(1);
+                            } else if (currentPlatformIndex === 0) {
+                              // Go back to client info step
+                              setCurrentStep('info');
                             } else {
                               // Handle platform-level navigation
-                              setCurrentPlatformIndex(Math.max(0, currentPlatformIndex - 1));
+                              setCurrentPlatformIndex(currentPlatformIndex - 1);
                             }
                           }}
                           variant="outline"
