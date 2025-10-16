@@ -67,6 +67,14 @@ export async function GET() {
       })));
     }
     
+    if (clients && clients.length > 0) {
+      console.log('[Detailed Clients API] All available clients:', clients.map(c => ({ 
+        id: c.id, 
+        email: c.email,
+        full_name: c.full_name 
+      })));
+    }
+    
     // Get client platform connections
     const { data: connections, error: connectionsError } = await supabaseAdmin
       .from('client_platform_connections')
@@ -129,6 +137,7 @@ export async function GET() {
 
       const constructedUrl = link ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${link.token}` : null;
       console.log(`[Detailed Clients API] Client ${client.id} final linkUrl:`, constructedUrl);
+      console.log(`[Detailed Clients API] Client ${client.id} onboardingRequest with link:`, request ? { ...request, link: link } : null);
       
       return {
         ...client,
@@ -138,7 +147,10 @@ export async function GET() {
         platforms: platforms,
         status: status,
         connectedDate: request?.submitted_at || client.created_at,
-        onboardingRequest: request
+        onboardingRequest: request ? {
+          ...request,
+          link: link
+        } : null
       };
     }) || [];
 
