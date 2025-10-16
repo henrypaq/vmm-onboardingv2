@@ -256,34 +256,55 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
               const isAvailable = availableScopesCount > 0;
               
               return (
-                <div key={platform.id} className={`border rounded-lg p-4 ${!isAvailable ? 'opacity-50 bg-gray-50' : ''}`}>
-                  <div className="flex items-center space-x-3 mb-3">
-                    <Checkbox
-                      id={`platform-${platform.id}`}
-                      checked={isSelected}
-                      disabled={!isAvailable}
-                      onCheckedChange={(checked) => handlePlatformToggle(platform.id, checked as boolean)}
-                    />
-                    <div className="p-2 rounded-lg">
+                <div key={platform.id} className={`border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-md ${
+                  isSelected 
+                    ? 'border-primary bg-primary/5 shadow-md' 
+                    : !isAvailable 
+                      ? 'border-gray-200 bg-gray-50 opacity-50' 
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="relative">
+                      <Checkbox
+                        id={`platform-${platform.id}`}
+                        checked={isSelected}
+                        disabled={!isAvailable}
+                        onCheckedChange={(checked) => handlePlatformToggle(platform.id, checked as boolean)}
+                        className="w-5 h-5 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
+                      {isSelected && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white"></div>
+                      )}
+                    </div>
+                    <div className={`p-3 rounded-xl transition-colors ${
+                      isSelected ? 'bg-primary/10' : 'bg-gray-50'
+                    }`}>
                       {getPlatformLogo(platform.id)}
                     </div>
-                    <div>
-                      <h3 className="font-medium">{platform.name}</h3>
-                      <p className="text-sm text-gray-500">
+                    <div className="flex-1">
+                      <h3 className={`font-semibold text-lg transition-colors ${
+                        isSelected ? 'text-primary' : 'text-gray-900'
+                      }`}>
+                        {platform.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
                         {isAvailable 
                           ? `${availableScopesCount} scopes available for testing`
                           : 'No scopes available for testing'
                         }
                       </p>
                       {!isAvailable && (
-                        <p className="text-xs text-orange-600 mt-1">Coming Soon</p>
+                        <p className="text-xs text-orange-600 mt-1 font-medium">Coming Soon</p>
                       )}
                     </div>
                   </div>
                   
                   {isSelected && (
-                    <div className="ml-8 space-y-2">
-                      <p className="text-sm font-medium text-gray-700">Select OAuth Scopes:</p>
+                    <div className="ml-12 space-y-4 border-t border-gray-200 pt-4">
+                      <p className="text-sm font-semibold text-gray-700 flex items-center">
+                        <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
+                        Select OAuth Scopes
+                      </p>
                       {platform.id === 'google' && (
                         <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
                           <p className="text-sm text-blue-800 font-medium">
@@ -299,19 +320,31 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
                             const isGroupAvailable = groupData.available;
                             
                             return (
-                              <div key={groupName} className="border rounded-lg p-3">
-                                <div className="flex items-start space-x-2">
-                                  <Checkbox
-                                    id={`meta-group-${groupName}`}
-                                    checked={isGroupSelected}
-                                    onCheckedChange={(checked) => 
-                                      handleMetaAssetGroupToggle(groupName, checked as boolean)
-                                    }
-                                  />
+                              <div key={groupName} className={`border-2 rounded-lg p-4 transition-all duration-200 ${
+                                isGroupSelected 
+                                  ? 'border-primary bg-primary/5' 
+                                  : 'border-gray-200 bg-white hover:border-gray-300'
+                              }`}>
+                                <div className="flex items-start space-x-3">
+                                  <div className="relative">
+                                    <Checkbox
+                                      id={`meta-group-${groupName}`}
+                                      checked={isGroupSelected}
+                                      onCheckedChange={(checked) => 
+                                        handleMetaAssetGroupToggle(groupName, checked as boolean)
+                                      }
+                                      className="w-4 h-4 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                    />
+                                    {isGroupSelected && (
+                                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border border-white"></div>
+                                    )}
+                                  </div>
                                   <div className="flex-1">
                                     <label 
                                       htmlFor={`meta-group-${groupName}`}
-                                      className="text-sm font-medium cursor-pointer"
+                                      className={`text-sm font-semibold cursor-pointer transition-colors ${
+                                        isGroupSelected ? 'text-primary' : 'text-gray-900'
+                                      }`}
                                     >
                                       {groupName}
                                     </label>
@@ -362,23 +395,35 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
                             }
                             
                             return (
-                              <div key={scope} className="border rounded-lg p-3">
-                                <div className="flex items-start space-x-2">
-                                  <Checkbox
-                                    id={`scope-${platform.id}-${scope}`}
-                                    checked={isScopeSelected}
-                                    onCheckedChange={(checked) => 
-                                      handleScopeToggle(platform.id, scope, checked as boolean)
-                                    }
-                                  />
+                              <div key={scope} className={`border-2 rounded-lg p-4 transition-all duration-200 ${
+                                isScopeSelected 
+                                  ? 'border-primary bg-primary/5' 
+                                  : 'border-gray-200 bg-white hover:border-gray-300'
+                              }`}>
+                                <div className="flex items-start space-x-3">
+                                  <div className="relative">
+                                    <Checkbox
+                                      id={`scope-${platform.id}-${scope}`}
+                                      checked={isScopeSelected}
+                                      onCheckedChange={(checked) => 
+                                        handleScopeToggle(platform.id, scope, checked as boolean)
+                                      }
+                                      className="w-4 h-4 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                    />
+                                    {isScopeSelected && (
+                                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border border-white"></div>
+                                    )}
+                                  </div>
                                   <div className="flex-1">
                                     <label 
                                       htmlFor={`scope-${platform.id}-${scope}`}
-                                      className="text-sm font-medium cursor-pointer"
+                                      className={`text-sm font-semibold cursor-pointer transition-colors ${
+                                        isScopeSelected ? 'text-primary' : 'text-gray-900'
+                                      }`}
                                     >
                                       {getGoogleServiceName(scope)}
                                     </label>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-gray-500 mt-1">
                                       {getScopeDescription(platform.id as keyof typeof scopes, scope)}
                                     </p>
                                   </div>
@@ -395,28 +440,46 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
                             const isScopeAvailable = getAvailableScopesForProvider(platform.id as keyof typeof scopes).includes(scope);
                             
                             return (
-                              <div key={scope} className={`flex items-start space-x-2 ${!isScopeAvailable ? 'opacity-50' : ''}`}>
-                                <Checkbox
-                                  id={`scope-${platform.id}-${scope}`}
-                                  checked={isScopeSelected}
-                                  disabled={!isScopeAvailable}
-                                  onCheckedChange={(checked) => 
-                                    isScopeAvailable ? handleScopeToggle(platform.id, scope, checked as boolean) : undefined
-                                  }
-                                />
-                                <div className="flex-1">
-                                  <label 
-                                    htmlFor={`scope-${platform.id}-${scope}`}
-                                    className={`text-sm font-medium ${isScopeAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                                  >
-                                    {scope}
-                                    {!isScopeAvailable && (
-                                      <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
+                              <div key={scope} className={`border-2 rounded-lg p-4 transition-all duration-200 ${
+                                isScopeSelected 
+                                  ? 'border-primary bg-primary/5' 
+                                  : !isScopeAvailable
+                                    ? 'border-gray-200 bg-gray-50 opacity-50'
+                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                              }`}>
+                                <div className="flex items-start space-x-3">
+                                  <div className="relative">
+                                    <Checkbox
+                                      id={`scope-${platform.id}-${scope}`}
+                                      checked={isScopeSelected}
+                                      disabled={!isScopeAvailable}
+                                      onCheckedChange={(checked) => 
+                                        isScopeAvailable ? handleScopeToggle(platform.id, scope, checked as boolean) : undefined
+                                      }
+                                      className="w-4 h-4 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                    />
+                                    {isScopeSelected && (
+                                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border border-white"></div>
                                     )}
-                                  </label>
-                                  <p className="text-xs text-gray-500">
-                                    {getScopeDescription(platform.id as keyof typeof scopes, scope)}
-                                  </p>
+                                  </div>
+                                  <div className="flex-1">
+                                    <label 
+                                      htmlFor={`scope-${platform.id}-${scope}`}
+                                      className={`text-sm font-semibold ${
+                                        isScopeAvailable 
+                                          ? `cursor-pointer transition-colors ${isScopeSelected ? 'text-primary' : 'text-gray-900'}`
+                                          : 'cursor-not-allowed text-gray-500'
+                                      }`}
+                                    >
+                                      {scope}
+                                      {!isScopeAvailable && (
+                                        <span className="ml-2 text-xs text-orange-600 font-normal">(Coming Soon)</span>
+                                      )}
+                                    </label>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {getScopeDescription(platform.id as keyof typeof scopes, scope)}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             );

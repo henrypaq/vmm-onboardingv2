@@ -1052,6 +1052,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Can't find the collaborator code?</strong>
                       </p>
+                      <p className="text-sm text-gray-600">
+                        Go to Settings → Users and permissions → Collaborator access → Generate collaborator request code
+                      </p>
                     </div>
                     <div className="flex justify-center mt-6">
                       <Button
@@ -1068,9 +1071,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                         Enter your Collaborator Request Code
                                       </h3>
                                       <div className="space-y-2">
-                                        <Label htmlFor="collaboratorCode" className="text-sm font-medium text-gray-700">
-                                          Collaborator Request Code
-                                        </Label>
                                         <Input
                                           id="collaboratorCode"
                                           value={shopifyData.collaboratorCode}
