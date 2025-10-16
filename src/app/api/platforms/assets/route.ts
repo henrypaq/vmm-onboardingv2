@@ -279,13 +279,16 @@ async function fetchMetaAssets(accessToken: string) {
 
     // Fetch Catalogs (Product Catalogs) - Try different endpoints
     console.log('🔍 [META ASSETS] Fetching Meta Catalogs...');
+    console.log('🔍 [META ASSETS] Access token length:', accessToken?.length);
     try {
       // First try the business account catalogs endpoint
-      const catalogsResponse = await fetch(
-        `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,catalogs{id,name,vertical}`
-      );
+      const catalogsUrl = `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,catalogs{id,name,vertical}`;
+      console.log('🔍 [META ASSETS] Catalogs URL:', catalogsUrl);
+      
+      const catalogsResponse = await fetch(catalogsUrl);
       
       console.log('🔍 [META ASSETS] Catalogs response status:', catalogsResponse.status);
+      console.log('🔍 [META ASSETS] Catalogs response headers:', Object.fromEntries(catalogsResponse.headers.entries()));
       
       if (catalogsResponse.ok) {
         const catalogsData = await catalogsResponse.json();
@@ -321,11 +324,13 @@ async function fetchMetaAssets(accessToken: string) {
     console.log('🔍 [META ASSETS] Fetching Meta Business Datasets...');
     try {
       // Try to get datasets from business accounts
-      const datasetsResponse = await fetch(
-        `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,datasets{id,name,description}`
-      );
+      const datasetsUrl = `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,datasets{id,name,description}`;
+      console.log('🔍 [META ASSETS] Datasets URL:', datasetsUrl);
+      
+      const datasetsResponse = await fetch(datasetsUrl);
       
       console.log('🔍 [META ASSETS] Datasets response status:', datasetsResponse.status);
+      console.log('🔍 [META ASSETS] Datasets response headers:', Object.fromEntries(datasetsResponse.headers.entries()));
       
       if (datasetsResponse.ok) {
         const datasetsData = await datasetsResponse.json();
@@ -360,6 +365,18 @@ async function fetchMetaAssets(accessToken: string) {
     console.log('=== META ASSETS FETCH COMPLETE ===');
     console.log('Total assets found:', assets.length);
     console.log('Assets:', assets);
+    
+    // Debug: Log each asset type found
+    const assetTypes = [...new Set(assets.map(asset => asset.type))];
+    console.log('🔍 [META ASSETS] Final asset types found:', assetTypes);
+    assets.forEach((asset, index) => {
+      console.log(`🔍 [META ASSETS] Final asset ${index + 1}:`, {
+        id: asset.id,
+        name: asset.name,
+        type: asset.type,
+        description: asset.description
+      });
+    });
 
     return assets;
   } catch (error) {
