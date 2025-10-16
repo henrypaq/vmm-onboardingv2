@@ -268,20 +268,13 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   
   // Handle Shopify store ID submission
   const handleShopifyStoreIdSubmit = () => {
-    if (!shopifyData.storeId.trim()) {
-      toast.error('Please enter your Shopify store ID');
-      return;
+    if (shopifyData.storeId.trim()) {
+      setShopifyStep(2);
     }
-    setShopifyStep(2);
   };
   
   // Handle Shopify completion
   const handleShopifyComplete = async () => {
-    if (!shopifyData.collaboratorCode.trim()) {
-      toast.error('Please enter your collaborator code');
-      return;
-    }
-    
     try {
       // Get the client ID from the current request
       const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
@@ -294,8 +287,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         throw new Error('Client ID not found');
       }
 
-      // Save Shopify data to database
-      const saveResponse = await fetch('/api/integrations/shopify/verify', {
+      // Call the Shopify verification API
+      const verifyResponse = await fetch('/api/integrations/shopify/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -307,13 +300,13 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         }),
       });
 
-      if (!saveResponse.ok) {
-        const errorData = await saveResponse.json();
-        throw new Error(errorData.error || 'Failed to save Shopify store information');
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json();
+        throw new Error(errorData.error || 'Failed to verify Shopify store access');
       }
 
-      const saveData = await saveResponse.json();
-      console.log('Shopify data saved successfully:', saveData);
+      const verifyData = await verifyResponse.json();
+      console.log('Shopify verification successful:', verifyData);
 
       // Mark platform as connected
       setConnectionStatus(prev => ({
@@ -328,18 +321,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       });
       setShopifyStep(1);
       
-      toast.success('Shopify store information saved successfully.');
-      
-      // Move to next platform
-      if (currentPlatformIndex < platforms.length - 1) {
-        setCurrentPlatformIndex(currentPlatformIndex + 1);
-      } else if (allPlatformsConnected()) {
-        setCurrentStep('complete');
-      }
-      
     } catch (error) {
-      console.error('Shopify save error:', error);
-      toast.error(`Failed to save Shopify store information: ${error.message}`);
+      console.error('Shopify verification error:', error);
+      toast.error(`Failed to verify Shopify store access: ${error.message}`);
     }
   };
   
@@ -947,21 +931,21 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                         !isConnected ? (
                           <div className="space-y-4">
                             {shopifyStep === 1 ? (
-                              // Step 1: Store ID
+                              // Step 1: Store ID Entry
                               <div>
                                 <div className="text-center mb-6">
                                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
                                     Enter Your Shopify Store ID
                                   </h3>
                                   <p className="text-gray-600">
-                                    We need your store ID to connect your Shopify account
+                                    Enter your store ID to continue with the connection process.
                                   </p>
                                 </div>
                                 
                                 <div className="space-y-4">
                                   <div>
                                     <Label htmlFor="storeId" className="text-sm font-medium text-gray-700">
-                                      Store ID
+                                      Shopify Store ID
                                     </Label>
                                     <div className="flex items-center space-x-2">
                                       <span className="text-sm font-medium text-gray-700">
@@ -992,26 +976,25 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                   </div>
                                 </div>
 
-                                <div className="flex justify-end space-x-3 mt-8">
+                                <div className="flex space-x-4 mt-8">
                                   <Button 
                                     onClick={() => setCurrentPlatformIndex(Math.max(0, currentPlatformIndex - 1))}
                                     variant="outline"
+                                    className="flex-1"
                                   >
-                                    <ArrowLeft className="mr-2 h-4 w-4" />
                                     Back
                                   </Button>
                                   <Button 
                                     onClick={handleShopifyStoreIdSubmit}
                                     disabled={!shopifyData.storeId.trim()}
-                                    className="gradient-primary"
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     Continue
-                                    <ArrowRight className="ml-2 h-4 w-4" />
                                   </Button>
                                 </div>
                               </div>
                             ) : (
-                              // Step 2: Collaborator Code
+                              // Step 2: Collaborator Code Entry
                               <div>
                                 <div className="space-y-6">
                                   <div>
@@ -1019,7 +1002,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                       1. Open your store's Users and permissions settings:
                                     </h3>
                                     <Button
-                                      onClick={() => window.open(`https://admin.shopify.com/store/${shopifyData.storeId}/settings/account`, '_blank')}
+                                      onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
                                       className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md"
                                     >
                                       OPEN SHOPIFY
@@ -1028,38 +1011,41 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
 
                                   <div>
                                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                      2. Find your Collaborator Code and enter it below:
+                                      2. Enter your Collaborator Request Code
                                     </h3>
                                     <div className="space-y-2">
                                       <Label htmlFor="collaboratorCode" className="text-sm font-medium text-gray-700">
-                                        Collaborator Code
+                                        Collaborator Request Code
                                       </Label>
                                       <Input
                                         id="collaboratorCode"
                                         value={shopifyData.collaboratorCode}
                                         onChange={(e) => setShopifyData(prev => ({ ...prev, collaboratorCode: e.target.value }))}
                                         placeholder="Enter your collaborator code"
-                                        className="w-full border border-gray-300 rounded-md"
+                                        className="w-full"
                                       />
+                                      <div className="flex items-start space-x-2 text-sm text-gray-600">
+                                        <div className="w-4 h-4 mt-0.5 text-gray-500">ℹ</div>
+                                        <p>Note: if no code is required enter 'none'</p>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
 
-                                <div className="flex justify-end space-x-3 mt-8">
+                                <div className="flex space-x-4 mt-8">
                                   <Button 
                                     onClick={() => setShopifyStep(1)}
                                     variant="outline"
+                                    className="flex-1"
                                   >
-                                    <ArrowLeft className="mr-2 h-4 w-4" />
                                     Back
                                   </Button>
                                   <Button 
                                     onClick={handleShopifyComplete}
-                                    disabled={!shopifyData.collaboratorCode.trim()}
-                                    className="gradient-primary"
+                                    disabled={!shopifyData.collaboratorCode}
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
-                                    Complete Connection
-                                    <CheckCircle className="ml-2 h-4 w-4" />
+                                    Complete
                                   </Button>
                                 </div>
                               </div>
