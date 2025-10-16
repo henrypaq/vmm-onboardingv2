@@ -1,85 +1,111 @@
-import { NextRequest } from 'next/server';
-import { getSupabaseClient, executeSupabaseOperation, handleApiRoute, safeJsonParse } from '@/lib/api/api-utils';
-import { updateClient } from '@/lib/db/database';
+import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseAdmin } from '@/lib/supabase/server';
+import { updateClient, deleteAdminPlatformConnectionByAdminAndPlatform } from '@/lib/db/database';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ clientId: string }> }
 ) {
-  return handleApiRoute('Get Client Details', async () => {
+  try {
+    const supabase = getSupabaseAdmin();
     const { clientId } = await params;
-    const supabase = await getSupabaseClient();
 
-    const client = await executeSupabaseOperation(
-      () => supabase
-        .from('clients')
-        .select('*')
-        .eq('id', clientId)
-        .single(),
-      'Fetch client details'
+    console.log('[Client Details API] Fetching client details for:', clientId);
+
+    // Fetch client details
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', clientId)
+      .single();
+
+    if (clientError) {
+      console.error('[Client Details API] Error fetching client:', clientError);
+      return NextResponse.json(
+        { error: 'Client not found' },
+        { status: 404 }
+      );
+    }
+
+    console.log('[Client Details API] Client found:', client);
+
+    return NextResponse.json({
+      success: true,
+      client
+    });
+
+  } catch (error) {
+    console.error('[Client Details API] Error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
     );
-
-    return { client };
-  });
+  }
 }
 
+// Rename/update a client
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ clientId: string }> }
 ) {
-  return handleApiRoute('Update Client', async () => {
+  try {
     const { clientId } = await params;
-    const body = await safeJsonParse<{ full_name?: string; company_name?: string }>(request);
-    
+    const body = await request.json();
     const updates: any = {};
     if (typeof body.full_name === 'string') updates.full_name = body.full_name;
     if (typeof body.company_name === 'string') updates.company_name = body.company_name;
 
     if (Object.keys(updates).length === 0) {
-      throw new Error('No valid fields to update');
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
     }
 
     const updated = await updateClient(clientId, updates);
-    return { client: updated };
-  });
+    return NextResponse.json({ success: true, client: updated });
+  } catch (error) {
+    console.error('[Client PATCH] Error:', error);
+    return NextResponse.json({ error: 'Failed to update client' }, { status: 500 });
+  }
 }
 
+// Delete a client and their platform connections
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ clientId: string }> }
 ) {
-  return handleApiRoute('Delete Client', async () => {
+  try {
+    const supabase = getSupabaseAdmin();
     const { clientId } = await params;
-    const supabase = await getSupabaseClient();
 
     // Get client to know admin owner
-    const client = await executeSupabaseOperation(
-      () => supabase
-        .from('clients')
-        .select('id, admin_id')
-        .eq('id', clientId)
-        .single(),
-      'Fetch client for deletion'
-    );
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id, admin_id')
+      .eq('id', clientId)
+      .single();
+
+    // Best-effort: mark any admin connections for this admin as inactive for safety (optional)
+    // Skipped: handled per-account via UI normally
 
     // Delete client platform connections
-    await executeSupabaseOperation(
-      () => supabase
-        .from('client_platform_connections')
-        .delete()
-        .eq('client_id', clientId),
-      'Delete platform connections'
-    );
+    const { error: delConnErr } = await supabase
+      .from('client_platform_connections')
+      .delete()
+      .eq('client_id', clientId);
+    if (delConnErr) console.warn('[Client DELETE] Failed deleting platform connections', delConnErr);
 
     // Delete the client
-    await executeSupabaseOperation(
-      () => supabase
-        .from('clients')
-        .delete()
-        .eq('id', clientId),
-      'Delete client'
-    );
+    const { error: delClientErr } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', clientId);
+    if (delClientErr) {
+      console.error('[Client DELETE] Failed deleting client', delClientErr);
+      return NextResponse.json({ error: 'Failed to delete client' }, { status: 500 });
+    }
 
-    return { success: true };
-  });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[Client DELETE] Error:', error);
+    return NextResponse.json({ error: 'Failed to delete client' }, { status: 500 });
+  }
 }

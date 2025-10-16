@@ -318,7 +318,7 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
           </div>
 
           {/* Status */}
-          <div className="min-w-0 flex-[1.5]">
+          <div className="min-w-0 flex-[1.5] flex justify-center">
             <Badge 
               variant={client.status === 'active' ? 'default' : 'secondary'}
               className={`text-xs ${
@@ -332,7 +332,7 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
           </div>
 
           {/* Platforms */}
-          <div className="min-w-0 flex-[2]">
+          <div className="min-w-0 flex-[2] flex justify-center">
             <div className="flex flex-wrap gap-1.5">
               {(client.platforms || []).length > 0 ? (
                 client.platforms?.map((platform, index) => (
@@ -350,7 +350,7 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
           </div>
 
           {/* Date */}
-          <div className="min-w-0 flex-[1] text-right">
+          <div className="min-w-0 flex-[1] flex justify-center">
             <p className="text-sm text-foreground">
               {client.connectedDate ? formatDate(client.connectedDate) : formatDate(client.created_at)}
             </p>
@@ -669,7 +669,7 @@ export default function ClientsPage() {
               <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Client</p>
             </div>
             <div className="flex-[4]">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Link</p>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Sign Up Link</p>
             </div>
             <div className="flex-[1.5] flex justify-center">
               <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Status</p>

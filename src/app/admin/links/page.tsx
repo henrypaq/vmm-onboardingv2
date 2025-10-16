@@ -510,10 +510,10 @@ function LinksPageContent() {
           <div className="flex-[2.5]">
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Link Name</p>
           </div>
-          <div className="flex-[3.5]">
+          <div className="flex-[4]">
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">URL</p>
           </div>
-          <div className="flex-[1.5] flex justify-center">
+          <div className="flex-[1.2] flex justify-center">
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Platforms</p>
           </div>
           <div className="flex-[1] flex justify-center">
@@ -567,7 +567,7 @@ function LinksPageContent() {
                     </div>
 
                     {/* URL Display */}
-                    <div className="min-w-0 flex-[3.5]">
+                    <div className="min-w-0 flex-[4]">
                       <div className="relative group max-w-2xl">
                         <div 
                           className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 pr-20 cursor-pointer hover:bg-gray-100 transition-colors"
@@ -609,7 +609,7 @@ function LinksPageContent() {
                             </div>
 
                     {/* Platforms */}
-                    <div className="min-w-0 flex-[1.5]">
+                    <div className="min-w-0 flex-[1.2]">
                       <div className="flex flex-wrap gap-1 items-center justify-center">
                         {link.platforms.map((platform) => (
                           <div key={platform} className="w-5 h-5 flex items-center justify-center flex-shrink-0">
