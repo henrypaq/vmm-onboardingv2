@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Save, Bell, Shield, Globe, Plus, Trash2 } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 

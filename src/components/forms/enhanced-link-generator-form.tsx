@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 import { scopes, getScopesForProvider, getScopeDescription, getAvailableScopesForProvider, getGoogleScopesWithRequired, getGoogleServiceName, metaAssetGroups, areAllSubScopesSelected } from '@/lib/scopes';
+import { Globe } from 'lucide-react';
 
 interface EnhancedLinkGeneratorFormProps {
   onLinkGenerated: (link: { url: string; token: string; platforms: string[]; requestedScopes: Record<string, string[]> }) => void;

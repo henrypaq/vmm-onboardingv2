@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 import { getScopeDescription, scopes } from '@/lib/scopes';
 import { ArrowRight, ArrowLeft, ExternalLink, CheckCircle, Users, Search, Video, ShoppingBag, Globe } from 'lucide-react';

@@ -244,7 +244,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl p-8 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="bg-white rounded-lg p-8 max-w-7xl w-full mx-4 max-h-[95vh] overflow-y-auto shadow-xl border border-gray-200">
           <div className="flex items-center justify-center py-12">
             <RefreshCw className="h-8 w-8 animate-spin text-primary" />
             <span className="ml-3 text-gray-600">Loading client details...</span>
@@ -257,7 +257,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   if (error || !client) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl p-8 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="bg-white rounded-lg p-8 max-w-7xl w-full mx-4 max-h-[95vh] overflow-y-auto shadow-xl border border-gray-200">
           <div className="text-center py-12">
             <p className="text-red-600 mb-6 text-lg">{error || 'Client not found'}</p>
             <Button onClick={onClose} variant="outline" className="hover:bg-primary/10 hover:border-primary/30">
@@ -271,7 +271,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
+      <div className="bg-white rounded-lg p-8 max-w-7xl w-full mx-4 max-h-[95vh] overflow-y-auto shadow-xl border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -284,7 +284,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Personal Information */}
-          <Card className="hover:shadow-lg transition-shadow duration-200">
+          <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-200">
             <CardHeader>
               <CardTitle className="flex items-center text-lg">
                 <User className="h-5 w-5 mr-2 text-primary" />
@@ -293,30 +293,24 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-gray-500">Full Name</label>
                 <p className="text-lg font-semibold text-gray-900">{client.full_name || 'Not provided'}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Email Address</label>
                 <p className="text-lg text-gray-900">{client.email}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Company</label>
                 <p className="text-lg text-gray-900">{client.company_name || 'Not provided'}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Status</label>
-                <div className="mt-2">
-                  <Badge variant={getStatusVariant(client.status)} className="text-sm px-3 py-1">
-                    {client.status}
-                  </Badge>
-                </div>
+                <Badge variant={getStatusVariant(client.status)} className="text-sm px-3 py-1">
+                  {client.status}
+                </Badge>
               </div>
             </CardContent>
           </Card>
 
           {/* Connection Information */}
-          <Card className="hover:shadow-lg transition-shadow duration-200">
+          <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-200">
             <CardHeader>
               <CardTitle className="flex items-center text-lg">
                 <Calendar className="h-5 w-5 mr-2 text-primary" />
@@ -325,43 +319,38 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-gray-500">Account Created</label>
                 <p className="text-lg text-gray-900">{formatDate(client.created_at)}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Last Onboarding</label>
                 <p className="text-lg text-gray-900">
                   {client.last_onboarding_at ? formatDate(client.last_onboarding_at) : 'Never'}
                 </p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Onboarding Link Used</label>
-                <div className="mt-2">
-                  {onboardingRequest?.link ? (
-                    <div className="space-y-2">
-                      <Badge variant="outline" className="font-mono text-sm px-3 py-1">
-                        {onboardingRequest.link.token.substring(0, 12)}...
-                      </Badge>
-                      {onboardingRequest.link.link_name && (
-                        <p className="text-sm text-gray-600">{onboardingRequest.link.link_name}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">No onboarding request recorded</p>
-                  )}
-                </div>
+                {onboardingRequest?.link ? (
+                  <div className="space-y-2">
+                    <Badge variant="outline" className="font-mono text-sm px-3 py-1">
+                      {onboardingRequest.link.token.substring(0, 12)}...
+                    </Badge>
+                    {onboardingRequest.link.link_name && (
+                      <p className="text-sm text-gray-600">{onboardingRequest.link.link_name}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No onboarding request recorded</p>
+                )}
               </div>
             </CardContent>
           </Card>
 
           {/* Platform Connections */}
-          <Card className="lg:col-span-2 hover:shadow-lg transition-shadow duration-200">
+          <Card className="lg:col-span-2 hover:shadow-md transition-shadow duration-200 border border-gray-200">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center text-lg">
                   <LinkIcon className="h-5 w-5 mr-2 text-primary" />
-                Platform Connections
-              </CardTitle>
+                  Platform Connections
+                </CardTitle>
                 <Button
                   onClick={testAllAssets}
                   disabled={isTestingAllAssets || platformConnections.length === 0}
@@ -387,14 +376,11 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
               {platformConnections.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">No platform connections found</p>
-                  <p className="text-sm text-gray-400 mt-2">
-                    This client hasn't connected any platforms yet
-                  </p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {platformConnections.map((connection) => (
-                    <div key={connection.id} className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow duration-200">
+                    <div key={connection.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-4">
                           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-gray-50">
@@ -437,7 +423,6 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       
                       {connection.scopes && connection.scopes.length > 0 && (
                         <div className="mb-4">
-                          <label className="text-sm font-medium text-gray-500 mb-2 block">Granted Permissions</label>
                           <div className="flex flex-wrap gap-2">
                             {connection.scopes.map((scope, index) => (
                               <Badge key={index} variant="outline" className="text-xs px-2 py-1">
@@ -453,9 +438,8 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                         const assets = connection.assets;
                         return connection.platform === 'google' || (assets && assets.length > 0);
                       })() ? (
-                                    <div>
-                          <label className="text-sm font-medium text-gray-500 mb-2 block">Available Assets</label>
-                                  <div className="space-y-2">
+                        <div>
+                          <div className="space-y-2">
                             {connection.assets?.map((asset: Asset, index: number) => (
                               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div>
