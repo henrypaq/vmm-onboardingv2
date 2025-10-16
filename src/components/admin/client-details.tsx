@@ -339,9 +339,37 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                 <div className="mt-2">
                   {onboardingRequest?.link ? (
                     <div className="space-y-2">
-                      <Badge variant="outline" className="font-mono text-sm px-3 py-1">
-                        {onboardingRequest.link.token.substring(0, 12)}...
-                      </Badge>
+                      <div className="relative group">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <Input
+                                readOnly
+                                value={`${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${onboardingRequest.link.token}`}
+                                className="text-sm font-mono bg-transparent border-none p-0 h-auto focus:ring-0 focus:outline-none cursor-pointer"
+                                onClick={(e) => {
+                                  e.currentTarget.select();
+                                  navigator.clipboard.writeText(e.currentTarget.value);
+                                  toast.success('Link copied to clipboard');
+                                }}
+                              />
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const fullUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${onboardingRequest.link.token}`;
+                                navigator.clipboard.writeText(fullUrl);
+                                toast.success('Link copied to clipboard');
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                       {onboardingRequest.link.link_name && (
                         <p className="text-sm text-gray-600">{onboardingRequest.link.link_name}</p>
                       )}

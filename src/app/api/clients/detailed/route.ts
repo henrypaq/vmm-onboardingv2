@@ -69,6 +69,9 @@ export async function GET() {
         console.log(`[Detailed Clients API] Available links:`, links?.map(l => ({ id: l.id, token: l.token, link_name: l.link_name })));
       } else if (!request) {
         console.log(`[Detailed Clients API] Client ${client.id} has no onboarding request`);
+      } else if (link) {
+        const constructedUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${link.token}`;
+        console.log(`[Detailed Clients API] Client ${client.id} link constructed:`, constructedUrl);
       }
       
       // Find platform connections for this client
