@@ -1019,9 +1019,22 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
               Onboarding Complete!
             </h2>
-            <p className="text-gray-600 text-sm">
-              Thank you for connecting your platforms. You'll be redirected shortly.
+            <p className="text-gray-600 text-sm mb-6">
+              Thank you for connecting your platforms. You'll be redirected to your dashboard shortly.
             </p>
+            <div className="flex justify-center">
+              <Button
+                onClick={() => {
+                  // Redirect to client dashboard
+                  window.location.href = '/client';
+                }}
+                className="gradient-primary"
+                size="lg"
+              >
+                Go to Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
           </div>

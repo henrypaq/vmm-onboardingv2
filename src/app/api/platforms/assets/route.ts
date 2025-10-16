@@ -277,6 +277,76 @@ async function fetchMetaAssets(accessToken: string) {
       console.error('Instagram API error:', instagramResponse.status, errorText);
     }
 
+    // Fetch Catalogs (Product Catalogs)
+    console.log('🔍 [META ASSETS] Fetching Meta Catalogs...');
+    try {
+      const catalogsResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me/catalogs?access_token=${accessToken}&fields=id,name,vertical`
+      );
+      
+      console.log('🔍 [META ASSETS] Catalogs response status:', catalogsResponse.status);
+      
+      if (catalogsResponse.ok) {
+        const catalogsData = await catalogsResponse.json();
+        console.log('🔍 [META ASSETS] Catalogs data received:', catalogsData);
+        
+        if (catalogsData.data && catalogsData.data.length > 0) {
+          catalogsData.data.forEach((catalog: any) => {
+            const asset = {
+              id: catalog.id,
+              name: catalog.name,
+              type: 'catalog',
+              description: `Product Catalog (${catalog.vertical || 'E-commerce'})`
+            };
+            console.log('🔍 [META ASSETS] Adding catalog asset:', asset);
+            assets.push(asset);
+          });
+        } else {
+          console.log('🔍 [META ASSETS] No catalogs found in response');
+        }
+      } else {
+        const errorText = await catalogsResponse.text();
+        console.error('🔍 [META ASSETS] Catalogs API error:', catalogsResponse.status, errorText);
+      }
+    } catch (catalogError) {
+      console.error('🔍 [META ASSETS] Error fetching catalogs:', catalogError);
+    }
+
+    // Fetch Business Datasets
+    console.log('🔍 [META ASSETS] Fetching Meta Business Datasets...');
+    try {
+      const datasetsResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me/business_datasets?access_token=${accessToken}&fields=id,name,description`
+      );
+      
+      console.log('🔍 [META ASSETS] Datasets response status:', datasetsResponse.status);
+      
+      if (datasetsResponse.ok) {
+        const datasetsData = await datasetsResponse.json();
+        console.log('🔍 [META ASSETS] Datasets data received:', datasetsData);
+        
+        if (datasetsData.data && datasetsData.data.length > 0) {
+          datasetsData.data.forEach((dataset: any) => {
+            const asset = {
+              id: dataset.id,
+              name: dataset.name,
+              type: 'business_dataset',
+              description: dataset.description || 'Business Dataset'
+            };
+            console.log('🔍 [META ASSETS] Adding dataset asset:', asset);
+            assets.push(asset);
+          });
+        } else {
+          console.log('🔍 [META ASSETS] No datasets found in response');
+        }
+      } else {
+        const errorText = await datasetsResponse.text();
+        console.error('🔍 [META ASSETS] Datasets API error:', datasetsResponse.status, errorText);
+      }
+    } catch (datasetError) {
+      console.error('🔍 [META ASSETS] Error fetching datasets:', datasetError);
+    }
+
     console.log('=== META ASSETS FETCH COMPLETE ===');
     console.log('Total assets found:', assets.length);
     console.log('Assets:', assets);
