@@ -335,7 +335,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         });
       }
       
-      setPlatformAssets(prev => ({ ...prev, [platformId]: assetsData.assets || [] }));
+      setPlatformAssets(prev => {
+        const newState = { ...prev, [platformId]: assetsData.assets || [] };
+        console.log('🟢 [UNIFIED FORM] State updated for platformAssets:', platformId, newState[platformId]);
+        console.log('🟢 [UNIFIED FORM] Full platformAssets state after update:', newState);
+        return newState;
+      });
       console.log('🟢 [UNIFIED FORM] Assets set in state for', platformId, ':', assetsData.assets || []);
       
     } catch (error: any) {
@@ -414,6 +419,14 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     
     return hasRequiredScope;
   };
+
+  // Debug: Monitor platformAssets state changes
+  useEffect(() => {
+    console.log('🔍 [STATE DEBUG] platformAssets state changed:', platformAssets);
+    Object.entries(platformAssets).forEach(([platformId, assets]) => {
+      console.log(`🔍 [STATE DEBUG] Platform ${platformId} has ${assets?.length || 0} assets:`, assets);
+    });
+  }, [platformAssets]);
 
   // Handle asset selection (dropdown-based)
   const handleAssetSelection = (platformId: string, assetType: string, assetId: string) => {
@@ -884,6 +897,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                           ) : platformAssets[platform.id] && platformAssets[platform.id].length > 0 ? (
                             <div className="space-y-4">
                               {(() => {
+                                console.log('🔍 [RENDER DEBUG] Current platformAssets for', platform.id, 'before grouping:', platformAssets[platform.id]);
+                                console.log('🔍 [RENDER DEBUG] platformAssets state keys:', Object.keys(platformAssets));
+                                console.log('🔍 [RENDER DEBUG] platformAssets[platform.id] length:', platformAssets[platform.id]?.length || 0);
                                 const groupedAssets = groupAssetsByType(platformAssets[platform.id]);
                                 console.log('🔍 [RENDER DEBUG] Grouped assets for', platform.id, ':', groupedAssets);
                                 const filteredAssets = Object.entries(groupedAssets)

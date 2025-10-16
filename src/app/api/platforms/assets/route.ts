@@ -277,11 +277,12 @@ async function fetchMetaAssets(accessToken: string) {
       console.error('Instagram API error:', instagramResponse.status, errorText);
     }
 
-    // Fetch Catalogs (Product Catalogs)
+    // Fetch Catalogs (Product Catalogs) - Try different endpoints
     console.log('🔍 [META ASSETS] Fetching Meta Catalogs...');
     try {
+      // First try the business account catalogs endpoint
       const catalogsResponse = await fetch(
-        `https://graph.facebook.com/v18.0/me/catalogs?access_token=${accessToken}&fields=id,name,vertical`
+        `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,catalogs{id,name,vertical}`
       );
       
       console.log('🔍 [META ASSETS] Catalogs response status:', catalogsResponse.status);
@@ -291,18 +292,22 @@ async function fetchMetaAssets(accessToken: string) {
         console.log('🔍 [META ASSETS] Catalogs data received:', catalogsData);
         
         if (catalogsData.data && catalogsData.data.length > 0) {
-          catalogsData.data.forEach((catalog: any) => {
-            const asset = {
-              id: catalog.id,
-              name: catalog.name,
-              type: 'catalog',
-              description: `Product Catalog (${catalog.vertical || 'E-commerce'})`
-            };
-            console.log('🔍 [META ASSETS] Adding catalog asset:', asset);
-            assets.push(asset);
+          catalogsData.data.forEach((businessAccount: any) => {
+            if (businessAccount.catalogs && businessAccount.catalogs.data) {
+              businessAccount.catalogs.data.forEach((catalog: any) => {
+                const asset = {
+                  id: catalog.id,
+                  name: catalog.name,
+                  type: 'catalog',
+                  description: `Product Catalog (${catalog.vertical || 'E-commerce'})`
+                };
+                console.log('🔍 [META ASSETS] Adding catalog asset:', asset);
+                assets.push(asset);
+              });
+            }
           });
         } else {
-          console.log('🔍 [META ASSETS] No catalogs found in response');
+          console.log('🔍 [META ASSETS] No business accounts with catalogs found in response');
         }
       } else {
         const errorText = await catalogsResponse.text();
@@ -312,11 +317,12 @@ async function fetchMetaAssets(accessToken: string) {
       console.error('🔍 [META ASSETS] Error fetching catalogs:', catalogError);
     }
 
-    // Fetch Business Datasets
+    // Fetch Business Datasets - Try different approach
     console.log('🔍 [META ASSETS] Fetching Meta Business Datasets...');
     try {
+      // Try to get datasets from business accounts
       const datasetsResponse = await fetch(
-        `https://graph.facebook.com/v18.0/me/business_datasets?access_token=${accessToken}&fields=id,name,description`
+        `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,datasets{id,name,description}`
       );
       
       console.log('🔍 [META ASSETS] Datasets response status:', datasetsResponse.status);
@@ -326,18 +332,22 @@ async function fetchMetaAssets(accessToken: string) {
         console.log('🔍 [META ASSETS] Datasets data received:', datasetsData);
         
         if (datasetsData.data && datasetsData.data.length > 0) {
-          datasetsData.data.forEach((dataset: any) => {
-            const asset = {
-              id: dataset.id,
-              name: dataset.name,
-              type: 'business_dataset',
-              description: dataset.description || 'Business Dataset'
-            };
-            console.log('🔍 [META ASSETS] Adding dataset asset:', asset);
-            assets.push(asset);
+          datasetsData.data.forEach((businessAccount: any) => {
+            if (businessAccount.datasets && businessAccount.datasets.data) {
+              businessAccount.datasets.data.forEach((dataset: any) => {
+                const asset = {
+                  id: dataset.id,
+                  name: dataset.name,
+                  type: 'business_dataset',
+                  description: dataset.description || 'Business Dataset'
+                };
+                console.log('🔍 [META ASSETS] Adding dataset asset:', asset);
+                assets.push(asset);
+              });
+            }
           });
         } else {
-          console.log('🔍 [META ASSETS] No datasets found in response');
+          console.log('🔍 [META ASSETS] No business accounts with datasets found in response');
         }
       } else {
         const errorText = await datasetsResponse.text();
