@@ -3,12 +3,8 @@ import { getAdminPlatformConnections } from '@/lib/db/database';
 
 export async function GET(_request: NextRequest) {
   try {
-    // TODO: Get real admin ID from authentication/session
-    // For now, using a mock admin ID - replace with real auth
-    const mockAdminId = '00000000-0000-0000-0000-000000000001';
-
-    // Fetch admin platform connections from database
-    const connections = await getAdminPlatformConnections(mockAdminId);
+    // Fetch admin platform connections from database (shared across all admins)
+    const connections = await getAdminPlatformConnections();
 
     // Transform the data to match the expected format
     const formattedConnections = connections.map(conn => ({

@@ -118,12 +118,11 @@ export async function createUser(user: Omit<User, 'id' | 'created_at' | 'updated
 }
 
 // Client functions
-export async function getClients(adminId: string): Promise<Client[]> {
+export async function getClients(): Promise<Client[]> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('clients')
     .select('*')
-    .eq('admin_id', adminId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -205,12 +204,11 @@ export async function updateClient(id: string, updates: Partial<Client>): Promis
 }
 
 // Onboarding Link functions
-export async function getOnboardingLinks(adminId: string): Promise<OnboardingLink[]> {
+export async function getOnboardingLinks(): Promise<OnboardingLink[]> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('onboarding_links')
     .select('*')
-    .eq('admin_id', adminId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -388,12 +386,11 @@ export async function updateOnboardingRequest(id: string, updates: Partial<Onboa
 }
 
 // Admin Platform Connection functions
-export async function getAdminPlatformConnections(adminId: string): Promise<AdminPlatformConnection[]> {
+export async function getAdminPlatformConnections(): Promise<AdminPlatformConnection[]> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('admin_platform_connections')
     .select('*')
-    .eq('admin_id', adminId)
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 

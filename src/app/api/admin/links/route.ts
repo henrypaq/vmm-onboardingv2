@@ -3,12 +3,8 @@ import { getOnboardingLinks, deleteOnboardingLink } from '@/lib/db/database';
 
 export async function GET(_request: NextRequest) {
   try {
-    // TODO: Get real admin ID from authentication/session
-    // For now, using a mock admin ID - replace with real auth
-    const mockAdminId = '00000000-0000-0000-0000-000000000001';
-
-    // Fetch onboarding links from database
-    const links = await getOnboardingLinks(mockAdminId);
+    // Fetch onboarding links from database (shared across all admins)
+    const links = await getOnboardingLinks();
 
     return NextResponse.json({
       links: links,

@@ -5,14 +5,10 @@ export async function GET(_request: NextRequest) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
-    // TODO: Get real admin ID from authentication/session
-    const mockAdminId = '00000000-0000-0000-0000-000000000001';
-
-    // Fetch admin platform connections with assets
+    // Fetch admin platform connections with assets (shared across all admins)
     const { data: connections, error } = await supabaseAdmin
       .from('admin_platform_connections')
       .select('*')
-      .eq('admin_id', mockAdminId)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 

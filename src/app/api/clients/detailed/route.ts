@@ -5,15 +5,12 @@ export async function GET() {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
-    // Temporary: Use a default admin ID for testing
-    const adminId = '00000000-0000-0000-0000-000000000001';
-    console.log(`[Detailed Clients API] Fetching detailed clients for admin: ${adminId}`);
+    console.log(`[Detailed Clients API] Fetching detailed clients (shared across all admins)`);
     
-    // Get clients
+    // Get clients (shared across all admins)
     const { data: clients, error: clientsError } = await supabaseAdmin
       .from('clients')
       .select('*')
-      .eq('admin_id', adminId)
       .order('created_at', { ascending: false });
 
     if (clientsError) {
@@ -21,18 +18,17 @@ export async function GET() {
       throw new Error(`Failed to fetch clients: ${clientsError.message}`);
     }
 
-    // Get onboarding links for this admin
+    // Get onboarding links (shared across all admins)
     const { data: links, error: linksError } = await supabaseAdmin
       .from('onboarding_links')
-      .select('*')
-      .eq('admin_id', adminId);
+      .select('*');
 
     if (linksError) {
       console.error('[Detailed Clients API] Error fetching links:', linksError);
       throw new Error(`Failed to fetch links: ${linksError.message}`);
     }
 
-    console.log(`[Detailed Clients API] Found ${links?.length || 0} onboarding links for admin ${adminId}`);
+    console.log(`[Detailed Clients API] Found ${links?.length || 0} onboarding links`);
     if (links && links.length > 0) {
       console.log('[Detailed Clients API] Available links:', links.map(l => ({ id: l.id, token: l.token, link_name: l.link_name })));
     }

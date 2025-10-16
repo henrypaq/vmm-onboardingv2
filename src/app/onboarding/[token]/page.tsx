@@ -75,9 +75,9 @@ export default function OnboardingPage() {
   }
 
   if (isSubmitted) {
-    // Redirect to confirmation page after showing success message
+    // Redirect to admin dashboard after showing success message
     setTimeout(() => {
-      window.location.href = `/client?completed=true&requestId=${requestId}`;
+      window.location.href = `/admin?completed=true&requestId=${requestId}`;
     }, 2000);
     
     return (
