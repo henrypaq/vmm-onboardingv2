@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { X, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube, Copy, Check, Globe } from 'lucide-react';
+import { X, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube, Copy, Check, Globe, Loader2 } from 'lucide-react';
 
 interface ClientDetails {
   id: string;
@@ -74,6 +74,44 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [apiTestLoading, setApiTestLoading] = useState<Record<string, boolean>>({});
+  const [isTestingAllAssets, setIsTestingAllAssets] = useState(false);
+  const [testResults, setTestResults] = useState<Record<string, string> | null>(null);
+
+  const testAllAssets = async () => {
+    try {
+      setIsTestingAllAssets(true);
+      setTestResults(null);
+      
+      const response = await fetch('/api/admin/test-assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Test failed: ${response.status}`);
+      }
+
+      const results = await response.json();
+      setTestResults(results);
+      
+      // Show appropriate banner based on results
+      const allOk = Object.values(results).every(status => status === 'ok');
+      const anyFail = Object.values(results).some(status => status === 'fail');
+      
+      if (allOk) {
+        toast.success('All client assets are connected and functioning correctly.');
+      } else if (anyFail) {
+        toast.error('Some client assets could not be verified. Check tokens or permissions.');
+      }
+      
+    } catch (error) {
+      console.error('[Client Details] Error testing assets:', error);
+      toast.warning('Asset test unavailable — please try again later.');
+    } finally {
+      setIsTestingAllAssets(false);
+    }
+  };
 
   const fetchClientDetails = async () => {
     try {
@@ -319,10 +357,31 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
           {/* Platform Connections */}
           <Card className="lg:col-span-2 hover:shadow-lg transition-shadow duration-200">
             <CardHeader>
-              <CardTitle className="flex items-center text-lg">
-                <LinkIcon className="h-5 w-5 mr-2 text-primary" />
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center text-lg">
+                  <LinkIcon className="h-5 w-5 mr-2 text-primary" />
                 Platform Connections
               </CardTitle>
+                <Button
+                  onClick={testAllAssets}
+                  disabled={isTestingAllAssets || platformConnections.length === 0}
+                  variant="outline"
+                  size="sm"
+                  className="hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                >
+                  {isTestingAllAssets ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Testing connections...
+                    </>
+                  ) : (
+                    <>
+                      <TestTube className="h-4 w-4 mr-2" />
+                      Test All Assets
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {platformConnections.length === 0 ? (
