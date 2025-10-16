@@ -123,7 +123,10 @@ interface ClientGridItemProps {
 function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Link copied to clipboard');
+    toast.success('Link copied to clipboard!', {
+      duration: 2000,
+      position: 'top-right'
+    });
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -259,7 +262,10 @@ interface ClientListItemProps {
 function ClientListItem({ client, onView }: ClientListItemProps) {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Link copied to clipboard');
+    toast.success('Link copied to clipboard!', {
+      duration: 2000,
+      position: 'top-right'
+    });
   };
 
   return (

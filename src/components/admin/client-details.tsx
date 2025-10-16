@@ -141,10 +141,19 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       setClient(clientData.client);
       
       // Fetch platform connections
-      const connectionsResponse = await fetch(`/api/clients/${clientId}/connections`);
+      console.log('[Client Details] Fetching connections for clientId:', clientId);
+      const connectionsUrl = `/api/clients/${clientId}/connections`;
+      console.log('[Client Details] Connections URL:', connectionsUrl);
+      
+      const connectionsResponse = await fetch(connectionsUrl);
+      console.log('[Client Details] Connections response status:', connectionsResponse.status);
+      
       if (connectionsResponse.ok) {
         const connectionsData = await connectionsResponse.json();
+        console.log('[Client Details] Connections data:', connectionsData);
         setPlatformConnections(connectionsData.connections || []);
+      } else {
+        console.error('[Client Details] Failed to fetch connections:', connectionsResponse.status, connectionsResponse.statusText);
       }
       
       // Fetch onboarding request
@@ -362,7 +371,10 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                 onClick={(e) => {
                                   e.currentTarget.select();
                                   navigator.clipboard.writeText(e.currentTarget.value);
-                                  toast.success('Link copied to clipboard');
+                                  toast.success('Link copied to clipboard!', {
+                                    duration: 2000,
+                                    position: 'top-right'
+                                  });
                                 }}
                               />
                             </div>
@@ -374,7 +386,10 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                 e.stopPropagation();
                                 const fullUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${onboardingRequest.link.token}`;
                                 navigator.clipboard.writeText(fullUrl);
-                                toast.success('Link copied to clipboard');
+                                toast.success('Link copied to clipboard!', {
+                                  duration: 2000,
+                                  position: 'top-right'
+                                });
                               }}
                             >
                               <Copy className="h-4 w-4" />

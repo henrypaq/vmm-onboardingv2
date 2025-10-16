@@ -107,6 +107,17 @@ export async function GET() {
 
     console.log(`[Detailed Clients API] Found ${detailedClients.length} detailed clients`);
     
+    // Debug: Log final client data with linkUrls
+    detailedClients.forEach((client, index) => {
+      console.log(`[Detailed Clients API] Final client ${index + 1}:`, {
+        id: client.id,
+        name: client.full_name,
+        linkUrl: client.linkUrl,
+        hasRequest: !!client.onboardingRequest,
+        requestLinkId: client.onboardingRequest?.link_id
+      });
+    });
+    
     return NextResponse.json({ clients: detailedClients });
   } catch (error) {
     console.error('[Detailed Clients API] Error:', error);
