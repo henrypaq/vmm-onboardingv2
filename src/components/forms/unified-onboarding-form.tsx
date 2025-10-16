@@ -400,6 +400,10 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     console.log(`🔍 [SCOPE FILTER] linkData:`, linkData);
     console.log(`🔍 [SCOPE FILTER] linkData.requested_permissions:`, linkData?.requested_permissions);
     
+    // TEMPORARY: Show all asset types to debug the API issue
+    console.log(`🔍 [SCOPE FILTER] TEMPORARILY SHOWING ALL ASSET TYPES FOR DEBUGGING`);
+    return true;
+    
     if (!linkData?.requested_permissions?.[platformId]) {
       console.log(`🔍 [SCOPE FILTER] No requested permissions for platform ${platformId}`);
       return true; // Show all if no specific permissions requested
