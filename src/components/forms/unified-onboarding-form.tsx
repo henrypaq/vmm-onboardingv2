@@ -798,9 +798,23 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               </Button>
                             </>
                           ) : (
-                            <div className="flex items-center space-x-3 text-green-600">
-                              <CheckCircle className="h-5 w-5" />
-                              <span className="font-medium">{platform.name} connected successfully</span>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3 text-green-600">
+                                <CheckCircle className="h-5 w-5" />
+                                <span className="font-medium">You are logged in as {platform.name}</span>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  // Reset connection status to allow re-authentication
+                                  setConnectionStatus(prev => ({ ...prev, [platform.id]: 'pending' }));
+                                  setShowAssetSelection(prev => ({ ...prev, [platform.id]: false }));
+                                }}
+                                className="text-xs"
+                              >
+                                Change Account
+                              </Button>
                             </div>
                           )}
                         </div>
@@ -808,17 +822,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                     
                     {/* Asset Selection */}
                     {isConnected && showAssetSelection[platform.id] && (
-                      <div className="px-6 py-4 bg-blue-50 border-t border-blue-200">
+                      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                         <div className="space-y-4">
-                          <div className="flex items-center space-x-2">
-                            <h4 className="text-lg font-semibold text-gray-900">
-                              Select Assets to Share
-                            </h4>
-                            <Badge variant="outline" className="text-blue-600 border-blue-300">
-                              {platform.name}
-                            </Badge>
-                          </div>
-                          
                           <p className="text-sm text-gray-600">
                             Choose which {platform.name} assets you'd like to share with your team.
                           </p>
@@ -844,12 +849,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                     value={selectedAssets[platform.id]?.[assetType] || ''}
                                     onValueChange={(value) => handleAssetSelection(platform.id, assetType, value)}
                                   >
-                                    <SelectTrigger className="w-full">
+                                    <SelectTrigger className="w-full bg-white border-gray-300 focus:border-gray-400 focus:ring-gray-400">
                                       <SelectValue placeholder="Select..." />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-white border-gray-300">
                                       {assets.map((asset) => (
-                                        <SelectItem key={asset.id} value={asset.id}>
+                                        <SelectItem key={asset.id} value={asset.id} className="hover:bg-gray-50 focus:bg-gray-50">
                                           <div className="flex flex-col">
                                             <span className="font-medium">{asset.name}</span>
                                             <span className="text-xs text-gray-500">{asset.description}</span>
@@ -882,7 +887,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                             </div>
                           )}
                           
-                          <div className="flex justify-end space-x-3 pt-4">
+                          <div className="flex justify-between space-x-3 pt-6">
                             <Button
                               onClick={() => setShowAssetSelection(prev => ({ ...prev, [platform.id]: false }))}
                               variant="outline"
