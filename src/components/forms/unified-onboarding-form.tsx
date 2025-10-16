@@ -400,10 +400,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     console.log(`🔍 [SCOPE FILTER] linkData:`, linkData);
     console.log(`🔍 [SCOPE FILTER] linkData.requested_permissions:`, linkData?.requested_permissions);
     
-    // TEMPORARY: Show all asset types to debug the API issue
-    console.log(`🔍 [SCOPE FILTER] TEMPORARILY SHOWING ALL ASSET TYPES FOR DEBUGGING`);
-    return true;
-    
     if (!linkData?.requested_permissions?.[platformId]) {
       console.log(`🔍 [SCOPE FILTER] No requested permissions for platform ${platformId}`);
       return true; // Show all if no specific permissions requested
@@ -950,7 +946,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                         <SelectItem key={asset.id} value={asset.id} className="hover:bg-gray-50 focus:bg-gray-50">
                                           <div className="flex flex-col">
                                             <span className="font-medium">{asset.name}</span>
-                                            <span className="text-xs text-gray-500">{asset.description}</span>
+                                            <span className="text-xs text-gray-500">{asset.id}</span>
                                           </div>
                                         </SelectItem>
                                       ))}

@@ -165,9 +165,19 @@ export async function GET(request: NextRequest) {
         }
         break;
       case 'google':
-        console.log('Fetching Google assets...');
-        assets = await fetchGoogleAssets(connection.access_token);
-        console.log('Google assets fetched:', assets);
+        console.log('🔍 [PLATFORM ASSETS] Fetching Google assets using oauth-utils...');
+        try {
+          // Get the scopes from the platform connection
+          const scopes = connection.scopes || [];
+          console.log('🔍 [PLATFORM ASSETS] Google scopes:', scopes);
+          
+          // Use the working fetchPlatformAssets function from oauth-utils
+          assets = await fetchPlatformAssets('google', connection.access_token, scopes);
+          console.log('🔍 [PLATFORM ASSETS] Google assets from oauth-utils:', assets);
+        } catch (error) {
+          console.error('🔍 [PLATFORM ASSETS] Error fetching Google assets:', error);
+          assets = [];
+        }
         break;
       default:
         console.log('Unsupported platform:', platform);
@@ -189,74 +199,6 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch assets', details: error.message },
       { status: 500 }
     );
-  }
-}
-
-async function fetchGoogleAssets(accessToken: string) {
-  try {
-    const assets = [];
-    
-    // Fetch Google Analytics accounts
-    const analyticsResponse = await fetch(
-      `https://www.googleapis.com/analytics/v3/management/accounts?access_token=${accessToken}`
-    );
-    
-    if (analyticsResponse.ok) {
-      const analyticsData = await analyticsResponse.json();
-      if (analyticsData.items) {
-        analyticsData.items.forEach((account: any) => {
-          assets.push({
-            id: account.id,
-            name: account.name,
-            type: 'analytics_account',
-            description: 'Google Analytics Account'
-          });
-        });
-      }
-    }
-
-    // Fetch Google Tag Manager accounts
-    const gtmResponse = await fetch(
-      `https://www.googleapis.com/tagmanager/v2/accounts?access_token=${accessToken}`
-    );
-    
-    if (gtmResponse.ok) {
-      const gtmData = await gtmResponse.json();
-      if (gtmData.account) {
-        gtmData.account.forEach((account: any) => {
-          assets.push({
-            id: account.accountId,
-            name: account.name,
-            type: 'tag_manager_account',
-            description: 'Google Tag Manager Account'
-          });
-        });
-      }
-    }
-
-    // Fetch Search Console sites
-    const searchConsoleResponse = await fetch(
-      `https://www.googleapis.com/webmasters/v3/sites?access_token=${accessToken}`
-    );
-    
-    if (searchConsoleResponse.ok) {
-      const searchConsoleData = await searchConsoleResponse.json();
-      if (searchConsoleData.siteEntry) {
-        searchConsoleData.siteEntry.forEach((site: any) => {
-          assets.push({
-            id: site.siteUrl,
-            name: site.siteUrl,
-            type: 'search_console_site',
-            description: 'Google Search Console Site'
-          });
-        });
-      }
-    }
-
-    return assets;
-  } catch (error) {
-    console.error('Error fetching Google assets:', error);
-    return [];
   }
 }
 
