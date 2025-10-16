@@ -450,7 +450,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                         const assets = connection.assets;
                         return connection.platform === 'google' || (assets && assets.length > 0);
                       })() ? (
-                                    <div>
+                        <div>
                           <label className="text-sm font-medium text-gray-500 mb-2 block">Available Assets</label>
                           <div className="space-y-2">
                             {connection.assets?.map((asset: Asset, index: number) => (
@@ -458,15 +458,15 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                 <div className="flex-1">
                                   <p className="font-medium text-sm text-gray-900">{asset.name}</p>
                                   <p className="text-xs text-gray-500 capitalize">{asset.type.replace('_', ' ')}</p>
-                                      </div>
+                                </div>
                                 <div className="flex items-center gap-2">
                                   <Badge variant="outline" className="text-xs">
                                     {asset.id}
                                   </Badge>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => {
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
                                       const platformUrls = {
                                         'google': `https://analytics.google.com/analytics/web/#/p${asset.id}`,
                                         'meta': `https://business.facebook.com/`,
@@ -480,7 +480,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   >
                                     <ExternalLink className="h-3 w-3 mr-1" />
                                     Open in {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
-                                        </Button>
+                                  </Button>
                                 </div>
                               </div>
                             )) || (
@@ -491,6 +491,58 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                           </div>
                         </div>
                       ) : null}
+                      
+                      {/* Shopify-specific information */}
+                      {connection.platform === 'shopify' && connection.metadata && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-500 mb-2 block">Shopify Store Information</label>
+                          <div className="space-y-3">
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-sm text-gray-900">Store ID / Domain</p>
+                                  <p className="text-xs text-gray-500">{connection.metadata.store_domain || connection.metadata.store_id || 'Not provided'}</p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    const storeId = connection.metadata.store_id || connection.metadata.store_domain;
+                                    if (storeId) {
+                                      window.open(`https://${storeId}.myshopify.com/admin`, '_blank');
+                                    }
+                                  }}
+                                  className="text-xs hover:bg-primary/10 hover:border-primary/30"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Open Store
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-sm text-gray-900">Collaborator Code</p>
+                                  <p className="text-xs text-gray-500 font-mono">{connection.metadata.collaborator_code || 'Not provided'}</p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    // TODO: Link to partner dashboard when available
+                                    toast.info('Partner dashboard link will be added soon');
+                                  }}
+                                  className="text-xs hover:bg-primary/10 hover:border-primary/30"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Open Partner Dashboard
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
