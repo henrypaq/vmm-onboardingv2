@@ -71,42 +71,32 @@ export default function SignUpPage() {
     setErrors({});
 
     try {
-      // Use the imported supabase client
-
-      // Sign up the user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+      // Use API endpoint for signup
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          companyName: formData.companyName,
+        }),
       });
 
-      if (authError) {
-        throw authError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Signup failed');
       }
 
-      if (authData.user) {
-        // Create user profile in users table
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
-            email: formData.email,
-            full_name: formData.fullName,
-            company_name: formData.companyName,
-            role: 'admin'
-          });
+      toast.success('Account created successfully! You can now sign in.', {
+        duration: 5000,
+      });
 
-        if (profileError) {
-          console.error('Error creating user profile:', profileError);
-          // Don't throw here as the user is already created in auth
-        }
-
-        toast.success('Account created successfully! Please check your email to verify your account.', {
-          duration: 5000,
-        });
-
-        // Redirect to login page with success message
-        router.push('/login?message=Account created successfully! Please check your email to verify your account.');
-      }
+      // Redirect to login page with success message
+      router.push('/login?message=Account created successfully! You can now sign in.');
     } catch (error: any) {
       console.error('Sign up error:', error);
       setErrors({

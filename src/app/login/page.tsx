@@ -59,20 +59,26 @@ function LoginForm() {
     setErrors({});
 
     try {
-      // Use the imported supabase client
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
+      // Use API endpoint for login
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
-      if (error) {
-        throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
       }
 
-      if (data.user) {
-        toast.success('Welcome back!');
-        router.push('/admin');
-      }
+      toast.success('Welcome back!');
+      router.push('/admin');
     } catch (error: any) {
       console.error('Login error:', error);
       setErrors({
