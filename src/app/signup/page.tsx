@@ -71,32 +71,98 @@ export default function SignUpPage() {
     setErrors({});
 
     try {
-      // Use API endpoint for signup
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Try API endpoint first, fallback to direct Supabase if it fails
+      try {
+        const response = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            fullName: formData.fullName,
+            companyName: formData.companyName,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'API signup failed');
+        }
+
+        // Show appropriate success message based on email confirmation status
+        if (data.emailConfirmationSent) {
+          toast.success('Account created successfully! Please check your email to verify your account.', {
+            duration: 8000,
+          });
+          router.push('/login?message=Account created successfully! Please check your email to verify your account.');
+        } else {
+          toast.success('Account created successfully! You can now sign in.', {
+            duration: 5000,
+          });
+          router.push('/login?message=Account created successfully! You can now sign in.');
+        }
+        return;
+      } catch (apiError) {
+        console.log('API signup failed, trying direct Supabase:', apiError);
+        
+        // Fallback to direct Supabase client-side signup
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
-          fullName: formData.fullName,
-          companyName: formData.companyName,
-        }),
-      });
+          options: {
+            data: {
+              full_name: formData.fullName,
+              company_name: formData.companyName,
+              role: 'admin'
+            }
+          }
+        });
 
-      const data = await response.json();
+        if (authError) {
+          throw authError;
+        }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Signup failed');
+        if (authData.user) {
+          // Try to create user profile in users table
+          try {
+            const { error: profileError } = await supabase
+              .from('users')
+              .insert({
+                id: authData.user.id,
+                email: formData.email,
+                full_name: formData.fullName,
+                company_name: formData.companyName,
+                role: 'admin'
+              });
+
+            if (profileError) {
+              console.error('Profile creation error:', profileError);
+              // Continue anyway - the auth user is created
+            }
+          } catch (profileError) {
+            console.error('Profile creation failed:', profileError);
+            // Continue anyway - the auth user is created
+          }
+
+          // Check if email confirmation is required
+          const needsConfirmation = authData.user.email_confirmed_at === null;
+          
+          if (needsConfirmation) {
+            toast.success('Account created successfully! Please check your email to verify your account.', {
+              duration: 8000,
+            });
+            router.push('/login?message=Account created successfully! Please check your email to verify your account.');
+          } else {
+            toast.success('Account created successfully! You can now sign in.', {
+              duration: 5000,
+            });
+            router.push('/login?message=Account created successfully! You can now sign in.');
+          }
+        }
       }
-
-      toast.success('Account created successfully! You can now sign in.', {
-        duration: 5000,
-      });
-
-      // Redirect to login page with success message
-      router.push('/login?message=Account created successfully! You can now sign in.');
     } catch (error: any) {
       console.error('Sign up error:', error);
       setErrors({

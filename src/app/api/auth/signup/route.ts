@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,22 +12,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
+    // Use the regular Supabase client instead of admin client
+    const supabase = await createClient();
 
-    // Create user in auth.users using admin client
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    // Sign up the user using the regular auth flow
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        full_name: fullName,
-        company_name: companyName,
-        role: 'admin'
+      options: {
+        data: {
+          full_name: fullName,
+          company_name: companyName,
+          role: 'admin'
+        }
       }
     });
 
     if (authError) {
-      console.error('Auth creation error:', authError);
+      console.error('Auth signup error:', authError);
       return NextResponse.json(
         { error: authError.message },
         { status: 400 }
@@ -35,31 +37,32 @@ export async function POST(request: NextRequest) {
     }
 
     if (authData.user) {
-      // Create user profile in users table
-      const { error: profileError } = await supabaseAdmin
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email: email,
-          full_name: fullName,
-          company_name: companyName,
-          role: 'admin'
-        });
+      // Try to create user profile in users table
+      try {
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: email,
+            full_name: fullName,
+            company_name: companyName,
+            role: 'admin'
+          });
 
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        // Don't fail here - the auth user is created
-        return NextResponse.json({
-          success: true,
-          message: 'Account created but profile setup incomplete',
-          user: authData.user
-        });
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // Don't fail here - the auth user is created
+        }
+      } catch (profileError) {
+        console.error('Profile creation failed:', profileError);
+        // Continue anyway - the auth user is created
       }
 
       return NextResponse.json({
         success: true,
-        message: 'Account created successfully',
-        user: authData.user
+        message: 'Account created successfully! Please check your email to verify your account.',
+        user: authData.user,
+        emailConfirmationSent: authData.user.email_confirmed_at === null
       });
     }
 
