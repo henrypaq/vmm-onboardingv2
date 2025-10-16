@@ -132,6 +132,9 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
     }
   };
 
+  // Debug logging
+  console.log(`[ClientGridItem] Client ${client.id} (${client.full_name}) linkUrl:`, client.linkUrl);
+
   return (
     <Card 
       className="cursor-pointer bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
@@ -460,6 +463,8 @@ export default function ClientsPage() {
       
       const data = await response.json();
       console.log('[Admin Clients] Received data:', data);
+      console.log('[Admin Clients] First client linkUrl:', data.clients?.[0]?.linkUrl);
+      console.log('[Admin Clients] All client linkUrls:', data.clients?.map((c: any) => ({ id: c.id, name: c.full_name, linkUrl: c.linkUrl })));
       
       // Use the detailed client data directly from the API
       const detailedClients: ExtendedClientData[] = (data.clients || []).map((c: any) => ({
