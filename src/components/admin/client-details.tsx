@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { X, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube, Copy, Check, Globe, Loader2, ExternalLink } from 'lucide-react';
 
