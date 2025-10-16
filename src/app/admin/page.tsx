@@ -404,46 +404,48 @@ export default function AdminDashboardPage() {
         <CardContent>
           <div className="space-y-6">
             {platformConnections.length > 0 ? (
-              platformConnections.map((connection) => (
-                <div key={connection.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg">
-                        {getPlatformLogo(connection.platform)}
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-sm">{connection.name}</h3>
-                        <p className="text-xs text-gray-500">
-                          Connected as {connection.username}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Connected
-                    </Badge>
-                  </div>
-                  
-                  {/* Assets */}
-                  <div>
-                    <h4 className="text-sm font-medium mb-3">Available Assets:</h4>
-                    <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-                      {connection.assets.map((asset) => (
-                        <div key={asset.id} className="flex items-center space-x-2 p-2 bg-white border border-gray-200 rounded-md">
-                          <div className="text-gray-500">
-                            {getAssetIcon(asset.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium truncate">{asset.name}</p>
-                            <p className="text-xs text-gray-500 capitalize">
-                              {asset.type.replace('_', ' ')}
-                            </p>
-                          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {platformConnections.map((connection) => (
+                  <div key={connection.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 rounded-lg">
+                          {getPlatformLogo(connection.platform)}
                         </div>
-                      ))}
+                        <div>
+                          <h3 className="font-medium">{connection.name}</h3>
+                          <p className="text-sm text-gray-500">
+                            Connected as {connection.username}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="default" className="bg-green-100 text-green-800">
+                        Connected
+                      </Badge>
+                    </div>
+                    
+                    {/* Assets */}
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Available Assets:</h4>
+                      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                        {connection.assets.map((asset) => (
+                          <div key={asset.id} className="flex items-center space-x-2 p-2 bg-white border border-gray-200 rounded-md">
+                            <div className="text-gray-500">
+                              {getAssetIcon(asset.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{asset.name}</p>
+                              <p className="text-xs text-gray-500 capitalize">
+                                {asset.type.replace('_', ' ')}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             ) : (
               <div className="text-center py-8">
                 <Globe className="h-12 w-12 text-gray-500 mx-auto mb-4" />

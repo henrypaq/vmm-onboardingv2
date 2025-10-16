@@ -1387,8 +1387,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
             <div className="flex justify-center">
               <Button
                 onClick={() => {
-                  // Redirect to client dashboard
-                  window.location.href = '/client';
+                  // Redirect to admin dashboard
+                  window.location.href = '/admin';
                 }}
                 className="gradient-primary"
                 size="lg"
