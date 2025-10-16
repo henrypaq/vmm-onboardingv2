@@ -1,16 +1,9 @@
-import { NextResponse } from 'next/server';
 import { signOut } from '@/lib/auth/auth';
+import { handleApiRoute } from '@/lib/api/api-utils';
 
 export async function POST() {
-  try {
+  return handleApiRoute('User Logout', async () => {
     await signOut();
-    
-    return NextResponse.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    console.error('Logout error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+    return { message: 'Logged out successfully' };
+  });
 }

@@ -1,32 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase/server';
+import { NextRequest } from 'next/server';
+import { getSupabaseClient, executeSupabaseOperation, handleApiRoute, safeJsonParse } from '@/lib/api/api-utils';
 
 export async function POST(request: NextRequest) {
-  try {
-    const { clientId, platform, selectedAssets } = await request.json();
+  return handleApiRoute('Save Selected Assets', async () => {
+    const { clientId, platform, selectedAssets } = await safeJsonParse<{
+      clientId: string;
+      platform: string;
+      selectedAssets: any;
+    }>(request);
 
     if (!clientId || !platform || !selectedAssets) {
-      return NextResponse.json(
-        { error: 'Missing required fields: clientId, platform, selectedAssets' },
-        { status: 400 }
-      );
+      throw new Error('Missing required fields: clientId, platform, selectedAssets');
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = await getSupabaseClient();
 
     // Get the onboarding request
-    const { data: onboardingRequest, error: requestError } = await supabase
-      .from('onboarding_requests')
-      .select('platform_connections, client_id')
-      .eq('id', clientId)
-      .single();
-
-    if (requestError || !onboardingRequest) {
-      return NextResponse.json(
-        { error: 'Onboarding request not found' },
-        { status: 404 }
-      );
-    }
+    const onboardingRequest = await executeSupabaseOperation(
+      () => supabase
+        .from('onboarding_requests')
+        .select('platform_connections, client_id')
+        .eq('id', clientId)
+        .single(),
+      'Fetch onboarding request'
+    );
 
     // Update the platform_connections with selected assets
     const currentConnections = onboardingRequest.platform_connections || {};
@@ -35,67 +32,50 @@ export async function POST(request: NextRequest) {
       selected_assets: selectedAssets
     };
 
-    const { error: updateError } = await supabase
-      .from('onboarding_requests')
-      .update({ 
-        platform_connections: currentConnections,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', clientId);
-
-    if (updateError) {
-      console.error('Error updating onboarding request:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to save selected assets' },
-        { status: 500 }
-      );
-    }
+    await executeSupabaseOperation(
+      () => supabase
+        .from('onboarding_requests')
+        .update({ 
+          platform_connections: currentConnections,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', clientId),
+      'Update onboarding request'
+    );
 
     // Also update the client_platform_connections table with selected assets
     if (onboardingRequest.client_id) {
-      console.log('Updating client_platform_connections for client:', onboardingRequest.client_id);
-      
-      // Get the current platform connection
-      const { data: platformConnection, error: connectionError } = await supabase
-        .from('client_platform_connections')
-        .select('*')
-        .eq('client_id', onboardingRequest.client_id)
-        .eq('platform', platform)
-        .eq('is_active', true)
-        .single();
+      try {
+        const platformConnection = await executeSupabaseOperation(
+          () => supabase
+            .from('client_platform_connections')
+            .select('*')
+            .eq('client_id', onboardingRequest.client_id)
+            .eq('platform', platform)
+            .eq('is_active', true)
+            .single(),
+          'Fetch platform connection'
+        );
 
-      if (platformConnection && !connectionError) {
-        // Update the assets field with selected assets
-        const { error: updateConnectionError } = await supabase
-          .from('client_platform_connections')
-          .update({
-            assets: selectedAssets,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', platformConnection.id);
-
-        if (updateConnectionError) {
-          console.error('Error updating platform connection:', updateConnectionError);
-          // Don't fail the request, just log the error
-        } else {
-          console.log('Successfully updated platform connection with selected assets');
-        }
-      } else {
-        console.log('No active platform connection found to update');
+        await executeSupabaseOperation(
+          () => supabase
+            .from('client_platform_connections')
+            .update({
+              assets: selectedAssets,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', platformConnection.id),
+          'Update platform connection'
+        );
+      } catch (error) {
+        // Don't fail the request if platform connection update fails
+        console.warn('Failed to update platform connection:', error);
       }
     }
 
-    return NextResponse.json({ 
-      success: true,
+    return { 
       message: 'Selected assets saved successfully',
       selectedAssets 
-    });
-
-  } catch (error) {
-    console.error('Error saving selected assets:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+    };
+  });
 }

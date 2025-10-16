@@ -1,33 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { signIn } from '@/lib/auth/auth';
+import { handleApiRoute, safeJsonParse } from '@/lib/api/api-utils';
 
 export async function POST(request: NextRequest) {
-  try {
-    const { email, password } = await request.json();
+  return handleApiRoute('User Login', async () => {
+    const { email, password } = await safeJsonParse<{ email: string; password: string }>(request);
     
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+      throw new Error('Email and password are required');
     }
 
-    // TODO: Implement actual authentication with Supabase
     const session = await signIn(email, password);
     
     if (!session) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      throw new Error('Invalid credentials');
     }
 
-    return NextResponse.json({ session });
-  } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+    return { session };
+  });
 }
