@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     // Use the regular Supabase client instead of admin client
     const supabase = await createClient();
 
-    // Sign up the user using the regular auth flow
+    // Sign up the user using the regular auth flow (requires email confirmation)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
           full_name: fullName,
           company_name: companyName,
           role: 'admin'
-        }
+        },
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/verify-email`
       }
     });
 

@@ -92,18 +92,18 @@ export default function SignUpPage() {
           throw new Error(data.error || 'API signup failed');
         }
 
-        // Show appropriate success message based on email confirmation status
-        if (data.emailConfirmationSent) {
-          toast.success('Account created successfully! Please check your email to verify your account.', {
-            duration: 8000,
-          });
-          router.push('/login?message=Account created successfully! Please check your email to verify your account.');
-        } else {
-          toast.success('Account created successfully! You can now sign in.', {
-            duration: 5000,
-          });
-          router.push('/login?message=Account created successfully! You can now sign in.');
-        }
+      // Show appropriate success message based on email confirmation status
+      if (data.emailConfirmationSent) {
+        toast.success('Account created successfully! Please check your email for a verification code.', {
+          duration: 8000,
+        });
+        router.push('/verify-email?email=' + encodeURIComponent(formData.email));
+      } else {
+        toast.success('Account created successfully! You can now sign in.', {
+          duration: 5000,
+        });
+        router.push('/login?message=Account created successfully! You can now sign in.');
+      }
         return;
       } catch (apiError) {
         console.log('API signup failed, trying direct Supabase:', apiError);
@@ -151,10 +151,10 @@ export default function SignUpPage() {
           const needsConfirmation = authData.user.email_confirmed_at === null;
           
           if (needsConfirmation) {
-            toast.success('Account created successfully! Please check your email to verify your account.', {
+            toast.success('Account created successfully! Please check your email for a verification code.', {
               duration: 8000,
             });
-            router.push('/login?message=Account created successfully! Please check your email to verify your account.');
+            router.push('/verify-email?email=' + encodeURIComponent(formData.email));
           } else {
             toast.success('Account created successfully! You can now sign in.', {
               duration: 5000,
