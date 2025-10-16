@@ -992,12 +992,14 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       We'll need your Shopify collaborator code
                     </h3>
-                    <Button
-                      onClick={() => window.open(`https://admin.shopify.com/store/${shopifyData.storeId}/settings/account`, '_blank')}
-                      className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md"
-                    >
-                      OPEN SHOPIFY
-                    </Button>
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() => window.open(`https://admin.shopify.com/store/${shopifyData.storeId}/settings/account`, '_blank')}
+                        className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md"
+                      >
+                        OPEN SHOPIFY
+                      </Button>
+                    </div>
                     <div className="mt-3 p-3 bg-gray-50 rounded-md">
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Can't find the collaborator code?</strong>
@@ -1030,20 +1032,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                       </div>
                                     </div>
                                   </div>
-
-                                  {/* Previous button for Shopify step 2 */}
-                                  {shopifyStep === 2 && (
-                                    <div className="flex justify-center mt-6">
-                                      <Button
-                                        onClick={() => setShopifyStep(1)}
-                                        variant="outline"
-                                        className="w-full max-w-xs"
-                                      >
-                                        <ArrowLeft className="mr-2 h-4 w-4" />
-                                        Previous
-                                      </Button>
-                                    </div>
-                                  )}
                                 </div>
                               )}
                             </div>
@@ -1224,7 +1212,15 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                     <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                       <div className="flex justify-between">
                         <Button
-                          onClick={() => setCurrentPlatformIndex(Math.max(0, currentPlatformIndex - 1))}
+                          onClick={() => {
+                            // Handle Shopify sub-step navigation
+                            if (currentPlatform?.id === 'shopify' && shopifyStep === 2) {
+                              setShopifyStep(1);
+                            } else {
+                              // Handle platform-level navigation
+                              setCurrentPlatformIndex(Math.max(0, currentPlatformIndex - 1));
+                            }
+                          }}
                           variant="outline"
                         >
                           <ArrowLeft className="mr-2 h-4 w-4" />
