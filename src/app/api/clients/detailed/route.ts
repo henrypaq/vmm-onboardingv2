@@ -44,11 +44,29 @@ export async function GET() {
       throw new Error(`Failed to fetch requests: ${requestsError.message}`);
     }
 
+    console.log(`[Detailed Clients API] Found ${clients?.length || 0} clients`);
+    console.log(`[Detailed Clients API] Found ${links?.length || 0} onboarding links`);
     console.log(`[Detailed Clients API] Found ${requests?.length || 0} onboarding requests`);
-    if (requests && requests.length > 0) {
-      console.log('[Detailed Clients API] Available requests:', requests.map(r => ({ id: r.id, client_id: r.client_id, link_id: r.link_id })));
+    
+    // Debug: Log all links and requests for troubleshooting
+    if (links && links.length > 0) {
+      console.log('[Detailed Clients API] All available links:', links.map(l => ({ 
+        id: l.id, 
+        token: l.token, 
+        link_name: l.link_name,
+        admin_id: l.admin_id 
+      })));
     }
-
+    
+    if (requests && requests.length > 0) {
+      console.log('[Detailed Clients API] All available requests:', requests.map(r => ({ 
+        id: r.id, 
+        client_id: r.client_id, 
+        link_id: r.link_id,
+        submitted_at: r.submitted_at 
+      })));
+    }
+    
     // Get client platform connections
     const { data: connections, error: connectionsError } = await supabaseAdmin
       .from('client_platform_connections')

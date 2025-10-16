@@ -258,24 +258,19 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
               return (
                 <div key={platform.id} className={`border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-md ${
                   isSelected 
-                    ? 'border-primary bg-primary/5 shadow-md' 
+                    ? 'border-primary/60 bg-primary/5 shadow-md' 
                     : !isAvailable 
                       ? 'border-gray-200 bg-gray-50 opacity-50' 
                       : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}>
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="relative">
-                      <Checkbox
-                        id={`platform-${platform.id}`}
-                        checked={isSelected}
-                        disabled={!isAvailable}
-                        onCheckedChange={(checked) => handlePlatformToggle(platform.id, checked as boolean)}
-                        className="w-5 h-5 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      />
-                      {isSelected && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white"></div>
-                      )}
-                    </div>
+                    <Checkbox
+                      id={`platform-${platform.id}`}
+                      checked={isSelected}
+                      disabled={!isAvailable}
+                      onCheckedChange={(checked) => handlePlatformToggle(platform.id, checked as boolean)}
+                      className="w-5 h-5 border-2 data-[state=checked]:bg-primary/80 data-[state=checked]:border-primary/80"
+                    />
                     <div className={`p-3 rounded-xl transition-colors ${
                       isSelected ? 'bg-primary/10' : 'bg-gray-50'
                     }`}>
@@ -322,23 +317,18 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
                             return (
                               <div key={groupName} className={`border-2 rounded-lg p-4 transition-all duration-200 ${
                                 isGroupSelected 
-                                  ? 'border-primary bg-primary/5' 
+                                  ? 'border-primary/60 bg-primary/5' 
                                   : 'border-gray-200 bg-white hover:border-gray-300'
                               }`}>
-                                <div className="flex items-start space-x-3">
-                                  <div className="relative">
+                                  <div className="flex items-start space-x-3">
                                     <Checkbox
                                       id={`meta-group-${groupName}`}
                                       checked={isGroupSelected}
                                       onCheckedChange={(checked) => 
                                         handleMetaAssetGroupToggle(groupName, checked as boolean)
                                       }
-                                      className="w-4 h-4 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                      className="w-4 h-4 border-2 data-[state=checked]:bg-primary/80 data-[state=checked]:border-primary/80"
                                     />
-                                    {isGroupSelected && (
-                                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border border-white"></div>
-                                    )}
-                                  </div>
                                   <div className="flex-1">
                                     <label 
                                       htmlFor={`meta-group-${groupName}`}
@@ -397,23 +387,18 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
                             return (
                               <div key={scope} className={`border-2 rounded-lg p-4 transition-all duration-200 ${
                                 isScopeSelected 
-                                  ? 'border-primary bg-primary/5' 
+                                  ? 'border-primary/60 bg-primary/5' 
                                   : 'border-gray-200 bg-white hover:border-gray-300'
                               }`}>
                                 <div className="flex items-start space-x-3">
-                                  <div className="relative">
-                                    <Checkbox
-                                      id={`scope-${platform.id}-${scope}`}
-                                      checked={isScopeSelected}
-                                      onCheckedChange={(checked) => 
-                                        handleScopeToggle(platform.id, scope, checked as boolean)
-                                      }
-                                      className="w-4 h-4 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                    />
-                                    {isScopeSelected && (
-                                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border border-white"></div>
-                                    )}
-                                  </div>
+                                  <Checkbox
+                                    id={`scope-${platform.id}-${scope}`}
+                                    checked={isScopeSelected}
+                                    onCheckedChange={(checked) => 
+                                      handleScopeToggle(platform.id, scope, checked as boolean)
+                                    }
+                                    className="w-4 h-4 border-2 data-[state=checked]:bg-primary/80 data-[state=checked]:border-primary/80"
+                                  />
                                   <div className="flex-1">
                                     <label 
                                       htmlFor={`scope-${platform.id}-${scope}`}
@@ -442,26 +427,21 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
                             return (
                               <div key={scope} className={`border-2 rounded-lg p-4 transition-all duration-200 ${
                                 isScopeSelected 
-                                  ? 'border-primary bg-primary/5' 
+                                  ? 'border-primary/60 bg-primary/5' 
                                   : !isScopeAvailable
                                     ? 'border-gray-200 bg-gray-50 opacity-50'
                                     : 'border-gray-200 bg-white hover:border-gray-300'
                               }`}>
                                 <div className="flex items-start space-x-3">
-                                  <div className="relative">
-                                    <Checkbox
-                                      id={`scope-${platform.id}-${scope}`}
-                                      checked={isScopeSelected}
-                                      disabled={!isScopeAvailable}
-                                      onCheckedChange={(checked) => 
-                                        isScopeAvailable ? handleScopeToggle(platform.id, scope, checked as boolean) : undefined
-                                      }
-                                      className="w-4 h-4 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                    />
-                                    {isScopeSelected && (
-                                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border border-white"></div>
-                                    )}
-                                  </div>
+                                  <Checkbox
+                                    id={`scope-${platform.id}-${scope}`}
+                                    checked={isScopeSelected}
+                                    disabled={!isScopeAvailable}
+                                    onCheckedChange={(checked) => 
+                                      isScopeAvailable ? handleScopeToggle(platform.id, scope, checked as boolean) : undefined
+                                    }
+                                    className="w-4 h-4 border-2 data-[state=checked]:bg-primary/80 data-[state=checked]:border-primary/80"
+                                  />
                                   <div className="flex-1">
                                     <label 
                                       htmlFor={`scope-${platform.id}-${scope}`}
