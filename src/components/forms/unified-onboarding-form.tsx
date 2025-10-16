@@ -396,14 +396,17 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
 
   // Check if asset type should be shown based on requested scopes
   const shouldShowAssetType = (platformId: string, assetType: string) => {
+    console.log(`🔍 [SCOPE FILTER] ===== Checking asset type ${assetType} for platform ${platformId} =====`);
+    console.log(`🔍 [SCOPE FILTER] linkData:`, linkData);
+    console.log(`🔍 [SCOPE FILTER] linkData.requested_permissions:`, linkData?.requested_permissions);
+    
     if (!linkData?.requested_permissions?.[platformId]) {
       console.log(`🔍 [SCOPE FILTER] No requested permissions for platform ${platformId}`);
       return true; // Show all if no specific permissions requested
     }
 
     const requestedScopes = linkData.requested_permissions[platformId];
-    console.log(`🔍 [SCOPE FILTER] Checking asset type ${assetType} for platform ${platformId}`);
-    console.log(`🔍 [SCOPE FILTER] Requested scopes:`, requestedScopes);
+    console.log(`🔍 [SCOPE FILTER] Requested scopes for ${platformId}:`, requestedScopes);
 
     // Map asset types to required scopes
     const assetTypeToScopes: Record<string, string[]> = {
@@ -918,6 +921,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                     return shouldShow;
                                   });
                                 console.log('🔍 [RENDER DEBUG] Filtered assets:', filteredAssets);
+                                console.log('🔍 [RENDER DEBUG] Total asset types before filtering:', Object.keys(groupedAssets).length);
+                                console.log('🔍 [RENDER DEBUG] Total asset types after filtering:', filteredAssets.length);
                                 return filteredAssets.map(([assetType, assets]) => (
                                 <div key={assetType} className="space-y-2">
                                   <Label className="text-sm font-medium text-gray-700">
@@ -957,10 +962,16 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                   <div className="flex-shrink-0 w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
                                     <span className="text-blue-600 text-xs font-bold">i</span>
                                   </div>
-                                  <p className="text-sm text-blue-800">
-                                    Missing your Instagram Account? Make sure to connect your Instagram Account to one of your pages.{' '}
-                                    <a href="#" className="text-blue-600 underline">Click here to learn how.</a>
-                                  </p>
+                                  <div className="text-sm text-blue-800">
+                                    <p className="font-medium mb-1">Missing your Instagram Account?</p>
+                                    <p className="mb-2">To link your Instagram account to Meta:</p>
+                                    <ol className="list-decimal list-inside space-y-1 text-xs">
+                                      <li>Go to your Facebook Page Settings</li>
+                                      <li>Navigate to "Instagram" in the left sidebar</li>
+                                      <li>Click "Connect Account" and follow the prompts</li>
+                                      <li>Or use Meta Business Manager to connect accounts</li>
+                                    </ol>
+                                  </div>
                                 </div>
                               )}
                             </div>
