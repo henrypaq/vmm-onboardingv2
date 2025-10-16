@@ -165,18 +165,27 @@ export async function GET(request: NextRequest) {
         }
         break;
       case 'google':
-        console.log('🔍 [PLATFORM ASSETS] Fetching Google assets using oauth-utils...');
-        try {
-          // Get the scopes from the platform connection
-          const scopes = connection.scopes || [];
-          console.log('🔍 [PLATFORM ASSETS] Google scopes:', scopes);
-          
-          // Use the working fetchPlatformAssets function from oauth-utils
-          assets = await fetchPlatformAssets('google', connection.access_token, scopes);
-          console.log('🔍 [PLATFORM ASSETS] Google assets from oauth-utils:', assets);
-        } catch (error) {
-          console.error('🔍 [PLATFORM ASSETS] Error fetching Google assets:', error);
-          assets = [];
+        console.log('🔍 [PLATFORM ASSETS] Using stored Google assets from platform connection...');
+        
+        // Check if we have stored assets in the platform connection
+        if (connection.assets && connection.assets.length > 0) {
+          console.log('🔍 [PLATFORM ASSETS] Found stored Google assets:', connection.assets.length);
+          assets = connection.assets;
+          console.log('🔍 [PLATFORM ASSETS] Using stored assets:', assets);
+        } else {
+          console.log('🔍 [PLATFORM ASSETS] No stored assets found, fetching fresh from Google APIs...');
+          try {
+            // Get the scopes from the platform connection
+            const scopes = connection.scopes || [];
+            console.log('🔍 [PLATFORM ASSETS] Google scopes:', scopes);
+            
+            // Use the working fetchPlatformAssets function from oauth-utils
+            assets = await fetchPlatformAssets('google', connection.access_token, scopes);
+            console.log('🔍 [PLATFORM ASSETS] Google assets from oauth-utils:', assets);
+          } catch (error) {
+            console.error('🔍 [PLATFORM ASSETS] Error fetching Google assets:', error);
+            assets = [];
+          }
         }
         break;
       default:
