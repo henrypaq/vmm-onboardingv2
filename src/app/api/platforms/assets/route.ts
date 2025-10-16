@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
+import { fetchPlatformAssets } from '@/lib/oauth/oauth-utils';
 
 export async function GET(request: NextRequest) {
   console.log('=== PLATFORM ASSETS API START ===');
@@ -149,9 +150,19 @@ export async function GET(request: NextRequest) {
     
     switch (platform) {
       case 'meta':
-        console.log('Fetching Meta assets...');
-        assets = await fetchMetaAssets(connection.access_token);
-        console.log('Meta assets fetched:', assets);
+        console.log('🔍 [PLATFORM ASSETS] Fetching Meta assets using oauth-utils...');
+        try {
+          // Get the scopes from the platform connection
+          const scopes = connection.scopes || [];
+          console.log('🔍 [PLATFORM ASSETS] Meta scopes:', scopes);
+          
+          // Use the working fetchPlatformAssets function from oauth-utils
+          assets = await fetchPlatformAssets('meta', connection.access_token, scopes);
+          console.log('🔍 [PLATFORM ASSETS] Meta assets from oauth-utils:', assets);
+        } catch (error) {
+          console.error('🔍 [PLATFORM ASSETS] Error fetching Meta assets:', error);
+          assets = [];
+        }
         break;
       case 'google':
         console.log('Fetching Google assets...');
@@ -178,253 +189,6 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch assets', details: error.message },
       { status: 500 }
     );
-  }
-}
-
-async function fetchMetaAssets(accessToken: string) {
-  console.log('=== FETCHING META ASSETS ===');
-  console.log('Access token length:', accessToken?.length);
-  
-  try {
-    const assets = [];
-    
-    // Fetch Pages
-    console.log('Fetching Meta Pages...');
-    const pagesResponse = await fetch(
-      `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&fields=id,name,category`
-    );
-    
-    console.log('Pages response status:', pagesResponse.status);
-    
-    if (pagesResponse.ok) {
-      const pagesData = await pagesResponse.json();
-      console.log('Pages data received:', pagesData);
-      
-      if (pagesData.data) {
-        pagesData.data.forEach((page: any) => {
-          const asset = {
-            id: page.id,
-            name: page.name,
-            type: 'page',
-            description: `${page.category || 'Facebook Page'}`
-          };
-          console.log('Adding page asset:', asset);
-          assets.push(asset);
-        });
-      }
-    } else {
-      const errorText = await pagesResponse.text();
-      console.error('Pages API error:', pagesResponse.status, errorText);
-    }
-
-    // Fetch Ad Accounts
-    console.log('Fetching Meta Ad Accounts...');
-    const adAccountsResponse = await fetch(
-      `https://graph.facebook.com/v18.0/me/adaccounts?access_token=${accessToken}&fields=id,name,account_status`
-    );
-    
-    console.log('Ad Accounts response status:', adAccountsResponse.status);
-    
-    if (adAccountsResponse.ok) {
-      const adAccountsData = await adAccountsResponse.json();
-      console.log('Ad Accounts data received:', adAccountsData);
-      
-      if (adAccountsData.data) {
-        adAccountsData.data.forEach((account: any) => {
-          const asset = {
-            id: account.id,
-            name: account.name,
-            type: 'ad_account',
-            description: `Ad Account (${account.account_status})`
-          };
-          console.log('Adding ad account asset:', asset);
-          assets.push(asset);
-        });
-      }
-    } else {
-      const errorText = await adAccountsResponse.text();
-      console.error('Ad Accounts API error:', adAccountsResponse.status, errorText);
-    }
-
-    // Fetch Instagram Accounts
-    console.log('Fetching Meta Instagram Accounts...');
-    const instagramResponse = await fetch(
-      `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}&fields=id,name,instagram_business_account{id,username}`
-    );
-    
-    console.log('Instagram response status:', instagramResponse.status);
-    
-    if (instagramResponse.ok) {
-      const instagramData = await instagramResponse.json();
-      console.log('Instagram data received:', instagramData);
-      
-      if (instagramData.data) {
-        instagramData.data.forEach((page: any) => {
-          if (page.instagram_business_account) {
-            const asset = {
-              id: page.instagram_business_account.id,
-              name: page.instagram_business_account.username,
-              type: 'instagram_account',
-              description: 'Instagram Business Account'
-            };
-            console.log('Adding Instagram asset:', asset);
-            assets.push(asset);
-          }
-        });
-      }
-    } else {
-      const errorText = await instagramResponse.text();
-      console.error('Instagram API error:', instagramResponse.status, errorText);
-    }
-
-    // Fetch Catalogs (Product Catalogs) - Try multiple endpoints
-    console.log('🔍 [META ASSETS] Fetching Meta Catalogs...');
-    console.log('🔍 [META ASSETS] Access token length:', accessToken?.length);
-    
-    // Try multiple catalog endpoints
-    const catalogEndpoints = [
-      `https://graph.facebook.com/v18.0/me/catalogs?access_token=${accessToken}&fields=id,name,vertical`,
-      `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,catalogs{id,name,vertical}`,
-      `https://graph.facebook.com/v18.0/me?access_token=${accessToken}&fields=catalogs{id,name,vertical}`
-    ];
-    
-    for (let i = 0; i < catalogEndpoints.length; i++) {
-      const catalogsUrl = catalogEndpoints[i];
-      console.log(`🔍 [META ASSETS] Trying Catalogs endpoint ${i + 1}:`, catalogsUrl);
-      
-      try {
-        const catalogsResponse = await fetch(catalogsUrl);
-        
-        console.log(`🔍 [META ASSETS] Catalogs endpoint ${i + 1} response status:`, catalogsResponse.status);
-        console.log(`🔍 [META ASSETS] Catalogs endpoint ${i + 1} response headers:`, Object.fromEntries(catalogsResponse.headers.entries()));
-      
-      if (catalogsResponse.ok) {
-        const catalogsData = await catalogsResponse.json();
-        console.log('🔍 [META ASSETS] Catalogs data received:', catalogsData);
-        
-        if (catalogsData.data && catalogsData.data.length > 0) {
-          catalogsData.data.forEach((businessAccount: any) => {
-            if (businessAccount.catalogs && businessAccount.catalogs.data) {
-              businessAccount.catalogs.data.forEach((catalog: any) => {
-                const asset = {
-                  id: catalog.id,
-                  name: catalog.name,
-                  type: 'catalog',
-                  description: `Product Catalog (${catalog.vertical || 'E-commerce'})`
-                };
-                console.log('🔍 [META ASSETS] Adding catalog asset:', asset);
-                assets.push(asset);
-              });
-            } else if (catalog.id) {
-              // Direct catalog object
-              const asset = {
-                id: catalog.id,
-                name: catalog.name,
-                type: 'catalog',
-                description: `Product Catalog (${catalog.vertical || 'E-commerce'})`
-              };
-              console.log('🔍 [META ASSETS] Adding catalog asset:', asset);
-              assets.push(asset);
-            }
-          });
-          console.log(`🔍 [META ASSETS] Successfully found catalogs with endpoint ${i + 1}`);
-          break; // Exit loop if we found catalogs
-        } else {
-          console.log(`🔍 [META ASSETS] No catalogs found with endpoint ${i + 1}`);
-        }
-      } else {
-        const errorText = await catalogsResponse.text();
-        console.error(`🔍 [META ASSETS] Catalogs endpoint ${i + 1} API error:`, catalogsResponse.status, errorText);
-      }
-      } catch (catalogError) {
-        console.error(`🔍 [META ASSETS] Error with catalogs endpoint ${i + 1}:`, catalogError);
-      }
-    }
-
-    // Fetch Business Datasets - Try multiple endpoints
-    console.log('🔍 [META ASSETS] Fetching Meta Business Datasets...');
-    
-    // Try multiple dataset endpoints
-    const datasetEndpoints = [
-      `https://graph.facebook.com/v18.0/me/business_datasets?access_token=${accessToken}&fields=id,name,description`,
-      `https://graph.facebook.com/v18.0/me/business_accounts?access_token=${accessToken}&fields=id,name,datasets{id,name,description}`,
-      `https://graph.facebook.com/v18.0/me?access_token=${accessToken}&fields=datasets{id,name,description}`
-    ];
-    
-    for (let i = 0; i < datasetEndpoints.length; i++) {
-      const datasetsUrl = datasetEndpoints[i];
-      console.log(`🔍 [META ASSETS] Trying Datasets endpoint ${i + 1}:`, datasetsUrl);
-      
-      try {
-        const datasetsResponse = await fetch(datasetsUrl);
-        
-        console.log(`🔍 [META ASSETS] Datasets endpoint ${i + 1} response status:`, datasetsResponse.status);
-        console.log(`🔍 [META ASSETS] Datasets endpoint ${i + 1} response headers:`, Object.fromEntries(datasetsResponse.headers.entries()));
-      
-      if (datasetsResponse.ok) {
-        const datasetsData = await datasetsResponse.json();
-        console.log('🔍 [META ASSETS] Datasets data received:', datasetsData);
-        
-        if (datasetsData.data && datasetsData.data.length > 0) {
-          datasetsData.data.forEach((businessAccount: any) => {
-            if (businessAccount.datasets && businessAccount.datasets.data) {
-              businessAccount.datasets.data.forEach((dataset: any) => {
-                const asset = {
-                  id: dataset.id,
-                  name: dataset.name,
-                  type: 'business_dataset',
-                  description: dataset.description || 'Business Dataset'
-                };
-                console.log('🔍 [META ASSETS] Adding dataset asset:', asset);
-                assets.push(asset);
-              });
-            } else if (dataset.id) {
-              // Direct dataset object
-              const asset = {
-                id: dataset.id,
-                name: dataset.name,
-                type: 'business_dataset',
-                description: dataset.description || 'Business Dataset'
-              };
-              console.log('🔍 [META ASSETS] Adding dataset asset:', asset);
-              assets.push(asset);
-            }
-          });
-          console.log(`🔍 [META ASSETS] Successfully found datasets with endpoint ${i + 1}`);
-          break; // Exit loop if we found datasets
-        } else {
-          console.log(`🔍 [META ASSETS] No datasets found with endpoint ${i + 1}`);
-        }
-      } else {
-        const errorText = await datasetsResponse.text();
-        console.error(`🔍 [META ASSETS] Datasets endpoint ${i + 1} API error:`, datasetsResponse.status, errorText);
-      }
-      } catch (datasetError) {
-        console.error(`🔍 [META ASSETS] Error with datasets endpoint ${i + 1}:`, datasetError);
-      }
-    }
-
-    console.log('=== META ASSETS FETCH COMPLETE ===');
-    console.log('Total assets found:', assets.length);
-    console.log('Assets:', assets);
-    
-    // Debug: Log each asset type found
-    const assetTypes = [...new Set(assets.map(asset => asset.type))];
-    console.log('🔍 [META ASSETS] Final asset types found:', assetTypes);
-    assets.forEach((asset, index) => {
-      console.log(`🔍 [META ASSETS] Final asset ${index + 1}:`, {
-        id: asset.id,
-        name: asset.name,
-        type: asset.type,
-        description: asset.description
-      });
-    });
-
-    return assets;
-  } catch (error) {
-    console.error('=== META ASSETS FETCH ERROR ===');
-    console.error('Error fetching Meta assets:', error);
-    return [];
   }
 }
 
