@@ -975,35 +975,43 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                 </div>
                               </div>
 
-                              <div className="flex justify-center mt-8">
-                                <Button 
-                                  onClick={handleShopifyStoreIdSubmit}
-                                  disabled={!shopifyData.storeId.trim()}
-                                  className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed px-8"
-                                >
-                                  Continue
-                                </Button>
-                              </div>
+            <div className="flex justify-center mt-8">
+              <Button
+                onClick={handleShopifyStoreIdSubmit}
+                disabled={!shopifyData.storeId.trim()}
+                className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Continue
+              </Button>
+            </div>
 
                               {/* Step 2: Collaborator Code Entry - Show underneath when step 2 */}
                               {shopifyStep === 2 && (
                                 <div className="mt-8 pt-8 border-t border-gray-200">
                                   <div className="space-y-6">
-                                    <div>
-                                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                        1. Open your store's Users and permissions settings:
-                                      </h3>
-                                      <Button
-                                        onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
-                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md"
-                                      >
-                                        OPEN SHOPIFY
-                                      </Button>
-                                    </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      We'll need your Shopify collaborator code
+                    </h3>
+                    <Button
+                      onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md"
+                    >
+                      OPEN SHOPIFY
+                    </Button>
+                    <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                      <p className="text-sm text-gray-600 mb-2">
+                        <strong>Can't find the collaborator code?</strong>
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Go to Settings → Users and permissions → Collaborator access → Generate collaborator request code
+                      </p>
+                    </div>
+                  </div>
 
                                     <div>
                                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                        2. Enter your Collaborator Request Code
+                                        Enter your Collaborator Request Code
                                       </h3>
                                       <div className="space-y-2">
                                         <Label htmlFor="collaboratorCode" className="text-sm font-medium text-gray-700">
@@ -1024,15 +1032,15 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                     </div>
                                   </div>
 
-                                  <div className="flex justify-center mt-8">
-                                    <Button 
-                                      onClick={handleShopifyComplete}
-                                      disabled={!shopifyData.collaboratorCode}
-                                      className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed px-8"
-                                    >
-                                      Complete
-                                    </Button>
-                                  </div>
+                <div className="flex justify-center mt-8">
+                  <Button
+                    onClick={handleShopifyComplete}
+                    disabled={!shopifyData.collaboratorCode}
+                    className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Complete
+                  </Button>
+                </div>
                                 </div>
                               )}
                             </div>
@@ -1043,18 +1051,18 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               <CheckCircle className="h-5 w-5" />
                               <span className="font-medium">Shopify store connected successfully</span>
                             </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setConnectionStatus(prev => ({ ...prev, shopify: { connected: false } }));
-                                setShopifyStep(1);
-                                setShopifyData({ storeId: '', collaboratorCode: '' });
-                              }}
-                              className="text-xs"
-                            >
-                              Change Store
-                            </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setConnectionStatus(prev => ({ ...prev, shopify: { connected: false } }));
+              setShopifyStep(1);
+              setShopifyData({ storeId: '', collaboratorCode: '' });
+            }}
+            className="text-xs px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Change Store
+          </Button>
                           </div>
                         )
                       ) : (
