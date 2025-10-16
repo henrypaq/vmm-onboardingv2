@@ -82,10 +82,21 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       setIsTestingAllAssets(true);
       setTestResults(null);
       
+      // Filter out Shopify connections for testing
+      const testableConnections = platformConnections.filter(conn => conn.platform !== 'shopify');
+      
+      if (testableConnections.length === 0) {
+        toast.info('No testable platform connections found (excluding Shopify).');
+        return;
+      }
+      
       const response = await fetch('/api/admin/test-assets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId })
+        body: JSON.stringify({ 
+          clientId,
+          excludePlatforms: ['shopify'] // Exclude Shopify from testing
+        })
       });
 
       if (!response.ok) {
@@ -100,9 +111,9 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
       const anyFail = Object.values(results).some(status => status === 'fail');
       
       if (allOk) {
-        toast.success('All client assets are connected and functioning correctly.');
+        toast.success('All testable platform assets are connected and functioning correctly.');
       } else if (anyFail) {
-        toast.error('Some client assets could not be verified. Check tokens or permissions.');
+        toast.error('Some platform assets could not be verified. Check tokens or permissions.');
       }
       
     } catch (error) {
@@ -392,7 +403,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
               </CardTitle>
                 <Button
                   onClick={testAllAssets}
-                  disabled={isTestingAllAssets || platformConnections.length === 0}
+                  disabled={isTestingAllAssets || platformConnections.filter(conn => conn.platform !== 'shopify').length === 0}
                   variant="outline"
                   size="sm"
                   className="hover:bg-primary/10 hover:border-primary/30 transition-colors"
@@ -400,12 +411,12 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                   {isTestingAllAssets ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Testing connections...
+                      Testing platform connections...
                     </>
                   ) : (
                     <>
                       <TestTube className="h-4 w-4 mr-2" />
-                      Test All Assets
+                      Test Platform Assets
                     </>
                   )}
                 </Button>
@@ -443,20 +454,22 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                           >
                             {connection.is_active ? 'Active' : 'Inactive'}
                           </Badge>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => testPlatformAPI(connection.platform, connection)}
-                            disabled={apiTestLoading[`${connection.platform}_${connection.id}`]}
-                            className="hover:bg-primary/10 hover:border-primary/30"
-                          >
-                            {apiTestLoading[`${connection.platform}_${connection.id}`] ? (
-                              <RefreshCw className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <TestTube className="h-4 w-4" />
-                            )}
-                            <span className="ml-2">Test API</span>
-                          </Button>
+                          {connection.platform !== 'shopify' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => testPlatformAPI(connection.platform, connection)}
+                              disabled={apiTestLoading[`${connection.platform}_${connection.id}`]}
+                              className="hover:bg-primary/10 hover:border-primary/30"
+                            >
+                              {apiTestLoading[`${connection.platform}_${connection.id}`] ? (
+                                <RefreshCw className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <TestTube className="h-4 w-4" />
+                              )}
+                              <span className="ml-2">Test API</span>
+                            </Button>
+                          )}
                         </div>
                       </div>
                       

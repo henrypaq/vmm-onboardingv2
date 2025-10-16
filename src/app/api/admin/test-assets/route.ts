@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { clientId } = await request.json();
+    const { clientId, excludePlatforms = [] } = await request.json();
 
     if (!clientId) {
       return NextResponse.json(
@@ -29,12 +29,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Filter out excluded platforms
+    const filteredConnections = connections?.filter(conn => 
+      !excludePlatforms.includes(conn.platform)
+    ) || [];
+
     console.log('[Test Assets] Found connections:', connections?.length || 0);
+    console.log('[Test Assets] Excluded platforms:', excludePlatforms);
+    console.log('[Test Assets] Testing connections:', filteredConnections.length);
 
     const results: Record<string, string> = {};
 
     // Test each platform connection
-    for (const connection of connections || []) {
+    for (const connection of filteredConnections) {
       const platform = connection.platform;
       console.log(`[Test Assets] Testing ${platform} connection...`);
 
