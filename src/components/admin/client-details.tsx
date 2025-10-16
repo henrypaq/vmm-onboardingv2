@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { X, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube, Copy, Check, Globe, Loader2 } from 'lucide-react';
+import { X, RefreshCw, Calendar, User, Building, Mail, Link as LinkIcon, TestTube, Copy, Check, Globe, Loader2, ExternalLink } from 'lucide-react';
 
 interface ClientDetails {
   id: string;
@@ -450,7 +450,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                         const assets = connection.assets;
                         return connection.platform === 'google' || (assets && assets.length > 0);
                       })() ? (
-                        <div>
+                                    <div>
                           <label className="text-sm font-medium text-gray-500 mb-2 block">Available Assets</label>
                           <div className="space-y-2">
                             {connection.assets?.map((asset: Asset, index: number) => (
@@ -458,15 +458,15 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                 <div className="flex-1">
                                   <p className="font-medium text-sm text-gray-900">{asset.name}</p>
                                   <p className="text-xs text-gray-500 capitalize">{asset.type.replace('_', ' ')}</p>
-                                </div>
+                                      </div>
                                 <div className="flex items-center gap-2">
                                   <Badge variant="outline" className="text-xs">
                                     {asset.id}
                                   </Badge>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
                                       const platformUrls = {
                                         'google': `https://analytics.google.com/analytics/web/#/p${asset.id}`,
                                         'meta': `https://business.facebook.com/`,
@@ -480,7 +480,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   >
                                     <ExternalLink className="h-3 w-3 mr-1" />
                                     Open in {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
-                                  </Button>
+                                        </Button>
                                 </div>
                               </div>
                             )) || (
@@ -517,12 +517,12 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   <ExternalLink className="h-3 w-3 mr-1" />
                                   Open Store
                                 </Button>
-                              </div>
-                            </div>
+                      </div>
+                    </div>
                             
                             <div className="p-3 bg-gray-50 rounded-lg">
                               <div className="flex items-center justify-between">
-                                <div>
+                  <div>
                                   <p className="font-medium text-sm text-gray-900">Collaborator Code</p>
                                   <p className="text-xs text-gray-500 font-mono">{connection.metadata.collaborator_code || 'Not provided'}</p>
                                 </div>
@@ -538,8 +538,8 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   <ExternalLink className="h-3 w-3 mr-1" />
                                   Open Partner Dashboard
                                 </Button>
-                              </div>
-                            </div>
+                    </div>
+                  </div>
                           </div>
                         </div>
                       )}
