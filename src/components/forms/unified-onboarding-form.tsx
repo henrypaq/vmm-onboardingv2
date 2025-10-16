@@ -447,11 +447,23 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   // Get display name for asset type
   const getAssetTypeDisplayName = (type: string) => {
     const typeMap: Record<string, string> = {
+      // Meta asset types
       'page': 'Pages',
       'ad_account': 'Ad Accounts',
       'catalog': 'Catalogs',
       'business_dataset': 'Datasets',
       'instagram_account': 'Instagram Accounts',
+      // Google asset types
+      'ads_account': 'Google Ads Accounts',
+      'analytics_property': 'Analytics Properties',
+      'business_profile': 'Business Profiles',
+      'tag_manager': 'Tag Manager Accounts',
+      'search_console_site': 'Search Console Sites',
+      'merchant_center': 'Merchant Center Accounts',
+      'tagmanager_account': 'Tag Manager Accounts',
+      'searchconsole_site': 'Search Console Sites',
+      'business_account': 'Business Accounts',
+      'merchant_account': 'Merchant Center Accounts',
       'other': 'Other Assets'
     };
     return typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
@@ -473,11 +485,23 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
 
     // Map asset types to required scopes
     const assetTypeToScopes: Record<string, string[]> = {
+      // Meta asset types
       'page': ['pages_show_list', 'pages_read_engagement'],
       'ad_account': ['ads_read', 'ads_management'],
       'catalog': ['catalog_management', 'business_management'],
       'business_dataset': ['business_management', 'ads_read'],
       'instagram_account': ['instagram_basic', 'pages_show_list'],
+      // Google asset types
+      'ads_account': ['https://www.googleapis.com/auth/adwords'],
+      'analytics_property': ['https://www.googleapis.com/auth/analytics.readonly'],
+      'business_profile': ['https://www.googleapis.com/auth/business.manage'],
+      'tag_manager': ['https://www.googleapis.com/auth/tagmanager.readonly'],
+      'search_console_site': ['https://www.googleapis.com/auth/webmasters.readonly'],
+      'merchant_center': ['https://www.googleapis.com/auth/content'],
+      'tagmanager_account': ['https://www.googleapis.com/auth/tagmanager.readonly'],
+      'searchconsole_site': ['https://www.googleapis.com/auth/webmasters.readonly'],
+      'business_account': ['https://www.googleapis.com/auth/business.manage'],
+      'merchant_account': ['https://www.googleapis.com/auth/content'],
       'other': []
     };
 
