@@ -32,6 +32,11 @@ export async function GET() {
       throw new Error(`Failed to fetch links: ${linksError.message}`);
     }
 
+    console.log(`[Detailed Clients API] Found ${links?.length || 0} onboarding links for admin ${adminId}`);
+    if (links && links.length > 0) {
+      console.log('[Detailed Clients API] Available links:', links.map(l => ({ id: l.id, token: l.token, link_name: l.link_name })));
+    }
+
     // Get onboarding requests
     const { data: requests, error: requestsError } = await supabaseAdmin
       .from('onboarding_requests')
@@ -41,6 +46,11 @@ export async function GET() {
     if (requestsError) {
       console.error('[Detailed Clients API] Error fetching requests:', requestsError);
       throw new Error(`Failed to fetch requests: ${requestsError.message}`);
+    }
+
+    console.log(`[Detailed Clients API] Found ${requests?.length || 0} onboarding requests`);
+    if (requests && requests.length > 0) {
+      console.log('[Detailed Clients API] Available requests:', requests.map(r => ({ id: r.id, client_id: r.client_id, link_id: r.link_id })));
     }
 
     // Get client platform connections

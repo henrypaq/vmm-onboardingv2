@@ -1,5 +1,4 @@
 import { Header } from '@/components/layout/header';
-import { ToastContainer } from '@/components/ui/toast';
 
 export default function AdminLayout({
   children,
@@ -19,7 +18,6 @@ export default function AdminLayout({
       <main className="flex-1 overflow-y-auto bg-white">
         {children}
       </main>
-      <ToastContainer />
     </div>
   );
 }
