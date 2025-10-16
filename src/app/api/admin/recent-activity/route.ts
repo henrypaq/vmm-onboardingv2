@@ -71,7 +71,7 @@ export async function GET() {
     }
 
     // Combine and format activities
-    const activities = [];
+    const activities: any[] = [];
 
     // Add completed onboarding requests
     requests?.forEach(request => {
@@ -96,13 +96,13 @@ export async function GET() {
         id: `connection-${connection.id}`,
         type: 'platform_connected',
         title: 'Platform Connected',
-        description: `${connection.client?.full_name || connection.client?.email} connected to ${connection.platform}`,
+        description: `${connection.client?.[0]?.full_name || connection.client?.[0]?.email || 'Client'} connected to ${connection.platform}`,
         timestamp: connection.created_at,
         icon: 'LinkIcon',
         metadata: {
           platform: connection.platform,
-          clientName: connection.client?.full_name,
-          clientEmail: connection.client?.email,
+          clientName: connection.client?.[0]?.full_name,
+          clientEmail: connection.client?.[0]?.email,
           platformUsername: connection.platform_username
         }
       });

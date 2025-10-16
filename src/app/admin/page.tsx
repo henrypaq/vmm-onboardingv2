@@ -36,10 +36,12 @@ interface DashboardStats {
 
 interface RecentActivity {
   id: string;
-  type: 'client_created' | 'link_generated' | 'onboarding_completed' | 'connection_established';
-  message: string;
+  type: string;
+  title: string;
+  description: string;
   timestamp: string;
-  status: 'success' | 'warning' | 'info';
+  icon: string;
+  metadata?: any;
 }
 
 interface PlatformAsset {
