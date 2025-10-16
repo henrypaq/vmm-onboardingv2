@@ -321,6 +321,20 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       console.log('🟢 [UNIFIED FORM] Assets array:', assetsData.assets);
       console.log('🟢 [UNIFIED FORM] Assets count:', assetsData.assets?.length || 0);
       
+      // Debug: Log each asset type found
+      if (assetsData.assets && assetsData.assets.length > 0) {
+        const assetTypes = [...new Set(assetsData.assets.map((asset: any) => asset.type))];
+        console.log('🔍 [ASSET DEBUG] Asset types found:', assetTypes);
+        assetsData.assets.forEach((asset: any, index: number) => {
+          console.log(`🔍 [ASSET DEBUG] Asset ${index + 1}:`, {
+            id: asset.id,
+            name: asset.name,
+            type: asset.type,
+            description: asset.description
+          });
+        });
+      }
+      
       setPlatformAssets(prev => ({ ...prev, [platformId]: assetsData.assets || [] }));
       console.log('🟢 [UNIFIED FORM] Assets set in state for', platformId, ':', assetsData.assets || []);
       
@@ -364,6 +378,41 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       'other': 'Other Assets'
     };
     return typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  // Check if asset type should be shown based on requested scopes
+  const shouldShowAssetType = (platformId: string, assetType: string) => {
+    if (!linkData?.requested_permissions?.[platformId]) {
+      console.log(`🔍 [SCOPE FILTER] No requested permissions for platform ${platformId}`);
+      return true; // Show all if no specific permissions requested
+    }
+
+    const requestedScopes = linkData.requested_permissions[platformId];
+    console.log(`🔍 [SCOPE FILTER] Checking asset type ${assetType} for platform ${platformId}`);
+    console.log(`🔍 [SCOPE FILTER] Requested scopes:`, requestedScopes);
+
+    // Map asset types to required scopes
+    const assetTypeToScopes: Record<string, string[]> = {
+      'page': ['pages_show_list', 'pages_read_engagement'],
+      'ad_account': ['ads_read', 'ads_management'],
+      'catalog': ['catalog_management', 'business_management'],
+      'business_dataset': ['business_management', 'ads_read'],
+      'instagram_account': ['instagram_basic', 'pages_show_list'],
+      'other': []
+    };
+
+    const requiredScopes = assetTypeToScopes[assetType] || [];
+    console.log(`🔍 [SCOPE FILTER] Required scopes for ${assetType}:`, requiredScopes);
+
+    if (requiredScopes.length === 0) {
+      console.log(`🔍 [SCOPE FILTER] No specific scopes required for ${assetType}, showing`);
+      return true;
+    }
+
+    const hasRequiredScope = requiredScopes.some(scope => requestedScopes.includes(scope));
+    console.log(`🔍 [SCOPE FILTER] Has required scope for ${assetType}:`, hasRequiredScope);
+    
+    return hasRequiredScope;
   };
 
   // Handle asset selection (dropdown-based)
@@ -834,7 +883,17 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                             </div>
                           ) : platformAssets[platform.id] && platformAssets[platform.id].length > 0 ? (
                             <div className="space-y-4">
-                              {Object.entries(groupAssetsByType(platformAssets[platform.id])).map(([assetType, assets]) => (
+                              {(() => {
+                                const groupedAssets = groupAssetsByType(platformAssets[platform.id]);
+                                console.log('🔍 [RENDER DEBUG] Grouped assets for', platform.id, ':', groupedAssets);
+                                const filteredAssets = Object.entries(groupedAssets)
+                                  .filter(([assetType]) => {
+                                    const shouldShow = shouldShowAssetType(platform.id, assetType);
+                                    console.log(`🔍 [RENDER DEBUG] Asset type ${assetType} should show:`, shouldShow);
+                                    return shouldShow;
+                                  });
+                                console.log('🔍 [RENDER DEBUG] Filtered assets:', filteredAssets);
+                                return filteredAssets.map(([assetType, assets]) => (
                                 <div key={assetType} className="space-y-2">
                                   <Label className="text-sm font-medium text-gray-700">
                                     {getAssetTypeDisplayName(assetType)}
@@ -864,7 +923,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                     </SelectContent>
                                   </Select>
                                 </div>
-                              ))}
+                                ));
+                              })()}
                               
                               {/* Instagram Account Help Text */}
                               {Object.keys(groupAssetsByType(platformAssets[platform.id])).includes('instagram_account') && (
