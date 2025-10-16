@@ -201,18 +201,19 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
 
           {/* Link Box */}
           <div className="bg-white border border-gray-200 rounded-lg px-3 py-2.5">
-            {client.linkUrl ? (
+            {client.onboardingRequest?.link?.token ? (
               <div className="relative group">
                 <div 
                   className="flex items-center justify-between gap-2 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
-                    copyToClipboard(client.linkUrl!);
+                    const linkUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`;
+                    copyToClipboard(linkUrl);
                   }}
                   title="Click to copy"
                 >
                   <span className="text-xs text-gray-600 truncate font-mono">
-                    {client.linkUrl}
+                    {`${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`}
                   </span>
                   <Copy className="h-3.5 w-3.5 text-gray-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
@@ -295,17 +296,18 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
 
           {/* Link */}
           <div className="min-w-0 flex-[4]">
-            {client.linkUrl ? (
+            {client.onboardingRequest?.link?.token ? (
               <div className="relative group max-w-md">
                 <div 
                   className="bg-white text-gray-700 text-xs px-3 py-2.5 pr-10 rounded border cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
-                    copyToClipboard(client.linkUrl!);
+                    const linkUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`;
+                    copyToClipboard(linkUrl);
                   }}
                   title="Click to copy"
                 >
-                  {client.linkUrl}
+                  {`${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`}
                 </div>
                 <Button
                   size="sm"
@@ -313,7 +315,8 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
                   className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
                   onClick={(e) => {
                     e.stopPropagation();
-                    copyToClipboard(client.linkUrl!);
+                    const linkUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`;
+                    copyToClipboard(linkUrl);
                   }}
                 >
                   <Copy className="h-3 w-3" />

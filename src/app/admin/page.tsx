@@ -424,23 +424,28 @@ export default function AdminDashboardPage() {
                       </Badge>
                     </div>
                     
-                    {/* Assets */}
-                    <div>
-                      <h4 className="text-sm font-medium mb-3">Available Assets:</h4>
-                      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-                        {connection.assets.map((asset) => (
-                          <div key={asset.id} className="flex items-center space-x-2 p-2 bg-white border border-gray-200 rounded-md">
-                            <div className="text-gray-500">
-                              {getAssetIcon(asset.type)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{asset.name}</p>
-                              <p className="text-xs text-gray-500 capitalize">
-                                {asset.type.replace('_', ' ')}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                    {/* Scopes */}
+                    <div className="text-sm text-gray-600">
+                      <p className="mb-2">Available permissions:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {connection.scopes && connection.scopes.length > 0 ? (
+                          <>
+                            {connection.scopes.slice(0, 3).map((scope, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {scope.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </Badge>
+                            ))}
+                            {connection.scopes.length > 3 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{connection.scopes.length - 3} more
+                              </Badge>
+                            )}
+                          </>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            No permissions granted
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
