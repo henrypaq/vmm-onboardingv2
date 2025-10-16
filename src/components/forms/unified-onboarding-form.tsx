@@ -274,8 +274,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     }
   };
   
-  // Handle Shopify completion
-  const handleShopifyComplete = async () => {
+  // Handle Shopify verification (without advancing steps)
+  const handleShopifyVerification = async () => {
     try {
       // Get the client ID from the current request
       const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
@@ -315,16 +315,10 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         shopify: { connected: true, account: shopifyData.storeId }
       }));
       
-      // Reset Shopify data and step
-      setShopifyData({
-        storeId: '',
-        collaboratorCode: ''
-      });
-      setShopifyStep(1);
-      
     } catch (error) {
       console.error('Shopify verification error:', error);
       toast.error(`Failed to verify Shopify store access: ${error.message}`);
+      throw error; // Re-throw to prevent advancing if verification fails
     }
   };
   
@@ -735,6 +729,11 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     
     setIsSubmitting(true);
     try {
+      // If we're on Shopify step 2 (collaborator code), verify Shopify first
+      if (currentPlatform?.id === 'shopify' && shopifyStep === 2 && shopifyData.collaboratorCode) {
+        await handleShopifyVerification();
+      }
+      
       await handleFinalSubmit();
     } catch (error) {
       console.error('Error completing onboarding:', error);
@@ -994,8 +993,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                       We'll need your Shopify collaborator code
                     </h3>
                     <Button
-                      onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md"
+                      onClick={() => window.open(`https://admin.shopify.com/store/${shopifyData.storeId}/settings/account`, '_blank')}
+                      className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md"
                     >
                       OPEN SHOPIFY
                     </Button>
@@ -1032,15 +1031,19 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                     </div>
                                   </div>
 
-                <div className="flex justify-center mt-8">
-                  <Button
-                    onClick={handleShopifyComplete}
-                    disabled={!shopifyData.collaboratorCode}
-                    className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Complete
-                  </Button>
-                </div>
+                                  {/* Previous button for Shopify step 2 */}
+                                  {shopifyStep === 2 && (
+                                    <div className="flex justify-center mt-6">
+                                      <Button
+                                        onClick={() => setShopifyStep(1)}
+                                        variant="outline"
+                                        className="w-full max-w-xs"
+                                      >
+                                        <ArrowLeft className="mr-2 h-4 w-4" />
+                                        Previous
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
