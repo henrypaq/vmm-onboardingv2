@@ -34,6 +34,9 @@ interface Client {
   last_onboarding_at: string | null;
   created_at: string;
   updated_at: string;
+  linkUrl?: string;
+  linkName?: string;
+  onboardingRequest?: any;
 }
 
 interface ExtendedClientData extends Omit<Client, 'status'> {
@@ -121,6 +124,33 @@ interface ClientGridItemProps {
 }
 
 function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
+  const [linkUrl, setLinkUrl] = useState<string | null>(null);
+  const [isLoadingLink, setIsLoadingLink] = useState(false);
+
+  useEffect(() => {
+    const fetchLink = async () => {
+      if (client.linkUrl) {
+        setLinkUrl(client.linkUrl);
+        return;
+      }
+      
+      setIsLoadingLink(true);
+      try {
+        const response = await fetch(`/api/clients/${client.id}/link`);
+        const data = await response.json();
+        if (data.success && data.linkUrl) {
+          setLinkUrl(data.linkUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching link:', error);
+      } finally {
+        setIsLoadingLink(false);
+      }
+    };
+
+    fetchLink();
+  }, [client.id, client.linkUrl]);
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Link copied to clipboard!', {
@@ -201,19 +231,20 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
 
           {/* Link Box */}
           <div className="bg-white border border-gray-200 rounded-lg px-3 py-2.5">
-            {client.onboardingRequest?.link?.token ? (
+            {isLoadingLink ? (
+              <span className="text-xs text-gray-400">Loading link...</span>
+            ) : linkUrl ? (
               <div className="relative group">
                 <div 
                   className="flex items-center justify-between gap-2 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const linkUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`;
                     copyToClipboard(linkUrl);
                   }}
                   title="Click to copy"
                 >
                   <span className="text-xs text-gray-600 truncate font-mono">
-                    {`${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`}
+                    {linkUrl}
                   </span>
                   <Copy className="h-3.5 w-3.5 text-gray-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
@@ -261,6 +292,33 @@ interface ClientListItemProps {
 }
 
 function ClientListItem({ client, onView }: ClientListItemProps) {
+  const [linkUrl, setLinkUrl] = useState<string | null>(null);
+  const [isLoadingLink, setIsLoadingLink] = useState(false);
+
+  useEffect(() => {
+    const fetchLink = async () => {
+      if (client.linkUrl) {
+        setLinkUrl(client.linkUrl);
+        return;
+      }
+      
+      setIsLoadingLink(true);
+      try {
+        const response = await fetch(`/api/clients/${client.id}/link`);
+        const data = await response.json();
+        if (data.success && data.linkUrl) {
+          setLinkUrl(data.linkUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching link:', error);
+      } finally {
+        setIsLoadingLink(false);
+      }
+    };
+
+    fetchLink();
+  }, [client.id, client.linkUrl]);
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Link copied to clipboard!', {
@@ -296,18 +354,19 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
 
           {/* Link */}
           <div className="min-w-0 flex-[4]">
-            {client.onboardingRequest?.link?.token ? (
+            {isLoadingLink ? (
+              <span className="text-xs text-gray-400">Loading link...</span>
+            ) : linkUrl ? (
               <div className="relative group max-w-md">
                 <div 
                   className="bg-white text-gray-700 text-xs px-3 py-2.5 pr-10 rounded border cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const linkUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`;
                     copyToClipboard(linkUrl);
                   }}
                   title="Click to copy"
                 >
-                  {`${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`}
+                  {linkUrl}
                 </div>
                 <Button
                   size="sm"
@@ -315,7 +374,6 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
                   className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const linkUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${client.onboardingRequest.link.token}`;
                     copyToClipboard(linkUrl);
                   }}
                 >

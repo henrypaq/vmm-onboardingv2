@@ -138,6 +138,9 @@ export async function GET() {
       const constructedUrl = link ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${link.token}` : null;
       console.log(`[Detailed Clients API] Client ${client.id} final linkUrl:`, constructedUrl);
       console.log(`[Detailed Clients API] Client ${client.id} onboardingRequest with link:`, request ? { ...request, link: link } : null);
+      console.log(`[Detailed Clients API] Client ${client.id} link token:`, link?.token);
+      console.log(`[Detailed Clients API] Client ${client.id} request link_id:`, request?.link_id);
+      console.log(`[Detailed Clients API] Client ${client.id} found link:`, link ? 'YES' : 'NO');
       
       return {
         ...client,
