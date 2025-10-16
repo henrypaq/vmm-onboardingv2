@@ -63,6 +63,14 @@ export async function GET() {
       // Find link for this request
       const link = request ? links?.find(l => l.id === request.link_id) : null;
       
+      // Debug logging for missing links
+      if (!link && request) {
+        console.log(`[Detailed Clients API] Client ${client.id} has request but no link found. Request link_id: ${request.link_id}`);
+        console.log(`[Detailed Clients API] Available links:`, links?.map(l => ({ id: l.id, token: l.token, link_name: l.link_name })));
+      } else if (!request) {
+        console.log(`[Detailed Clients API] Client ${client.id} has no onboarding request`);
+      }
+      
       // Find platform connections for this client
       const clientConnections = connections?.filter(c => c.client_id === client.id) || [];
       

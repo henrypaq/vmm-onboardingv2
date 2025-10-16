@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     // Get the onboarding request
     const { data: onboardingRequest, error: requestError } = await supabase
       .from('onboarding_requests')
-      .select('platform_connections')
+      .select('platform_connections, client_id')
       .eq('id', clientId)
       .single();
 
@@ -51,9 +51,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Also update the client_platform_connections table with selected assets
+    if (onboardingRequest.client_id) {
+      console.log('Updating client_platform_connections for client:', onboardingRequest.client_id);
+      
+      // Get the current platform connection
+      const { data: platformConnection, error: connectionError } = await supabase
+        .from('client_platform_connections')
+        .select('*')
+        .eq('client_id', onboardingRequest.client_id)
+        .eq('platform', platform)
+        .eq('is_active', true)
+        .single();
+
+      if (platformConnection && !connectionError) {
+        // Update the assets field with selected assets
+        const { error: updateConnectionError } = await supabase
+          .from('client_platform_connections')
+          .update({
+            assets: selectedAssets,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', platformConnection.id);
+
+        if (updateConnectionError) {
+          console.error('Error updating platform connection:', updateConnectionError);
+          // Don't fail the request, just log the error
+        } else {
+          console.log('Successfully updated platform connection with selected assets');
+        }
+      } else {
+        console.log('No active platform connection found to update');
+      }
+    }
+
     return NextResponse.json({ 
       success: true,
-      message: 'Selected assets saved successfully'
+      message: 'Selected assets saved successfully',
+      selectedAssets 
     });
 
   } catch (error) {
