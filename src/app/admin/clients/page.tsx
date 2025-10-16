@@ -745,7 +745,7 @@ export default function ClientsPage() {
 
       {/* Client Details Panel */}
       {selectedClientId && (
-        <ClientDetailsPanel
+        <ClientDetails
           clientId={selectedClientId}
           onClose={() => setSelectedClientId(null)}
         />
