@@ -549,7 +549,7 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col h-full overflow-hidden bg-white">
+    <div className="flex flex-col h-full bg-white">
       {/* Fixed Header Section */}
       <div className="flex-none p-4 md:p-6 space-y-4">
         {/* Header */}

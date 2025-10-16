@@ -709,13 +709,15 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 <div className={`
                   w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
                   ${step.completed 
-                    ? 'bg-primary text-white' 
+                    ? 'bg-green-500 text-white' 
                     : step.current 
                       ? 'bg-primary/20 text-primary border-2 border-primary' 
                       : 'bg-gray-200 text-gray-500'
                   }
                 `}>
-                  {step.logo ? (
+                  {step.completed ? (
+                    <CheckCircle className="h-5 w-5 text-white" />
+                  ) : step.logo ? (
                     <Image 
                       src={step.logo} 
                       alt={step.name} 
@@ -729,7 +731,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 </div>
                 {index < getProgressSteps().length - 1 && (
                   <div className={`w-12 h-0.5 mx-2 ${
-                    step.completed ? 'bg-primary' : 'bg-gray-200'
+                    step.completed ? 'bg-green-500' : 'bg-gray-200'
                   }`} />
                 )}
               </div>
@@ -983,7 +985,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                             </div>
                           )}
                           
-                          <div className="flex justify-between space-x-3 pt-6">
+                          <div className="flex justify-end space-x-3 pt-6">
                             <Button
                               onClick={() => setShowAssetSelection(prev => ({ ...prev, [platform.id]: false }))}
                               variant="outline"
@@ -1011,7 +1013,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                         <Button
                           onClick={() => setCurrentPlatformIndex(Math.max(0, currentPlatformIndex - 1))}
                           variant="outline"
-                          disabled={currentPlatformIndex === 0}
                         >
                           <ArrowLeft className="mr-2 h-4 w-4" />
                           Previous

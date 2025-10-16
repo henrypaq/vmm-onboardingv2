@@ -449,19 +449,39 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       {(() => {
                         const assets = connection.assets;
                         return connection.platform === 'google' || (assets && assets.length > 0);
-                      }                      )() ? (
+                      })() ? (
                                     <div>
                           <label className="text-sm font-medium text-gray-500 mb-2 block">Available Assets</label>
-                                  <div className="space-y-2">
+                          <div className="space-y-2">
                             {connection.assets?.map((asset: Asset, index: number) => (
                               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div>
+                                <div className="flex-1">
                                   <p className="font-medium text-sm text-gray-900">{asset.name}</p>
                                   <p className="text-xs text-gray-500 capitalize">{asset.type.replace('_', ' ')}</p>
+                                      </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {asset.id}
+                                  </Badge>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                      const platformUrls = {
+                                        'google': `https://analytics.google.com/analytics/web/#/p${asset.id}`,
+                                        'meta': `https://business.facebook.com/`,
+                                        'shopify': `https://${connection.platform_username}.myshopify.com/admin`,
+                                        'tiktok': `https://ads.tiktok.com/marketing_api/`
+                                      };
+                                      const url = platformUrls[connection.platform as keyof typeof platformUrls] || '#';
+                                      window.open(url, '_blank');
+                                    }}
+                                    className="text-xs hover:bg-primary/10 hover:border-primary/30"
+                                  >
+                                    <ExternalLink className="h-3 w-3 mr-1" />
+                                    Open in {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
+                                        </Button>
                                 </div>
-                                <Badge variant="outline" className="text-xs">
-                                  {asset.id}
-                                </Badge>
                               </div>
                             )) || (
                               <div className="text-center py-4">
