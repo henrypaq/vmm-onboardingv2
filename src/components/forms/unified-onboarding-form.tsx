@@ -942,9 +942,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
           <div className="space-y-4">
             <div>
               <h2 className="text-xl page-title text-gray-900">Connect Your Platforms</h2>
-              <p className="text-gray-600 mt-1 text-sm">
-                Connect each platform to grant access to your accounts.
-              </p>
             </div>
             
             {/* Current Platform */}
@@ -993,15 +990,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                                   Enter Your Shopify Store ID
                                 </h3>
-                                <p className="text-gray-600">
-                                  Enter your store ID to continue with the connection process.
-                                </p>
                               </div>
                               
                               <div className="space-y-4">
                                 <div className="flex justify-center">
                                   <div className="flex items-center space-x-2">
-                                    <span className="text-sm font-medium text-gray-700">
+                                    <span className="text-lg font-bold text-gray-700">
                                       https://
                                     </span>
                                     <Input
@@ -1009,12 +1003,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                       value={shopifyData.storeId}
                                       onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
                                       placeholder="store-id"
-                                      className="w-32 border border-gray-300 rounded-md"
+                                      className="w-40 border-2 border-gray-300 rounded-md text-lg font-semibold text-center"
                                       autoCapitalize="none"
                                       autoCorrect="off"
                                       spellCheck="false"
                                     />
-                                    <span className="text-sm font-medium text-gray-700">
+                                    <span className="text-lg font-bold text-gray-700">
                                       .myshopify.com
                                     </span>
                                   </div>
@@ -1058,11 +1052,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Can't find the collaborator code?</strong>
                       </p>
-                      <p className="text-sm text-gray-600">
-                        Go to Settings → Users and permissions → Collaborator access → Generate collaborator request code
-                      </p>
                     </div>
-                    <div className="flex justify-center">
+                    <div className="flex justify-center mt-6">
                       <Button
                         onClick={() => window.open(`https://admin.shopify.com/store/${shopifyData.storeId}/settings/account`, '_blank')}
                         className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md"

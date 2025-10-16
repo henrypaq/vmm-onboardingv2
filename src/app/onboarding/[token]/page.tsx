@@ -75,10 +75,10 @@ export default function OnboardingPage() {
   }
 
   if (isSubmitted) {
-    // Redirect to home page after showing success message
+    // Redirect to confirmation page after showing success message
     setTimeout(() => {
-      window.location.href = '/';
-    }, 3000);
+      window.location.href = `/client?completed=true&requestId=${requestId}`;
+    }, 2000);
     
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
