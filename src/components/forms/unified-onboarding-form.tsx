@@ -756,7 +756,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     setIsSubmitting(true);
     try {
       // Handle Shopify data submission if we have both store ID and collaborator code
-      if (currentPlatform?.id === 'shopify' && shopifyData.storeId.trim() && shopifyData.collaboratorCode.trim()) {
+      if (platforms[currentPlatformIndex]?.id === 'shopify' && shopifyData.storeId.trim() && shopifyData.collaboratorCode.trim()) {
         await handleShopifyVerification();
         
         // Show success message for Shopify
@@ -1003,15 +1003,17 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                 </div>
                               </div>
 
-            <div className="flex justify-center mt-8">
-              <Button
-                onClick={handleShopifyStoreIdSubmit}
-                disabled={!shopifyData.storeId.trim()}
-                className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Continue
-              </Button>
-            </div>
+            {shopifyStep === 1 && (
+              <div className="flex justify-center mt-8">
+                <Button
+                  onClick={handleShopifyStoreIdSubmit}
+                  disabled={!shopifyData.storeId.trim()}
+                  className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Continue
+                </Button>
+              </div>
+            )}
 
                               {/* Step 2: Collaborator Code Entry - Show underneath when step 2 */}
                               {shopifyStep === 2 && (
@@ -1021,14 +1023,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       We'll need your Shopify collaborator code
                     </h3>
-                    <div className="flex justify-center">
-                      <Button
-                        onClick={() => window.open(`https://admin.shopify.com/store/${shopifyData.storeId}/settings/account`, '_blank')}
-                        className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md"
-                      >
-                        OPEN SHOPIFY
-                      </Button>
-                    </div>
                     <div className="mt-3 p-3 bg-gray-50 rounded-md">
                       <p className="text-sm text-gray-600 mb-2">
                         <strong>Can't find the collaborator code?</strong>
@@ -1036,6 +1030,14 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                       <p className="text-sm text-gray-600">
                         Go to Settings → Users and permissions → Collaborator access → Generate collaborator request code
                       </p>
+                    </div>
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() => window.open(`https://admin.shopify.com/store/${shopifyData.storeId}/settings/account`, '_blank')}
+                        className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md"
+                      >
+                        OPEN SHOPIFY
+                      </Button>
                     </div>
                   </div>
 
@@ -1243,7 +1245,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                         <Button
                           onClick={() => {
                             // Handle Shopify sub-step navigation
-                            if (currentPlatform?.id === 'shopify' && shopifyStep === 2) {
+                            if (platforms[currentPlatformIndex]?.id === 'shopify' && shopifyStep === 2) {
                               setShopifyStep(1);
                             } else {
                               // Handle platform-level navigation
