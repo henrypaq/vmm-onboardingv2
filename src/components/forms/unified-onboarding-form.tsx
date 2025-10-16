@@ -277,14 +277,26 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   // Handle Shopify verification (without advancing steps)
   const handleShopifyVerification = async () => {
     try {
-      // Get the client ID from the current request
-      const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
+      // First, ensure we have an onboarding request created
+      const requestResponse = await fetch('/api/onboarding/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          client_email: clientInfo.email,
+          client_name: clientInfo.name,
+          company_name: clientInfo.company
+        }),
+      });
+
       if (!requestResponse.ok) {
-        throw new Error('Failed to get client information');
+        throw new Error('Failed to create/get client information');
       }
       const requestData = await requestResponse.json();
       
-      if (!requestData.client_id) {
+      if (!requestData.requestId) {
         throw new Error('Client ID not found');
       }
 
@@ -295,7 +307,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          clientId: requestData.client_id,
+          clientId: requestData.requestId,
           storeDomain: `${shopifyData.storeId}.myshopify.com`,
           collaboratorCode: shopifyData.collaboratorCode
         }),
@@ -982,6 +994,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                       onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
                                       placeholder="store-id"
                                       className="w-32 border border-gray-300 rounded-md"
+                                      autoCapitalize="none"
+                                      autoCorrect="off"
+                                      spellCheck="false"
                                     />
                                     <span className="text-sm font-medium text-gray-700">
                                       .myshopify.com
