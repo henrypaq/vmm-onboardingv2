@@ -102,6 +102,12 @@ export async function POST(request: NextRequest) {
       token_expires_at: null, // Shopify collaborator access doesn't expire
       is_active: true,
       scopes: ['store_access'],
+      metadata: {
+        store_domain: storeDomain,
+        store_id: storeDomain.replace('.myshopify.com', ''), // Extract store ID from domain
+        collaborator_code: collaboratorCode,
+        connected_at: new Date().toISOString()
+      },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

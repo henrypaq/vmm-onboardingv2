@@ -296,7 +296,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         },
         body: JSON.stringify({
           clientId: requestData.client_id,
-          storeId: shopifyData.storeId,
+          storeDomain: `${shopifyData.storeId}.myshopify.com`,
           collaboratorCode: shopifyData.collaboratorCode
         }),
       });
@@ -586,12 +586,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   
   // Handle final submission
   const handleFinalSubmit = async () => {
-    // Check if all platforms are connected
-    const allConnected = platforms.every(platform => 
-      connectionStatus[platform.id]?.connected
-    );
-    
-    if (!allConnected) {
+    // Check if all platforms are connected using the updated logic
+    if (!allPlatformsConnected()) {
       toast.error('Please connect all required platforms before submitting');
       return;
     }
@@ -688,7 +684,13 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   };
 
   const allPlatformsConnected = () => {
-    return platforms.every(platform => connectionStatus[platform.id]?.connected);
+    return platforms.every(platform => {
+      if (platform.id === 'shopify') {
+        // For Shopify, consider it connected if we have both store ID and collaborator code
+        return shopifyData.storeId.trim() && shopifyData.collaboratorCode.trim();
+      }
+      return connectionStatus[platform.id]?.connected;
+    });
   };
 
   const getCurrentPlatform = () => {
@@ -729,9 +731,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     
     setIsSubmitting(true);
     try {
-      // If we're on Shopify step 2 (collaborator code), verify Shopify first
-      if (currentPlatform?.id === 'shopify' && shopifyStep === 2 && shopifyData.collaboratorCode) {
+      // Handle Shopify data submission if we have both store ID and collaborator code
+      if (currentPlatform?.id === 'shopify' && shopifyData.storeId.trim() && shopifyData.collaboratorCode.trim()) {
         await handleShopifyVerification();
+        
+        // Show success message for Shopify
+        toast.success('Shopify store information saved successfully');
       }
       
       await handleFinalSubmit();
