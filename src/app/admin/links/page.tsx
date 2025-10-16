@@ -568,9 +568,9 @@ function LinksPageContent() {
 
                     {/* URL Display */}
                     <div className="min-w-0 flex-[4]">
-                      <div className="relative group max-w-2xl">
+                      <div className="relative group w-full">
                         <div 
-                          className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 pr-20 cursor-pointer hover:bg-gray-100 transition-colors"
+                          className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 pr-20 cursor-pointer hover:bg-gray-100 transition-colors w-full"
                           onClick={(e) => {
                             e.stopPropagation();
                             window.open(getOnboardingUrl(link.token), '_blank');

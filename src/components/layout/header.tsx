@@ -109,10 +109,8 @@ export function Header({ user, userRole }: HeaderProps) {
               role: profile.role || 'admin'
             };
             
-            console.log('[Header] Setting currentUser:', userData);
             setCurrentUser(userData);
           } else {
-            console.log('[Header] No profile found, using session user');
             setCurrentUser({
               name: session.user.user_metadata?.full_name || 'User',
               email: session.user.email || '',
