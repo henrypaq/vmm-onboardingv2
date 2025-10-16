@@ -361,14 +361,23 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
 
   // Group assets by type for dropdown display
   const groupAssetsByType = (assets: any[]) => {
+    console.log('🔍 [GROUP DEBUG] groupAssetsByType called with assets:', assets);
+    console.log('🔍 [GROUP DEBUG] assets length:', assets?.length || 0);
+    
     const grouped: Record<string, any[]> = {};
-    assets.forEach(asset => {
+    assets.forEach((asset, index) => {
+      console.log(`🔍 [GROUP DEBUG] Processing asset ${index + 1}:`, asset);
+      console.log(`🔍 [GROUP DEBUG] Asset ${index + 1} type:`, asset?.type);
       const type = asset.type || 'other';
+      console.log(`🔍 [GROUP DEBUG] Asset ${index + 1} final type:`, type);
+      
       if (!grouped[type]) {
         grouped[type] = [];
       }
       grouped[type].push(asset);
     });
+    
+    console.log('🔍 [GROUP DEBUG] Final grouped result:', grouped);
     return grouped;
   };
 
