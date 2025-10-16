@@ -237,7 +237,6 @@ export function Header({ user, userRole }: HeaderProps) {
   
   const clientNavItems = [
     { href: '/client', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/client/connections', label: 'Connections', icon: LinkIcon },
   ];
   
   const navItems = role === 'admin' ? adminNavItems : clientNavItems;

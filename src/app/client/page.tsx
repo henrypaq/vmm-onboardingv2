@@ -222,13 +222,6 @@ export default function ClientDashboardPage() {
 
   const quickActions = [
     {
-      title: 'View All Connections',
-      description: 'Manage your platform connections',
-      icon: LinkIcon,
-      color: 'from-blue-500 to-blue-600',
-      href: '#'
-    },
-    {
       title: 'Account Settings',
       description: 'Update your profile and preferences',
       icon: Settings,
@@ -259,7 +252,7 @@ export default function ClientDashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Manage your platform connections and assets</p>
+          <p className="text-gray-600">View your connected platforms and assets</p>
         </div>
         <Button
           onClick={fetchDashboardData}
@@ -423,8 +416,8 @@ export default function ClientDashboardPage() {
           <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-200">
             <CardHeader>
               <CardTitle className="flex items-center text-lg">
-                <Briefcase className="h-5 w-5 mr-2 text-primary" />
-                Quick Actions
+                <Settings className="h-5 w-5 mr-2 text-primary" />
+                Account & Support
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
