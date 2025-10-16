@@ -300,8 +300,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         throw new Error('Client ID not found');
       }
 
-      // Call the Shopify verification API
-      const verifyResponse = await fetch('/api/integrations/shopify/verify', {
+      // Call the Shopify data save API
+      const saveResponse = await fetch('/api/integrations/shopify/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -313,13 +313,13 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         }),
       });
 
-      if (!verifyResponse.ok) {
-        const errorData = await verifyResponse.json();
-        throw new Error(errorData.error || 'Failed to verify Shopify store access');
+      if (!saveResponse.ok) {
+        const errorData = await saveResponse.json();
+        throw new Error(errorData.error || 'Failed to save Shopify data');
       }
 
-      const verifyData = await verifyResponse.json();
-      console.log('Shopify verification successful:', verifyData);
+      const saveData = await saveResponse.json();
+      console.log('Shopify data saved successfully:', saveData);
 
       // Mark platform as connected
       setConnectionStatus(prev => ({
@@ -328,9 +328,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       }));
       
     } catch (error) {
-      console.error('Shopify verification error:', error);
-      toast.error(`Failed to verify Shopify store access: ${error.message}`);
-      throw error; // Re-throw to prevent advancing if verification fails
+      console.error('Shopify data save error:', error);
+      toast.error(`Failed to save Shopify data: ${error.message}`);
+      throw error; // Re-throw to prevent advancing if save fails
     }
   };
   
@@ -788,7 +788,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         await handleShopifyVerification();
         
         // Show success message for Shopify
-        toast.success('Shopify store information saved successfully');
+        toast.success('Shopify access details saved successfully');
       }
       
       await handleFinalSubmit();

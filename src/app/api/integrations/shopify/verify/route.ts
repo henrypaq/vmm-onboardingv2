@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
-  console.log('=== SHOPIFY VERIFICATION API START ===');
+  console.log('=== SHOPIFY DATA SAVE API START ===');
   
   try {
     const { clientId, storeDomain, collaboratorCode } = await request.json();
     
-    console.log('Shopify verification request:', { clientId, storeDomain, collaboratorCode });
+    console.log('Shopify data save request:', { clientId, storeDomain, collaboratorCode });
 
     // Validate required fields
     if (!clientId || !storeDomain || !collaboratorCode) {
@@ -26,149 +26,90 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate collaborator code format (typically 4-8 characters)
-    if (collaboratorCode.length < 4 || collaboratorCode.length > 8) {
+    // Validate collaborator code format (accept 4-8 characters, or 'none')
+    if (collaboratorCode !== 'none' && (collaboratorCode.length < 4 || collaboratorCode.length > 8)) {
       return NextResponse.json(
-        { error: 'Invalid collaborator code format. Must be 4-8 characters' },
+        { error: 'Invalid collaborator code format. Must be 4-8 characters or "none"' },
         { status: 400 }
       );
     }
 
-    // Check if onboarding request exists (for new clients) or client exists (for existing clients)
     const supabase = getSupabaseAdmin();
     console.log('Supabase admin client created successfully');
     
-    // First try to find it as an onboarding request
+    // Find the onboarding request
     const { data: onboardingRequest, error: onboardingError } = await supabase
       .from('onboarding_requests')
-      .select('id, client_id, client_email, client_name, status')
+      .select('id, platform_connections')
       .eq('id', clientId)
       .single();
 
     console.log('Onboarding request lookup:', { 
       clientId, 
       onboardingRequest, 
-      onboardingError,
-      errorCode: onboardingError?.code,
-      errorMessage: onboardingError?.message
+      onboardingError
     });
 
-    let requestId = null;
-    if (onboardingRequest && !onboardingError) {
-      requestId = onboardingRequest.id;
-      console.log('Found onboarding request:', requestId);
-    } else {
-      // If not found in onboarding_requests, try clients table
-      const { data: client, error: clientError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('id', clientId)
-        .single();
-
-      console.log('Client lookup:', { client, clientError });
-
-      if (clientError || !client) {
-        return NextResponse.json(
-          { error: 'Client or onboarding request not found' },
-          { status: 404 }
-        );
-      }
-      requestId = client.id;
-      console.log('Found client:', requestId);
+    if (onboardingError || !onboardingRequest) {
+      return NextResponse.json(
+        { error: 'Onboarding request not found' },
+        { status: 404 }
+      );
     }
 
-    // Check if Shopify connection already exists for this request
-    const { data: existingConnection, error: existingError } = await supabase
-      .from('client_platform_connections')
-      .select('id')
-      .eq('client_id', requestId)
-      .eq('platform', 'shopify')
+    // Extract store ID from domain
+    const storeId = storeDomain.replace('.myshopify.com', '');
+    
+    // Update the onboarding request with Shopify data
+    const shopifyData = {
+      store_id: storeId,
+      store_domain: storeDomain,
+      collaborator_code: collaboratorCode,
+      connected_at: new Date().toISOString()
+    };
+
+    // Update platform_connections field to include Shopify data
+    const currentPlatformConnections = onboardingRequest.platform_connections || {};
+    const updatedPlatformConnections = {
+      ...currentPlatformConnections,
+      shopify: shopifyData
+    };
+
+    const { data: updatedRequest, error: updateError } = await supabase
+      .from('onboarding_requests')
+      .update({
+        platform_connections: updatedPlatformConnections,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', clientId)
+      .select()
       .single();
 
-    if (existingError && existingError.code !== 'PGRST116') {
+    if (updateError) {
+      console.error('Failed to update onboarding request with Shopify data:', updateError);
       return NextResponse.json(
-        { error: 'Database error checking existing connection' },
+        { error: 'Failed to save Shopify data', details: updateError.message },
         { status: 500 }
       );
     }
 
-    const connectionData = {
-      client_id: requestId,
-      platform: 'shopify',
-      platform_user_id: storeDomain, // Use store domain as platform user ID
-      platform_username: storeDomain, // Use store domain as username
-      access_token: `shopify_${storeDomain}_${collaboratorCode}`, // Generate a token-like identifier
-      refresh_token: null, // Shopify doesn't use refresh tokens for collaborator access
-      token_expires_at: null, // Shopify collaborator access doesn't expire
-      is_active: true,
-      scopes: ['store_access'],
-      metadata: {
-        store_domain: storeDomain,
-        store_id: storeDomain.replace('.myshopify.com', ''), // Extract store ID from domain
-        collaborator_code: collaboratorCode,
-        connected_at: new Date().toISOString()
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    console.log('Connection data to insert:', connectionData);
-
-    let result;
-    if (existingConnection) {
-      // Update existing connection
-      const { data, error } = await supabase
-        .from('client_platform_connections')
-        .update(connectionData)
-        .eq('id', existingConnection.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Failed to update Shopify connection:', error);
-        return NextResponse.json(
-          { error: 'Failed to update Shopify connection', details: error.message },
-          { status: 500 }
-        );
-      }
-      result = data;
-    } else {
-      // Create new connection
-      const { data, error } = await supabase
-        .from('client_platform_connections')
-        .insert(connectionData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Failed to create Shopify connection:', error);
-        return NextResponse.json(
-          { error: 'Failed to create Shopify connection', details: error.message },
-          { status: 500 }
-        );
-      }
-      result = data;
-    }
-
-    console.log('=== SHOPIFY VERIFICATION API SUCCESS ===');
-    console.log('Connection created successfully:', result);
+    console.log('=== SHOPIFY DATA SAVE API SUCCESS ===');
+    console.log('Shopify data saved successfully:', shopifyData);
 
     return NextResponse.json({
       success: true,
-      message: 'Shopify store access verified and saved successfully',
-      connection: {
-        id: result.id,
-        platform: 'shopify',
+      message: 'Shopify connection saved successfully',
+      data: {
+        store_id: storeId,
         store_domain: storeDomain,
-        connected_at: result.created_at,
         collaborator_code: collaboratorCode,
-        status: 'verified'
+        saved_at: new Date().toISOString()
       }
     });
 
   } catch (error) {
-    console.error('=== SHOPIFY VERIFICATION API ERROR ===');
-    console.error('Shopify verification error:', error);
+    console.error('=== SHOPIFY DATA SAVE API ERROR ===');
+    console.error('Shopify data save error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
