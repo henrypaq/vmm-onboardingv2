@@ -18,11 +18,7 @@ export async function GET() {
         status,
         submitted_at,
         created_at,
-        link:onboarding_links(
-          id,
-          link_name,
-          platforms
-        )
+        link_id
       `)
       .eq('status', 'completed')
       .order('submitted_at', { ascending: false })
@@ -89,8 +85,7 @@ export async function GET() {
         metadata: {
           clientName: request.client_name,
           clientEmail: request.client_email,
-          linkName: request.link?.link_name,
-          platforms: request.link?.platforms || []
+          linkId: request.link_id
         }
       });
     });
