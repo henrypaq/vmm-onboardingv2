@@ -67,17 +67,30 @@ export async function GET() {
 
     // Combine the data
     const detailedClients = clients?.map(client => {
-      // Find onboarding request for this client
-      const request = requests?.find(r => r.client_id === client.id);
+      // Find onboarding request for this client - try both string and UUID matching
+      const request = requests?.find(r => 
+        r.client_id === client.id || 
+        r.client_id === client.id.toString() ||
+        r.client_id?.toString() === client.id?.toString()
+      );
       
-      // Find link for this request
-      const link = request ? links?.find(l => l.id === request.link_id) : null;
+      // Find link for this request - try both string and UUID matching
+      const link = request ? links?.find(l => 
+        l.id === request.link_id || 
+        l.id === request.link_id?.toString() ||
+        l.id?.toString() === request.link_id?.toString()
+      ) : null;
       
       // Debug logging for missing links
       console.log(`[Detailed Clients API] Client ${client.id} (${client.full_name}) - Request:`, request ? 'Found' : 'Not found');
+      console.log(`[Detailed Clients API] Client ID type: ${typeof client.id}, value: ${client.id}`);
       if (request) {
-        console.log(`[Detailed Clients API] Client ${client.id} request link_id:`, request.link_id);
-        console.log(`[Detailed Clients API] Client ${client.id} request client_id:`, request.client_id);
+        console.log(`[Detailed Clients API] Request client_id type: ${typeof request.client_id}, value: ${request.client_id}`);
+        console.log(`[Detailed Clients API] Request link_id type: ${typeof request.link_id}, value: ${request.link_id}`);
+        console.log(`[Detailed Clients API] Link found:`, link ? 'Yes' : 'No');
+        if (link) {
+          console.log(`[Detailed Clients API] Link ID type: ${typeof link.id}, value: ${link.id}`);
+        }
       }
       
       if (!link && request) {
