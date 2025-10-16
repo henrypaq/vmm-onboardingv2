@@ -300,110 +300,104 @@ function LinksPageContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
+                className="flex-1"
               >
-                <Card className="relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
-                        <Eye className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">View Link</p>
-                        <p className="text-xs text-gray-500">Client onboarding</p>
-                      </div>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
+                      <Eye className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">View Link</p>
+                      <p className="text-xs text-gray-500">Client onboarding</p>
                     </div>
                   </div>
-                  
-                  {/* Link Display */}
-                  <div className="mt-4">
-                    <div className="relative group">
-                      <div className="bg-green-100 border border-green-300 rounded-lg px-4 py-3 pr-20">
-                        <p className="text-sm font-mono text-gray-700 truncate">
-                          {viewLinkData ? getOnboardingUrl(viewLinkData.token) : ''}
-                        </p>
-                      </div>
-                      {viewLinkData && (
-                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
-                            onClick={(e) => copyToClipboard(getOnboardingUrl(viewLinkData.token), e, viewLinkData.token)}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
-                            onClick={() => window.open(getOnboardingUrl(viewLinkData.token), '_blank')}
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
+                </div>
+                
+                {/* Link Display */}
+                <div className="mt-4">
+                  <div className="relative group">
+                    <div className="bg-green-100 border border-green-300 rounded-lg px-4 py-3 pr-20">
+                      <p className="text-sm font-mono text-gray-700 truncate">
+                        {viewLinkData ? getOnboardingUrl(viewLinkData.token) : ''}
+                      </p>
                     </div>
-                  </div>
-
-                  {/* Link Info */}
-                  {viewLinkData && (
-                    <div className="mt-4 flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500">Status:</span>
-                        <Badge 
-                          variant={getStatusVariant(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}
-                          className={getStatusText(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used) === 'Active' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : ''}
+                    {viewLinkData && (
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
+                          onClick={(e) => copyToClipboard(getOnboardingUrl(viewLinkData.token), e, viewLinkData.token)}
                         >
-                          {getStatusText(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}
-                        </Badge>
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
+                          onClick={() => window.open(getOnboardingUrl(viewLinkData.token), '_blank')}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {viewLinkData.platforms.map((platform, index) => (
-                          <div key={index} className="w-4 h-4 flex items-center justify-center">
-                            {getPlatformLogo(platform)}
-                          </div>
-                        ))}
-                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Link Info */}
+                {viewLinkData && (
+                  <div className="mt-4 flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500">Status:</span>
+                      <Badge 
+                        variant={getStatusVariant(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}
+                        className={getStatusText(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used) === 'Active' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : ''}
+                      >
+                        {getStatusText(viewLinkData.status, viewLinkData.expires_at || '', viewLinkData.is_used)}
+                      </Badge>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 text-xs">Platforms:</span>
+                      {viewLinkData.platforms.map((platform, index) => (
+                        <div key={index} className="w-4 h-4 flex items-center justify-center">
+                          {getPlatformLogo(platform)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </motion.div>
 
-              {/* Manage Link Box - Now on the right */}
+              {/* Manage Link - Right side, no box */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
+                className="flex-1"
               >
-                <Card className="relative bg-gray-50 border border-gray-300 rounded-lg shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-500">
-                        <Settings className="h-6 w-6 text-white" />
-                      </div>
-              <div>
-                        <p className="text-sm font-medium text-gray-900">Manage Link</p>
-                        <p className="text-xs text-gray-500">Coming Soon</p>
-                      </div>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-500">
+                      <Settings className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Manage Link</p>
+                      <p className="text-xs text-gray-500">Coming Soon</p>
                     </div>
                   </div>
-                  
-                  {/* Link Display */}
-                  <div className="mt-4">
-                    <div className="relative group">
-                      <div className="bg-gray-100 border border-gray-400 rounded-lg px-4 py-3 pr-20 cursor-not-allowed opacity-70">
-                        <p className="text-sm font-mono text-gray-500 truncate">
-                          {manageLinkData ? getManageUrl(manageLinkData.token) : ''}
-                        </p>
-                      </div>
+                </div>
+                
+                {/* Link Display */}
+                <div className="mt-4">
+                  <div className="relative group">
+                    <div className="bg-gray-100 border border-gray-400 rounded-lg px-4 py-3 pr-20 cursor-not-allowed opacity-70">
+                      <p className="text-sm font-mono text-gray-500 truncate">
+                        {manageLinkData ? getManageUrl(manageLinkData.token) : ''}
+                      </p>
                     </div>
                   </div>
-
-                </CardContent>
-              </Card>
+                </div>
               </motion.div>
             </div>
           );
@@ -416,7 +410,7 @@ function LinksPageContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Custom Links</h2>
             <Button 
               onClick={() => setIsDialogOpen(true)}

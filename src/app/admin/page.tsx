@@ -98,37 +98,12 @@ export default function AdminDashboardPage() {
 
       setPlatformConnections(connections);
 
-      // Mock recent activity
-      setRecentActivity([
-        {
-          id: '1',
-          type: 'client_created',
-          message: 'New client Henry registered',
-          timestamp: '2 minutes ago',
-          status: 'success'
-        },
-        {
-          id: '2',
-          type: 'link_generated',
-          message: 'Onboarding link generated for Meta platform',
-          timestamp: '15 minutes ago',
-          status: 'info'
-        },
-        {
-          id: '3',
-          type: 'onboarding_completed',
-          message: 'Client completed Google Analytics setup',
-          timestamp: '1 hour ago',
-          status: 'success'
-        },
-        {
-          id: '4',
-          type: 'connection_established',
-          message: 'TikTok connection established',
-          timestamp: '2 hours ago',
-          status: 'success'
-        }
-      ]);
+      // Fetch real recent activity
+      const activityResponse = await fetch('/api/admin/recent-activity');
+      if (activityResponse.ok) {
+        const activityData = await activityResponse.json();
+        setRecentActivity(activityData.activities || []);
+      }
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -143,9 +118,10 @@ export default function AdminDashboardPage() {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'client_created': return <Users className="h-4 w-4" />;
-      case 'link_generated': return <LinkIcon className="h-4 w-4" />;
       case 'onboarding_completed': return <CheckCircle className="h-4 w-4" />;
+      case 'platform_connected': return <LinkIcon className="h-4 w-4" />;
+      case 'link_generated': return <LinkIcon className="h-4 w-4" />;
+      case 'client_created': return <Users className="h-4 w-4" />;
       case 'connection_established': return <TrendingUp className="h-4 w-4" />;
       default: return <AlertCircle className="h-4 w-4" />;
     }
@@ -334,12 +310,15 @@ export default function AdminDashboardPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-gray-900">
-                          {activity.message}
+                          {activity.title}
                         </p>
                         <p className="text-xs text-gray-500 ml-4">
-                          {activity.timestamp}
+                          {new Date(activity.timestamp).toLocaleString()}
                         </p>
                       </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {activity.description}
+                      </p>
                     </div>
                   </div>
                 ))}

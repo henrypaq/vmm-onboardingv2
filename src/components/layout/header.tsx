@@ -153,50 +153,10 @@ export function Header({ user, userRole }: HeaderProps) {
 
   const fetchRecentActivity = async () => {
     try {
-      const response = await fetch('/api/admin/platform-connections/assets');
+      const response = await fetch('/api/admin/recent-activity');
       if (response.ok) {
         const data = await response.json();
-        // Transform the data into recent activity format
-        const activities = data.connections?.map((connection: any) => ({
-          id: connection.id,
-          type: 'platform_connection',
-          title: `Connected to ${connection.name}`,
-          description: `Platform: ${connection.platform}`,
-          timestamp: new Date(connection.connectedAt).toISOString(),
-          icon: 'Globe'
-        })) || [];
-        
-        // Add some mock recent activities for demonstration
-        const mockActivities = [
-          {
-            id: '1',
-            type: 'link_generated',
-            title: 'New onboarding link created',
-            description: 'Link for Meta and Google platforms',
-            timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-            icon: 'LinkIcon'
-          },
-          {
-            id: '2',
-            type: 'client_connected',
-            title: 'Client completed onboarding',
-            description: 'John Doe connected their platforms',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-            icon: 'Users'
-          },
-          {
-            id: '3',
-            type: 'platform_connected',
-            title: 'Meta platform connected',
-            description: 'Facebook Business account linked',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
-            icon: 'Globe'
-          }
-        ];
-        
-        setRecentActivity([...mockActivities, ...activities].sort((a, b) => 
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        ).slice(0, 10));
+        setRecentActivity(data.activities || []);
       }
     } catch (error) {
       console.error('Error fetching recent activity:', error);

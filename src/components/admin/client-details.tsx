@@ -293,18 +293,24 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
+                <label className="text-sm font-medium text-gray-500">Full Name</label>
                 <p className="text-lg font-semibold text-gray-900">{client.full_name || 'Not provided'}</p>
               </div>
               <div>
+                <label className="text-sm font-medium text-gray-500">Email Address</label>
                 <p className="text-lg text-gray-900">{client.email}</p>
               </div>
               <div>
+                <label className="text-sm font-medium text-gray-500">Company</label>
                 <p className="text-lg text-gray-900">{client.company_name || 'Not provided'}</p>
               </div>
               <div>
-                <Badge variant={getStatusVariant(client.status)} className="text-sm px-3 py-1">
-                  {client.status}
-                </Badge>
+                <label className="text-sm font-medium text-gray-500">Status</label>
+                <div className="mt-2">
+                  <Badge variant={getStatusVariant(client.status)} className="text-sm px-3 py-1">
+                    {client.status}
+                  </Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -319,26 +325,31 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
+                <label className="text-sm font-medium text-gray-500">Account Created</label>
                 <p className="text-lg text-gray-900">{formatDate(client.created_at)}</p>
               </div>
               <div>
+                <label className="text-sm font-medium text-gray-500">Last Onboarding</label>
                 <p className="text-lg text-gray-900">
                   {client.last_onboarding_at ? formatDate(client.last_onboarding_at) : 'Never'}
                 </p>
               </div>
               <div>
-                {onboardingRequest?.link ? (
-                  <div className="space-y-2">
-                    <Badge variant="outline" className="font-mono text-sm px-3 py-1">
-                      {onboardingRequest.link.token.substring(0, 12)}...
-                    </Badge>
-                    {onboardingRequest.link.link_name && (
-                      <p className="text-sm text-gray-600">{onboardingRequest.link.link_name}</p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">No onboarding request recorded</p>
-                )}
+                <label className="text-sm font-medium text-gray-500">Onboarding Link Used</label>
+                <div className="mt-2">
+                  {onboardingRequest?.link ? (
+                    <div className="space-y-2">
+                      <Badge variant="outline" className="font-mono text-sm px-3 py-1">
+                        {onboardingRequest.link.token.substring(0, 12)}...
+                      </Badge>
+                      {onboardingRequest.link.link_name && (
+                        <p className="text-sm text-gray-600">{onboardingRequest.link.link_name}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">No onboarding request recorded</p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -349,8 +360,8 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center text-lg">
                   <LinkIcon className="h-5 w-5 mr-2 text-primary" />
-                  Platform Connections
-                </CardTitle>
+                Platform Connections
+              </CardTitle>
                 <Button
                   onClick={testAllAssets}
                   disabled={isTestingAllAssets || platformConnections.length === 0}
@@ -423,6 +434,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       
                       {connection.scopes && connection.scopes.length > 0 && (
                         <div className="mb-4">
+                          <label className="text-sm font-medium text-gray-500 mb-2 block">Granted Permissions</label>
                           <div className="flex flex-wrap gap-2">
                             {connection.scopes.map((scope, index) => (
                               <Badge key={index} variant="outline" className="text-xs px-2 py-1">
@@ -437,9 +449,10 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       {(() => {
                         const assets = connection.assets;
                         return connection.platform === 'google' || (assets && assets.length > 0);
-                      })() ? (
-                        <div>
-                          <div className="space-y-2">
+                      }                      )() ? (
+                                    <div>
+                          <label className="text-sm font-medium text-gray-500 mb-2 block">Available Assets</label>
+                                  <div className="space-y-2">
                             {connection.assets?.map((asset: Asset, index: number) => (
                               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div>
