@@ -56,6 +56,7 @@ const getPlatformLogo = (platformId: string) => {
     'google analytics': '/logos/google.png',
     'google ads': '/logos/google.png',
     'tiktok': '/logos/tiktok.webp',
+    'shopify': '/logos/shopify.webp',
   };
 
   const logoPath = logoMap[platformId.toLowerCase()];
@@ -930,126 +931,111 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                         // Shopify-specific flow
                         !isConnected ? (
                           <div className="space-y-4">
-                            {shopifyStep === 1 ? (
-                              // Step 1: Store ID Entry
-                              <div>
-                                <div className="text-center mb-6">
-                                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                    Enter Your Shopify Store ID
-                                  </h3>
-                                  <p className="text-gray-600">
-                                    Enter your store ID to continue with the connection process.
-                                  </p>
-                                </div>
-                                
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label htmlFor="storeId" className="text-sm font-medium text-gray-700">
-                                      Shopify Store ID
-                                    </Label>
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-sm font-medium text-gray-700">
-                                        https://
-                                      </span>
-                                      <Input
-                                        id="storeId"
-                                        value={shopifyData.storeId}
-                                        onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
-                                        placeholder="store-id"
-                                        className="w-32 border border-gray-300 rounded-md"
-                                      />
-                                      <span className="text-sm font-medium text-gray-700">
-                                        .myshopify.com
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center mt-2 text-sm text-gray-600">
-                                      <div className="w-4 h-4 mr-2 text-gray-500">ℹ</div>
-                                      <a 
-                                        href="https://help.shopify.com/en/manual/your-account/accessing-your-shopify-admin" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-800 underline"
-                                      >
-                                        How to find your store ID
-                                      </a>
-                                    </div>
+                            <div>
+                              {/* Step 1: Store ID Entry */}
+                              <div className="text-center mb-6">
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                  Enter Your Shopify Store ID
+                                </h3>
+                                <p className="text-gray-600">
+                                  Enter your store ID to continue with the connection process.
+                                </p>
+                              </div>
+                              
+                              <div className="space-y-4">
+                                <div className="flex justify-center">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-sm font-medium text-gray-700">
+                                      https://
+                                    </span>
+                                    <Input
+                                      id="storeId"
+                                      value={shopifyData.storeId}
+                                      onChange={(e) => setShopifyData(prev => ({ ...prev, storeId: e.target.value }))}
+                                      placeholder="store-id"
+                                      className="w-32 border border-gray-300 rounded-md"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">
+                                      .myshopify.com
+                                    </span>
                                   </div>
                                 </div>
-
-                                <div className="flex space-x-4 mt-8">
-                                  <Button 
-                                    onClick={() => setCurrentPlatformIndex(Math.max(0, currentPlatformIndex - 1))}
-                                    variant="outline"
-                                    className="flex-1"
-                                  >
-                                    Back
-                                  </Button>
-                                  <Button 
-                                    onClick={handleShopifyStoreIdSubmit}
-                                    disabled={!shopifyData.storeId.trim()}
-                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    Continue
-                                  </Button>
+                                <div className="flex justify-center">
+                                  <div className="flex items-center text-sm text-gray-600">
+                                    <div className="w-4 h-4 mr-2 text-gray-500">ℹ</div>
+                                    <a 
+                                      href="https://help.shopify.com/en/manual/your-account/accessing-your-shopify-admin" 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                      How to find your store ID
+                                    </a>
+                                  </div>
                                 </div>
                               </div>
-                            ) : (
-                              // Step 2: Collaborator Code Entry
-                              <div>
-                                <div className="space-y-6">
-                                  <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                      1. Open your store's Users and permissions settings:
-                                    </h3>
-                                    <Button
-                                      onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
-                                      className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md"
-                                    >
-                                      OPEN SHOPIFY
-                                    </Button>
-                                  </div>
 
-                                  <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                      2. Enter your Collaborator Request Code
-                                    </h3>
-                                    <div className="space-y-2">
-                                      <Label htmlFor="collaboratorCode" className="text-sm font-medium text-gray-700">
-                                        Collaborator Request Code
-                                      </Label>
-                                      <Input
-                                        id="collaboratorCode"
-                                        value={shopifyData.collaboratorCode}
-                                        onChange={(e) => setShopifyData(prev => ({ ...prev, collaboratorCode: e.target.value }))}
-                                        placeholder="Enter your collaborator code"
-                                        className="w-full"
-                                      />
-                                      <div className="flex items-start space-x-2 text-sm text-gray-600">
-                                        <div className="w-4 h-4 mt-0.5 text-gray-500">ℹ</div>
-                                        <p>Note: if no code is required enter 'none'</p>
+                              <div className="flex justify-center mt-8">
+                                <Button 
+                                  onClick={handleShopifyStoreIdSubmit}
+                                  disabled={!shopifyData.storeId.trim()}
+                                  className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed px-8"
+                                >
+                                  Continue
+                                </Button>
+                              </div>
+
+                              {/* Step 2: Collaborator Code Entry - Show underneath when step 2 */}
+                              {shopifyStep === 2 && (
+                                <div className="mt-8 pt-8 border-t border-gray-200">
+                                  <div className="space-y-6">
+                                    <div>
+                                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                        1. Open your store's Users and permissions settings:
+                                      </h3>
+                                      <Button
+                                        onClick={() => window.open(`https://${shopifyData.storeId}.myshopify.com/admin/settings/users`, '_blank')}
+                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md"
+                                      >
+                                        OPEN SHOPIFY
+                                      </Button>
+                                    </div>
+
+                                    <div>
+                                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                        2. Enter your Collaborator Request Code
+                                      </h3>
+                                      <div className="space-y-2">
+                                        <Label htmlFor="collaboratorCode" className="text-sm font-medium text-gray-700">
+                                          Collaborator Request Code
+                                        </Label>
+                                        <Input
+                                          id="collaboratorCode"
+                                          value={shopifyData.collaboratorCode}
+                                          onChange={(e) => setShopifyData(prev => ({ ...prev, collaboratorCode: e.target.value }))}
+                                          placeholder="Enter your collaborator code"
+                                          className="w-full"
+                                        />
+                                        <div className="flex items-start space-x-2 text-sm text-gray-600">
+                                          <div className="w-4 h-4 mt-0.5 text-gray-500">ℹ</div>
+                                          <p>Note: if no code is required enter 'none'</p>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
-                                </div>
 
-                                <div className="flex space-x-4 mt-8">
-                                  <Button 
-                                    onClick={() => setShopifyStep(1)}
-                                    variant="outline"
-                                    className="flex-1"
-                                  >
-                                    Back
-                                  </Button>
-                                  <Button 
-                                    onClick={handleShopifyComplete}
-                                    disabled={!shopifyData.collaboratorCode}
-                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    Complete
-                                  </Button>
+                                  <div className="flex justify-center mt-8">
+                                    <Button 
+                                      onClick={handleShopifyComplete}
+                                      disabled={!shopifyData.collaboratorCode}
+                                      className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed px-8"
+                                    >
+                                      Complete
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         ) : (
                           <div className="flex items-center justify-between">
