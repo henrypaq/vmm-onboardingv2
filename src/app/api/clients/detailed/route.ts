@@ -90,11 +90,14 @@ export async function GET() {
       // Get platforms from connections
       const platforms = clientConnections.map(c => c.platform);
 
+      const constructedUrl = link ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${link.token}` : null;
+      console.log(`[Detailed Clients API] Client ${client.id} final linkUrl:`, constructedUrl);
+      
       return {
         ...client,
         linkId: link?.id || null,
         linkName: link?.link_name || null,
-        linkUrl: link ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${link.token}` : null,
+        linkUrl: constructedUrl,
         platforms: platforms,
         status: status,
         connectedDate: request?.submitted_at || client.created_at,

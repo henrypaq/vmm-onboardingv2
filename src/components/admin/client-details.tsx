@@ -522,7 +522,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   >
                                     <ExternalLink className="h-3 w-3 mr-1" />
                                     Open in {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
-                                        </Button>
+                                      </Button>
                                 </div>
                               </div>
                             )) || (
@@ -535,53 +535,71 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                       ) : null}
                       
                       {/* Shopify-specific information */}
-                      {connection.platform === 'shopify' && connection.metadata && (
+                      {connection.platform === 'shopify' && (
                         <div>
                           <label className="text-sm font-medium text-gray-500 mb-2 block">Shopify Store Information</label>
                           <div className="space-y-3">
-                            <div className="p-3 bg-gray-50 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-medium text-sm text-gray-900">Store ID / Domain</p>
-                                  <p className="text-xs text-gray-500">{connection.metadata.store_domain || connection.metadata.store_id || 'Not provided'}</p>
+                            {(() => {
+                              // Get Shopify data from onboarding request
+                              const shopifyData = onboardingRequest?.platform_connections?.shopify;
+                              console.log('[Client Details] Shopify data from onboarding request:', shopifyData);
+                              
+                              if (shopifyData) {
+                                return (
+                                  <>
+                                    <div className="p-3 bg-gray-50 rounded-lg">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="font-medium text-sm text-gray-900">Store ID / Domain</p>
+                                          <p className="text-xs text-gray-500">{shopifyData.store_domain || shopifyData.store_id || 'Not provided'}</p>
+                                        </div>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                          onClick={() => {
+                                            const storeId = shopifyData.store_id || shopifyData.store_domain;
+                                            if (storeId) {
+                                              window.open(`https://${storeId}.myshopify.com/admin`, '_blank');
+                                            }
+                                          }}
+                                          className="text-xs hover:bg-primary/10 hover:border-primary/30"
+                                        >
+                                          <ExternalLink className="h-3 w-3 mr-1" />
+                                          Open Store
+                                      </Button>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="p-3 bg-gray-50 rounded-lg">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="font-medium text-sm text-gray-900">Collaborator Code</p>
+                                          <p className="text-xs text-gray-500 font-mono">{shopifyData.collaborator_code || 'Not provided'}</p>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => {
+                                            // TODO: Link to partner dashboard when available
+                                            toast.info('Partner dashboard link will be added soon');
+                                          }}
+                                          className="text-xs hover:bg-primary/10 hover:border-primary/30"
+                                        >
+                                          <ExternalLink className="h-3 w-3 mr-1" />
+                                          Open Partner Dashboard
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <div className="p-3 bg-gray-50 rounded-lg">
+                                    <p className="text-sm text-gray-500">Shopify store information not available</p>
                                 </div>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    const storeId = connection.metadata.store_id || connection.metadata.store_domain;
-                                    if (storeId) {
-                                      window.open(`https://${storeId}.myshopify.com/admin`, '_blank');
-                                    }
-                                  }}
-                                  className="text-xs hover:bg-primary/10 hover:border-primary/30"
-                                >
-                                  <ExternalLink className="h-3 w-3 mr-1" />
-                                  Open Store
-                                </Button>
-                      </div>
-                    </div>
-                            
-                            <div className="p-3 bg-gray-50 rounded-lg">
-                              <div className="flex items-center justify-between">
-                  <div>
-                                  <p className="font-medium text-sm text-gray-900">Collaborator Code</p>
-                                  <p className="text-xs text-gray-500 font-mono">{connection.metadata.collaborator_code || 'Not provided'}</p>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    // TODO: Link to partner dashboard when available
-                                    toast.info('Partner dashboard link will be added soon');
-                                  }}
-                                  className="text-xs hover:bg-primary/10 hover:border-primary/30"
-                                >
-                                  <ExternalLink className="h-3 w-3 mr-1" />
-                                  Open Partner Dashboard
-                                </Button>
-                    </div>
-                  </div>
+                              );
+                              }
+                            })()}
                           </div>
                         </div>
                       )}
