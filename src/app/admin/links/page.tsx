@@ -277,7 +277,7 @@ function LinksPageContent() {
           <h1 className="text-3xl page-title tracking-tight">Links</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="default" className="h-10 gradient-primary">
+              <Button size="default" className="h-10 gradient-generate">
                 Generate Link
               </Button>
             </DialogTrigger>
@@ -412,7 +412,7 @@ function LinksPageContent() {
             <Button 
               onClick={() => setIsDialogOpen(true)}
               size="default" 
-              className="h-10 gradient-primary"
+              className="h-10 gradient-generate"
             >
               Generate Link
             </Button>
@@ -439,17 +439,17 @@ function LinksPageContent() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                onClick={fetchLinks} 
+              <Button 
+                onClick={fetchLinks}
                 size="sm"
-                className="gradient-primary"
+                className="subtle-button"
                 disabled={isLoading}
               >
                 Refresh
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="sm" className="gradient-primary">
+                  <Button size="sm" className="subtle-button">
                     Filter
                   </Button>
                 </DropdownMenuTrigger>
@@ -570,7 +570,7 @@ function LinksPageContent() {
                         <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                                 <Button
                             size="sm"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity subtle-action-button"
                             onClick={(e) => {
                               e.stopPropagation();
                               copyToClipboard(getOnboardingUrl(link.token), e, link.token);
@@ -580,7 +580,7 @@ function LinksPageContent() {
                           </Button>
                           <Button
                                 size="sm"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity subtle-action-button"
                             onClick={(e) => {
                               e.stopPropagation();
                               window.open(getOnboardingUrl(link.token), '_blank');
@@ -622,7 +622,7 @@ function LinksPageContent() {
                     <div className="min-w-0 flex-[0.5] flex justify-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="sm" className="h-8 w-8 p-0 gradient-primary">
+                          <Button size="sm" className="h-8 w-8 p-0 subtle-icon-button">
                             ⋮
                           </Button>
                         </DropdownMenuTrigger>

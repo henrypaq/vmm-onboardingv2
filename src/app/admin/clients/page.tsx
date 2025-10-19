@@ -206,7 +206,7 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
                   <DropdownMenuTrigger asChild>
                     <Button
                       size="icon"
-                      className="h-8 w-8 gradient-primary"
+                      className="subtle-icon-button h-8 w-8"
                       onClick={(e) => e.stopPropagation()}
                     >
                       ⋮
@@ -367,7 +367,7 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
                 </div>
                 <Button
                   size="sm"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity subtle-action-button"
                   onClick={(e) => {
                     e.stopPropagation();
                     copyToClipboard(linkUrl);
@@ -646,33 +646,33 @@ export default function ClientsPage() {
                 </div>
       </div>
               <div className="flex items-center gap-2">
-              <Button 
-                onClick={fetchClients} 
-                size="sm" 
-                className="gradient-primary"
+              <Button
+                onClick={fetchClients}
+                size="sm"
+                className="subtle-button"
                 disabled={isLoading}
               >
             Refresh
               </Button>
-              <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+              <div className="flex items-center gap-1">
                 <Button
                   onClick={() => setViewMode('list')}
                   size="sm"
-                  className={`h-8 rounded-md ${viewMode === 'list' ? 'gradient-primary shadow-sm' : 'bg-transparent hover:bg-white/60'}`}
+                  className={viewMode === 'list' ? 'subtle-button-active' : 'subtle-button'}
                 >
                   List
                 </Button>
                     <Button 
                   onClick={() => setViewMode('grid')}
                   size="sm"
-                  className={`h-8 rounded-md ${viewMode === 'grid' ? 'gradient-primary shadow-sm' : 'bg-transparent hover:bg-white/60'}`}
+                  className={viewMode === 'grid' ? 'subtle-button-active' : 'subtle-button'}
                 >
                   Grid
                     </Button>
             </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                  <Button size="sm" className="gradient-primary">
+                  <Button size="sm" className="subtle-button">
                     Filter
                         </Button>
                       </DropdownMenuTrigger>
