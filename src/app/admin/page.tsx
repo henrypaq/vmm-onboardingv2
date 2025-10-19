@@ -205,8 +205,8 @@ export default function AdminDashboardPage() {
             <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your platform.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={fetchDashboardData} size="sm" className="gradient-primary" disabled={isLoading}>
-              Refresh
+            <Button onClick={fetchDashboardData} size="sm" className="ultra-minimal-icon-button" disabled={isLoading}>
+              <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
         </div>

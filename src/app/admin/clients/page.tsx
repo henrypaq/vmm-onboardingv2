@@ -655,20 +655,27 @@ export default function ClientsPage() {
           <RefreshCw className="h-4 w-4" />
         </Button>
               <div className="flex items-center gap-1">
-                <Button
-                  onClick={() => setViewMode('list')}
-                  size="sm"
-                  className={viewMode === 'list' ? 'subtle-button-active' : 'subtle-button'}
-                >
-                  List
-                </Button>
-                    <Button 
-                  onClick={() => setViewMode('grid')}
-                  size="sm"
-                  className={viewMode === 'grid' ? 'subtle-button-active' : 'subtle-button'}
-                >
-                  Grid
-                    </Button>
+                <div className="slide-selector">
+                  <div 
+                    className="slide-selector-slider"
+                    style={{
+                      width: '50%',
+                      left: viewMode === 'list' ? '4px' : 'calc(50% + 2px)'
+                    }}
+                  />
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`slide-selector-button ${viewMode === 'list' ? 'active' : ''}`}
+                  >
+                    List
+                  </button>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`slide-selector-button ${viewMode === 'grid' ? 'active' : ''}`}
+                  >
+                    Grid
+                  </button>
+                </div>
             </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

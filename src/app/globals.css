@@ -190,6 +190,27 @@
     @apply bg-transparent text-gray-400 hover:text-gray-700 transition-colors duration-200 rounded-md p-1;
   }
   
+  /* Slide selector for view modes */
+  .slide-selector {
+    @apply relative bg-gray-100 rounded-lg p-1 flex;
+  }
+  
+  .slide-selector-button {
+    @apply relative z-10 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md;
+  }
+  
+  .slide-selector-button.active {
+    @apply text-purple-700;
+  }
+  
+  .slide-selector-button:not(.active) {
+    @apply text-gray-600 hover:text-gray-800;
+  }
+  
+  .slide-selector-slider {
+    @apply absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-all duration-200 ease-in-out;
+  }
+  
   /* Generate button with modern styling */
   .gradient-generate {
     @apply bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg hover:scale-105 transition-all duration-300 rounded-xl font-medium;
