@@ -170,6 +170,16 @@
     @apply bg-transparent text-gray-400 hover:bg-gray-100 hover:text-gray-600 border border-transparent hover:border-gray-200 transition-all duration-200 rounded-lg p-1;
   }
   
+  /* Minimal copy/open buttons - just icons with clean hover */
+  .minimal-icon-button {
+    @apply bg-transparent text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-all duration-200 rounded-md p-1;
+  }
+  
+  /* Clean filter bar buttons with text darkening */
+  .clean-filter-button {
+    @apply bg-transparent text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium;
+  }
+  
   /* Generate button with modern styling */
   .gradient-generate {
     @apply bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg hover:scale-105 transition-all duration-300 rounded-xl font-medium;

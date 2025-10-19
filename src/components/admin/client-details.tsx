@@ -298,8 +298,8 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
           <div>
             <h2 className="text-3xl page-title tracking-tight">Client Details</h2>
           </div>
-          <Button onClick={onClose} size="icon" className="subtle-icon-button">
-            ×
+          <Button onClick={onClose} size="icon" className="minimal-icon-button">
+            <X className="h-4 w-4" />
           </Button>
         </div>
 

@@ -442,15 +442,16 @@ function LinksPageContent() {
               <Button 
                 onClick={fetchLinks}
                 size="sm"
-                className="subtle-button"
+                className="minimal-icon-button"
                 disabled={isLoading}
               >
-                Refresh
+                <RefreshCw className="h-4 w-4" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="sm" className="subtle-button">
+                  <Button size="sm" className="clean-filter-button flex items-center gap-1">
                     Filter
+                    <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -570,23 +571,23 @@ function LinksPageContent() {
                         <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                                 <Button
                             size="sm"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity subtle-action-button"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity minimal-icon-button"
                             onClick={(e) => {
                               e.stopPropagation();
                               copyToClipboard(getOnboardingUrl(link.token), e, link.token);
                             }}
                           >
-                            Copy
+                            <Copy className="h-4 w-4" />
                           </Button>
                           <Button
                                 size="sm"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity subtle-action-button"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity minimal-icon-button"
                             onClick={(e) => {
                               e.stopPropagation();
                               window.open(getOnboardingUrl(link.token), '_blank');
                             }}
                           >
-                            Open
+                            <ExternalLink className="h-4 w-4" />
                                 </Button>
                         </div>
                               </div>
@@ -622,8 +623,8 @@ function LinksPageContent() {
                     <div className="min-w-0 flex-[0.5] flex justify-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="sm" className="h-8 w-8 p-0 subtle-icon-button">
-                            ⋮
+                          <Button size="sm" className="h-8 w-8 p-0 minimal-icon-button">
+                            <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
