@@ -237,6 +237,7 @@ export default function ClientDashboardPage() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
