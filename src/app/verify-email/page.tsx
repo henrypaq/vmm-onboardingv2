@@ -176,10 +176,7 @@ function EmailVerificationForm() {
             {isLoading ? (
               <LoadingSpinner size="sm" text="Verifying..." />
             ) : (
-              <>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Verify Email
-              </>
+              'Verify Email'
             )}
           </Button>
         </form>
@@ -190,10 +187,9 @@ function EmailVerificationForm() {
             Didn't receive the code?
           </p>
           <Button
-            variant="outline"
             onClick={handleResendCode}
             disabled={isResending}
-            className="w-full"
+            className="w-full gradient-primary"
           >
             {isResending ? (
               <LoadingSpinner size="sm" text="Sending..." />

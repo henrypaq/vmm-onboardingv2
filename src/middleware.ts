@@ -2,18 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // Define protected routes
-  const protectedRoutes = ['/admin', '/admin/clients', '/admin/links', '/admin/settings'];
-  const authRoutes = ['/login', '/signup', '/forgot-password'];
-  
-  // Check if the current path is a protected route
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
-  
-  // For now, allow all requests to pass through
-  // Authentication will be handled by the admin layout
+  // Simplified middleware - just pass through requests
+  // Authentication is handled client-side for better performance
   return NextResponse.next();
 }
 

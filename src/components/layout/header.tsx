@@ -81,8 +81,15 @@ export function Header({ user, userRole }: HeaderProps) {
     .join('')
     .toUpperCase() || 'U';
 
-  // Fetch current user data
+  // Fetch current user data only once and cache
   useEffect(() => {
+    // Check if we already have cached user data
+    const cachedUser = sessionStorage.getItem('currentUser');
+    if (cachedUser) {
+      setCurrentUser(JSON.parse(cachedUser));
+      return;
+    }
+
     const fetchCurrentUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -110,12 +117,16 @@ export function Header({ user, userRole }: HeaderProps) {
             };
             
             setCurrentUser(userData);
+            // Cache the user data
+            sessionStorage.setItem('currentUser', JSON.stringify(userData));
           } else {
-            setCurrentUser({
+            const userData = {
               name: session.user.user_metadata?.full_name || 'User',
               email: session.user.email || '',
               role: 'admin'
-            });
+            };
+            setCurrentUser(userData);
+            sessionStorage.setItem('currentUser', JSON.stringify(userData));
           }
         }
       } catch (error) {
@@ -129,6 +140,8 @@ export function Header({ user, userRole }: HeaderProps) {
   // Handle logout
   const handleLogout = async () => {
     try {
+      // Clear cached user data
+      sessionStorage.removeItem('currentUser');
       await supabase.auth.signOut();
       router.push('/');
     } catch (error) {
@@ -185,10 +198,10 @@ export function Header({ user, userRole }: HeaderProps) {
     };
   }, []);
 
-  // Fetch recent activity on component mount
-  useEffect(() => {
-    fetchRecentActivity();
-  }, []);
+  // Don't fetch recent activity on mount - only when notification dropdown opens
+  // useEffect(() => {
+  //   fetchRecentActivity();
+  // }, []);
 
   const isPlatformConnected = (platformId: string) => {
     return connectedPlatforms.some(p => p.id === platformId);

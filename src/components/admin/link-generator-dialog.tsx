@@ -498,7 +498,7 @@ export function LinkGeneratorDialog({ onLinkGenerated, onClose }: LinkGeneratorD
           <Button 
             type="submit" 
             disabled={isGenerating || selectedPlatforms.length === 0} 
-            className="w-full"
+            className="w-full gradient-primary"
           >
             {isGenerating ? 'Generating...' : 'Generate Link'}
           </Button>

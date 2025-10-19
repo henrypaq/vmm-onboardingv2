@@ -278,7 +278,6 @@ function LinksPageContent() {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button size="default" className="h-10 gradient-primary">
-                <Plus className="h-4 w-4 mr-2" />
                 Generate Link
               </Button>
             </DialogTrigger>
@@ -326,19 +325,17 @@ function LinksPageContent() {
                       <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                         <Button
                           size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
+                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
                           onClick={(e) => copyToClipboard(getOnboardingUrl(viewLinkData.token), e, viewLinkData.token)}
                         >
-                          <Copy className="h-3 w-3" />
+                          Copy
                         </Button>
                         <Button
                           size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
+                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
                           onClick={() => window.open(getOnboardingUrl(viewLinkData.token), '_blank')}
                         >
-                          <ExternalLink className="h-3 w-3" />
+                          Open
                         </Button>
                       </div>
                     )}
@@ -417,7 +414,6 @@ function LinksPageContent() {
               size="default" 
               className="h-10 gradient-primary"
             >
-              <Plus className="h-4 w-4 mr-2" />
               Generate Link
             </Button>
           </div>
@@ -445,20 +441,16 @@ function LinksPageContent() {
             <div className="flex items-center gap-2">
               <Button
                 onClick={fetchLinks} 
-                variant="outline"
                 size="sm"
-                className="hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                className="gradient-primary"
                 disabled={isLoading}
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="hover:bg-primary/10 hover:border-primary/30 transition-colors">
-                    <Filter className="h-4 w-4 mr-2" />
+                  <Button size="sm" className="gradient-primary">
                     Filter
-                    <ChevronDown className="h-3 w-3 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -578,25 +570,23 @@ function LinksPageContent() {
                         <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                                 <Button
                             size="sm"
-                                variant="ghost"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
                             onClick={(e) => {
                               e.stopPropagation();
                               copyToClipboard(getOnboardingUrl(link.token), e, link.token);
                             }}
                           >
-                            <Copy className="h-3 w-3" />
+                            Copy
                           </Button>
                           <Button
                                 size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
                             onClick={(e) => {
                               e.stopPropagation();
                               window.open(getOnboardingUrl(link.token), '_blank');
                             }}
                           >
-                            <ExternalLink className="h-3 w-3" />
+                            Open
                                 </Button>
                         </div>
                               </div>
@@ -632,20 +622,18 @@ function LinksPageContent() {
                     <div className="min-w-0 flex-[0.5] flex justify-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <Button size="sm" className="h-8 w-8 p-0 gradient-primary">
+                            ⋮
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => window.open(getOnboardingUrl(link.token), '_blank')}>
-                            <ExternalLink className="mr-2 h-4 w-4" />
                             Open Link
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => {
                             e.stopPropagation();
                             copyToClipboard(getOnboardingUrl(link.token), e, link.token);
                           }}>
-                            <Copy className="mr-2 h-4 w-4" />
                             Copy Link
                           </DropdownMenuItem>
                           {!isPermanentLink(link.token) && (
@@ -654,12 +642,7 @@ function LinksPageContent() {
                           disabled={isDeleting === link.id}
                               className="text-destructive focus:text-destructive"
                         >
-                          {isDeleting === link.id ? (
-                                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                                <Trash2 className="mr-2 h-4 w-4" />
-                              )}
-                              Delete Link
+                              {isDeleting === link.id ? 'Deleting...' : 'Delete Link'}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>

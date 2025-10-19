@@ -84,14 +84,12 @@ export default function ForgotPasswordPage() {
                   setIsSubmitted(false);
                   setEmail('');
                 }}
-                variant="outline"
-                className="flex-1"
+                className="flex-1 gradient-primary"
               >
                 Try Different Email
               </Button>
               <Link href="/login" className="flex-1">
-                <Button variant="ghost" className="w-full">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
+                <Button className="w-full gradient-primary">
                   Back to Login
                 </Button>
               </Link>
@@ -135,15 +133,9 @@ export default function ForgotPasswordPage() {
           disabled={isLoading}
         >
           {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending Reset Link...
-            </>
+            'Sending Reset Link...'
           ) : (
-            <>
-              <Mail className="mr-2 h-4 w-4" />
-              Send Reset Link
-            </>
+            'Send Reset Link'
           )}
         </Button>
 

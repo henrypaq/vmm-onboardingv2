@@ -205,12 +205,11 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                      className="h-8 w-8 gradient-primary"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <MoreVertical className="h-4 w-4" />
+                      ⋮
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -220,7 +219,6 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
                       onClick={handleDelete}
                       className="text-red-600 focus:text-red-600 focus:bg-red-50"
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
                       Delete Client
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -257,8 +255,7 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
           {/* Action Buttons */}
           <div className="flex gap-2 pt-2">
             <Button 
-              variant="outline" 
-              className="flex-1 h-9 border-gray-300 bg-white hover:bg-primary/10 hover:border-primary/30 text-gray-700 text-sm transition-colors"
+              className="flex-1 h-9 gradient-primary text-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onView();
@@ -370,14 +367,13 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
                 </div>
                 <Button
                   size="sm"
-                  variant="ghost"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
                   onClick={(e) => {
                     e.stopPropagation();
                     copyToClipboard(linkUrl);
                   }}
                 >
-                  <Copy className="h-3 w-3" />
+                  Copy
                 </Button>
               </div>
             ) : (
@@ -458,7 +454,7 @@ function EmptyState({ searchTerm, onClearSearch }: EmptyStateProps) {
           No clients match your search for "{searchTerm}". Try adjusting your search terms.
         </p>
         {onClearSearch && (
-          <Button variant="outline" size="sm" onClick={onClearSearch}>
+          <Button size="sm" className="gradient-primary" onClick={onClearSearch}>
             Clear search
           </Button>
         )}
@@ -495,9 +491,8 @@ function ErrorState({ message, onRetry }: ErrorStateProps) {
       <p className="text-sm text-gray-500 mb-4">{message}</p>
       <button 
         onClick={onRetry}
-        className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+        className="px-4 py-2 gradient-primary transition-colors"
       >
-        <RefreshCw className="h-4 w-4 mr-2 inline" />
         Try Again
       </button>
     </div>
@@ -653,38 +648,32 @@ export default function ClientsPage() {
               <div className="flex items-center gap-2">
               <Button 
                 onClick={fetchClients} 
-                variant="outline" 
                 size="sm" 
-                className="hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                className="gradient-primary"
                 disabled={isLoading}
               >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
               </Button>
               <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
                 <Button
                   onClick={() => setViewMode('list')}
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
-                  className={`h-8 rounded-md ${viewMode === 'list' ? 'gradient-primary shadow-sm' : 'hover:bg-white/60'}`}
+                  className={`h-8 rounded-md ${viewMode === 'list' ? 'gradient-primary shadow-sm' : 'bg-transparent hover:bg-white/60'}`}
                 >
-                  <List className="h-4 w-4" />
+                  List
                 </Button>
                     <Button 
                   onClick={() => setViewMode('grid')}
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
-                  className={`h-8 rounded-md ${viewMode === 'grid' ? 'gradient-primary shadow-sm' : 'hover:bg-white/60'}`}
+                  className={`h-8 rounded-md ${viewMode === 'grid' ? 'gradient-primary shadow-sm' : 'bg-transparent hover:bg-white/60'}`}
                 >
-                  <Grid3X3 className="h-4 w-4" />
+                  Grid
                     </Button>
             </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="hover:bg-primary/10 hover:border-primary/30 transition-colors">
-                    <Filter className="h-4 w-4 mr-2" />
+                  <Button size="sm" className="gradient-primary">
                     Filter
-                    <ChevronDown className="h-3 w-3 ml-1" />
                         </Button>
                       </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">

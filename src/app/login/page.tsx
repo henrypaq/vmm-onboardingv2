@@ -166,10 +166,7 @@ function LoginForm() {
           {isLoading ? (
             <LoadingSpinner size="sm" text="Signing in..." />
           ) : (
-            <>
-              <LogIn className="mr-2 h-4 w-4" />
-              Sign In
-            </>
+            'Sign In'
           )}
         </Button>
 

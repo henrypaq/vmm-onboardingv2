@@ -1,4 +1,4 @@
-@import '@fontsource/inter';
+@import '@fontsource/manrope';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -64,12 +64,12 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   }
   
   /* Typography hierarchy */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     font-weight: 600;
     letter-spacing: -0.025em;
   }
@@ -91,14 +91,14 @@
   
   /* Body text */
   p, span, div, button, input, textarea, select {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     font-weight: 400;
     letter-spacing: 0;
   }
   
   /* Captions, labels, small UI text */
   .text-xs, .text-sm, label, .caption {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     font-weight: 500;
     letter-spacing: 0.025em;
   }
@@ -116,9 +116,9 @@
     font-weight: 700;
   }
   
-  /* Page titles - uniform Inter font with consistent weight */
+  /* Page titles - uniform Manrope font with consistent weight */
   .page-title {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     font-weight: 600;
     letter-spacing: -0.025em;
   }
@@ -140,31 +140,22 @@
     @apply focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors duration-200;
   }
   
-  /* CTA button styling - Rectangular with black outline and white interior */
+  /* CTA button styling - Rounded with black outline and white interior */
   .gradient-primary {
-    @apply bg-white border-2 border-black text-black hover:bg-purple-50 hover:border-purple-500 hover:shadow-md transition-all duration-200 rounded-none;
+    @apply bg-white border-2 border-black text-black hover:bg-purple-600 hover:text-white hover:border-purple-600 hover:shadow-md transition-all duration-200 rounded-lg;
   }
   
-  /* Quick Action button gradients - White boxes with colored outlines */
+  /* Quick Action button gradients - Rounded with black outline */
   .gradient-generate {
-    background: white;
-    border: 2px solid hsla(142, 76%, 36%, 0.6);
-    color: #000000;
-    @apply hover:bg-green-50 hover:border-green-400 hover:shadow-lg hover:scale-[1.02] transition-all duration-200;
+    @apply bg-white border-2 border-black text-black hover:bg-purple-600 hover:text-white hover:border-purple-600 hover:shadow-md transition-all duration-200 rounded-lg;
   }
   
   .gradient-connections {
-    background: white;
-    border: 2px solid hsla(217, 91%, 60%, 0.6);
-    color: #000000;
-    @apply hover:bg-blue-50 hover:border-blue-400 hover:shadow-lg hover:scale-[1.02] transition-all duration-200;
+    @apply bg-white border-2 border-black text-black hover:bg-purple-600 hover:text-white hover:border-purple-600 hover:shadow-md transition-all duration-200 rounded-lg;
   }
   
   .gradient-clients {
-    background: white;
-    border: 2px solid hsla(280, 100%, 70%, 0.6);
-    color: #000000;
-    @apply hover:bg-purple-50 hover:border-purple-400 hover:shadow-lg hover:scale-[1.02] transition-all duration-200;
+    @apply bg-white border-2 border-black text-black hover:bg-purple-600 hover:text-white hover:border-purple-600 hover:shadow-md transition-all duration-200 rounded-lg;
   }
   
   /* Fade in animation */

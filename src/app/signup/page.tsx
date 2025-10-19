@@ -297,10 +297,7 @@ export default function SignUpPage() {
           {isLoading ? (
             <LoadingSpinner size="sm" text="Creating Account..." />
           ) : (
-            <>
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Create Admin Account
-            </>
+            'Create Admin Account'
           )}
         </Button>
 

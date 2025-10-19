@@ -916,11 +916,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
               <div className="flex justify-between gap-4">
                 <Button 
                   onClick={() => setCurrentStep('info')}
-                  variant="outline"
                   size="lg"
-                  className="flex-1"
+                  className="flex-1 gradient-primary"
                 >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
                 <Button 
@@ -930,7 +928,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                   size="lg"
                 >
                   Continue to Platform Connections
-                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -1033,7 +1030,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 <Button
                   onClick={handleShopifyStoreIdSubmit}
                   disabled={!shopifyData.storeId.trim()}
-                  className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full max-w-xs gradient-primary font-medium py-3 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue
                 </Button>
@@ -1059,7 +1056,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                     <div className="flex justify-center mt-6">
                       <Button
                         onClick={() => window.open(`https://admin.shopify.com/store/${shopifyData.storeId}/settings/account`, '_blank')}
-                        className="w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-md"
+                        className="w-full max-w-xs gradient-primary font-medium py-3 px-6"
                       >
                         OPEN SHOPIFY
                       </Button>
@@ -1096,14 +1093,13 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               <span className="font-medium">Shopify store connected successfully</span>
                             </div>
           <Button
-            variant="outline"
             size="sm"
             onClick={() => {
               setConnectionStatus(prev => ({ ...prev, shopify: { connected: false } }));
               setShopifyStep(1);
               setShopifyData({ storeId: '', collaboratorCode: '' });
             }}
-            className="text-xs px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            className="text-xs px-4 py-2 gradient-primary"
           >
             Change Store
           </Button>
@@ -1122,7 +1118,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                 onClick={() => handleOAuthConnect(platform.id)}
                                 className="w-full gradient-primary"
                               >
-                                <ExternalLink className="mr-2 h-4 w-4" />
                                 Connect {platform.name}
                               </Button>
                             </>
@@ -1133,14 +1128,13 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                 <span className="font-medium">You are logged in as {platform.name}</span>
                               </div>
                               <Button
-                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   // Reset connection status to allow re-authentication
                                   setConnectionStatus(prev => ({ ...prev, [platform.id]: 'pending' }));
                                   setShowAssetSelection(prev => ({ ...prev, [platform.id]: false }));
                                 }}
-                                className="text-xs"
+                                className="text-xs gradient-primary"
                               >
                                 Change Account
                               </Button>
@@ -1242,8 +1236,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                           <div className="flex justify-end space-x-3 pt-6">
                             <Button
                               onClick={() => setShowAssetSelection(prev => ({ ...prev, [platform.id]: false }))}
-                              variant="outline"
                               size="sm"
+                              className="gradient-primary"
                             >
                               Skip
                             </Button>
@@ -1254,7 +1248,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               disabled={!selectedAssets[platform.id] || Object.keys(selectedAssets[platform.id] || {}).length === 0}
                             >
                               Continue
-                              <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -1277,9 +1270,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               setCurrentPlatformIndex(currentPlatformIndex - 1);
                             }
                           }}
-                          variant="outline"
+                          className="gradient-primary"
                         >
-                          <ArrowLeft className="mr-2 h-4 w-4" />
                           Previous
                         </Button>
                         
@@ -1293,10 +1285,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                           currentPlatformIndex < platforms.length - 1 ? (
                             <Button
                               onClick={() => setCurrentPlatformIndex(currentPlatformIndex + 1)}
-                              variant="outline"
+                              className="gradient-primary"
                             >
                               Next
-                              <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                           ) : (
                             <Button
@@ -1305,7 +1296,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               className="gradient-primary"
                             >
                               Complete Onboarding
-                              <CheckCircle className="ml-2 h-4 w-4" />
                             </Button>
                           )
                         )}
@@ -1364,7 +1354,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 size="lg"
               >
                 Continue to Next Platform
-                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -1394,7 +1383,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                 size="lg"
               >
                 Go to Dashboard
-                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>

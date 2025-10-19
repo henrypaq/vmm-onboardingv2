@@ -281,7 +281,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
         <div className="bg-white rounded-lg p-8 max-w-7xl w-full mx-4 max-h-[95vh] overflow-y-auto shadow-xl border border-gray-200">
           <div className="text-center py-12">
             <p className="text-red-600 mb-6 text-lg">{error || 'Client not found'}</p>
-            <Button onClick={onClose} variant="outline" className="hover:bg-primary/10 hover:border-primary/30">
+            <Button onClick={onClose} className="gradient-primary">
               Close
             </Button>
           </div>
@@ -298,8 +298,8 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
           <div>
             <h2 className="text-3xl page-title tracking-tight">Client Details</h2>
           </div>
-          <Button onClick={onClose} variant="ghost" size="icon" className="hover:bg-gray-100">
-            <X className="h-6 w-6" />
+          <Button onClick={onClose} size="icon" className="gradient-primary">
+            ×
           </Button>
         </div>
 
@@ -380,8 +380,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                             </div>
                             <Button
                               size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10"
+                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const fullUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${onboardingRequest.link.token}`;
@@ -392,7 +391,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                 });
                               }}
                             >
-                              <Copy className="h-4 w-4" />
+                              Copy
                             </Button>
                           </div>
                         </div>
@@ -420,20 +419,13 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                 <Button
                   onClick={testAllAssets}
                   disabled={isTestingAllAssets || platformConnections.filter(conn => conn.platform !== 'shopify').length === 0}
-                  variant="outline"
                   size="sm"
-                  className="hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                  className="gradient-primary"
                 >
                   {isTestingAllAssets ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Testing platform connections...
-                    </>
+                    'Testing platform connections...'
                   ) : (
-                    <>
-                      <TestTube className="h-4 w-4 mr-2" />
-                      Test Platform Assets
-                    </>
+                    'Test Platform Assets'
                   )}
                 </Button>
               </div>
@@ -473,17 +465,15 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                           {connection.platform !== 'shopify' && (
                             <Button
                               size="sm"
-                              variant="outline"
                               onClick={() => testPlatformAPI(connection.platform, connection)}
                               disabled={apiTestLoading[`${connection.platform}_${connection.id}`]}
-                              className="hover:bg-primary/10 hover:border-primary/30"
+                              className="gradient-primary"
                             >
                               {apiTestLoading[`${connection.platform}_${connection.id}`] ? (
-                                <RefreshCw className="h-4 w-4 animate-spin" />
+                                'Testing...'
                               ) : (
-                                <TestTube className="h-4 w-4" />
+                                'Test API'
                               )}
-                              <span className="ml-2">Test API</span>
                             </Button>
                           )}
                         </div>
@@ -522,7 +512,6 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                   </Badge>
                                       <Button
                                         size="sm"
-                                        variant="outline"
                                         onClick={() => {
                                       const platformUrls = {
                                         'google': `https://analytics.google.com/analytics/web/#/p${asset.id}`,
@@ -533,9 +522,8 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                       const url = platformUrls[connection.platform as keyof typeof platformUrls] || '#';
                                       window.open(url, '_blank');
                                     }}
-                                    className="text-xs hover:bg-primary/10 hover:border-primary/30"
+                                    className="text-xs gradient-primary"
                                   >
-                                    <ExternalLink className="h-3 w-3 mr-1" />
                                     Open in {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
                                       </Button>
                                 </div>
@@ -570,16 +558,14 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                         </div>
                                       <Button
                                         size="sm"
-                                        variant="outline"
                                           onClick={() => {
                                             const storeId = shopifyData.store_id || shopifyData.store_domain;
                                             if (storeId) {
                                               window.open(`https://${storeId}.myshopify.com/admin`, '_blank');
                                             }
                                           }}
-                                          className="text-xs hover:bg-primary/10 hover:border-primary/30"
+                                          className="text-xs gradient-primary"
                                         >
-                                          <ExternalLink className="h-3 w-3 mr-1" />
                                           Open Store
                                       </Button>
                                       </div>
@@ -593,14 +579,12 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                         </div>
                                         <Button
                                           size="sm"
-                                          variant="outline"
                                           onClick={() => {
                                             // TODO: Link to partner dashboard when available
                                             toast.info('Partner dashboard link will be added soon');
                                           }}
-                                          className="text-xs hover:bg-primary/10 hover:border-primary/30"
+                                          className="text-xs gradient-primary"
                                         >
-                                          <ExternalLink className="h-3 w-3 mr-1" />
                                           Open Partner Dashboard
                                         </Button>
                                       </div>

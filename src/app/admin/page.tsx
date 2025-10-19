@@ -201,8 +201,7 @@ export default function AdminDashboardPage() {
           <h1 className="text-3xl page-title tracking-tight">Dashboard</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={fetchDashboardData} variant="outline" size="sm" disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button onClick={fetchDashboardData} size="sm" className="gradient-primary" disabled={isLoading}>
             Refresh
           </Button>
         </div>
@@ -354,41 +353,32 @@ export default function AdminDashboardPage() {
           <CardContent>
             <div className="grid grid-cols-1 gap-3 h-full">
               <Button 
-                className="h-20 justify-center flex-col rounded-2xl gradient-generate border-0 shadow-lg hover:shadow-xl transition-all duration-200" 
-                variant="outline"
+                className="h-20 justify-center flex-col rounded-lg gradient-generate border-0 shadow-lg hover:shadow-xl transition-all duration-200" 
                 onClick={() => {
                   router.push('/admin/links?openDialog=true');
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <LinkIcon className="h-6 w-6 text-black" />
                   <span className="text-base font-medium text-black">Generate Link</span>
-                  <ArrowRight className="h-4 w-4 text-black" />
                 </div>
               </Button>
               <Button 
-                className="h-20 justify-center flex-col rounded-2xl gradient-clients border-0 shadow-lg hover:shadow-xl transition-all duration-200" 
-                variant="outline"
+                className="h-20 justify-center flex-col rounded-lg gradient-clients border-0 shadow-lg hover:shadow-xl transition-all duration-200" 
                 onClick={() => router.push('/admin/clients')}
               >
                 <div className="flex items-center gap-2">
-                  <Users className="h-6 w-6 text-black" />
                   <span className="text-base font-medium text-black">View Clients</span>
-                  <ArrowRight className="h-4 w-4 text-black" />
                 </div>
               </Button>
               <Button 
-                className="h-20 justify-center flex-col rounded-2xl gradient-connections border-0 shadow-lg hover:shadow-xl transition-all duration-200" 
-                variant="outline"
+                className="h-20 justify-center flex-col rounded-lg gradient-connections border-0 shadow-lg hover:shadow-xl transition-all duration-200" 
                 onClick={() => {
                   // Trigger settings dialog via custom event
                   window.dispatchEvent(new CustomEvent('openSettings'));
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-6 w-6 text-black" />
                   <span className="text-base font-medium text-black">Connections</span>
-                  <ArrowRight className="h-4 w-4 text-black" />
                 </div>
               </Button>
             </div>
