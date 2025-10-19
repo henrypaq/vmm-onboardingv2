@@ -287,7 +287,7 @@ export function Header({ user, userRole }: HeaderProps) {
                     <span className={cn("text-base font-medium transition-colors relative", isActive ? "text-purple-600" : "text-gray-600 group-hover:text-purple-600")}>
                       {item.label}
                       {/* Underline animation */}
-                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 transition-all duration-300 group-hover:w-full"></span>
+                      <span className={cn("absolute bottom-0 left-0 h-0.5 bg-purple-600 transition-all duration-300", isActive ? "w-full" : "w-0 group-hover:w-full")}></span>
                     </span>
                   </div>
                 </div>

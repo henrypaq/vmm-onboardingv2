@@ -275,14 +275,6 @@ function LinksPageContent() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl page-title tracking-tight">Links</h1>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="default" className="h-10 gradient-generate">
-                Generate Link
-              </Button>
-            </DialogTrigger>
-            <LinkGeneratorDialog onLinkGenerated={handleLinkGenerated} onClose={() => setIsDialogOpen(false)} />
-          </Dialog>
         </div>
       </div>
       
