@@ -175,19 +175,19 @@
     @apply bg-transparent text-gray-400 hover:text-gray-700 transition-colors duration-200 rounded-md p-1;
   }
   
-  /* Clean filter bar buttons with text darkening */
-  .clean-filter-button {
-    @apply bg-transparent text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium;
-  }
-  
   /* Ultra-minimal small buttons - no containers, just text/icon darkening */
   .ultra-minimal-button {
-    @apply bg-transparent text-gray-500 hover:text-gray-800 transition-colors duration-200 rounded-md;
+    @apply !bg-transparent !text-gray-500 hover:!text-gray-800 hover:!bg-transparent !border-transparent !shadow-none transition-colors duration-200 rounded-md;
   }
   
   /* Ultra-minimal icon buttons - no containers, just icon darkening */
   .ultra-minimal-icon-button {
-    @apply bg-transparent text-gray-400 hover:text-gray-700 transition-colors duration-200 rounded-md p-1;
+    @apply !bg-transparent !text-gray-400 hover:!text-gray-700 hover:!bg-transparent !border-transparent !shadow-none transition-colors duration-200 rounded-md p-1;
+  }
+  
+  /* Clean filter buttons - override all default button styles */
+  .clean-filter-button {
+    @apply !bg-transparent !text-gray-600 hover:!text-gray-900 hover:!bg-transparent !border-transparent !shadow-none transition-colors duration-200 font-medium;
   }
   
   /* Slide selector for view modes */
