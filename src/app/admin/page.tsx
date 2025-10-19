@@ -362,7 +362,7 @@ export default function AdminDashboardPage() {
           <CardContent>
             <div className="grid grid-cols-1 gap-4">
               <Button 
-                className="h-16 justify-center flex-col gradient-generate hover:scale-105 transition-all duration-300" 
+                className="h-16 justify-center flex-col bg-white/60 border border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-md transition-all duration-300" 
                 onClick={() => {
                   router.push('/admin/links?openDialog=true');
                 }}
@@ -372,7 +372,7 @@ export default function AdminDashboardPage() {
                 </div>
               </Button>
               <Button 
-                className="h-16 justify-center flex-col gradient-clients hover:scale-105 transition-all duration-300" 
+                className="h-16 justify-center flex-col bg-white/60 border border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-300" 
                 onClick={() => router.push('/admin/clients')}
               >
                 <div className="flex items-center gap-2">
@@ -380,7 +380,7 @@ export default function AdminDashboardPage() {
                 </div>
               </Button>
               <Button 
-                className="h-16 justify-center flex-col gradient-connections hover:scale-105 transition-all duration-300" 
+                className="h-16 justify-center flex-col bg-white/60 border border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300" 
                 onClick={() => {
                   // Trigger settings dialog via custom event
                   window.dispatchEvent(new CustomEvent('openSettings'));

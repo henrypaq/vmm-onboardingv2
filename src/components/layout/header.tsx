@@ -281,14 +281,15 @@ export function Header({ user, userRole }: HeaderProps) {
             
               return (
               <Link key={item.href} href={item.href}>
-                <div className="relative px-6 py-3 group cursor-pointer rounded-xl transition-all duration-200 hover:bg-gray-50">
+                <div className="relative px-6 py-3 group cursor-pointer transition-all duration-200">
                   <div className="flex items-center gap-3">
                     <Icon className={cn("h-5 w-5 transition-colors", isActive ? "text-purple-600" : "text-gray-500 group-hover:text-purple-600")} />
-                    <span className={cn("text-base font-medium transition-colors", isActive ? "text-purple-600" : "text-gray-600 group-hover:text-purple-600")}>{item.label}</span>
+                    <span className={cn("text-base font-medium transition-colors relative", isActive ? "text-purple-600" : "text-gray-600 group-hover:text-purple-600")}>
+                      {item.label}
+                      {/* Underline animation */}
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 transition-all duration-300 group-hover:w-full"></span>
+                    </span>
                   </div>
-                  {isActive && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full" />
-                  )}
                 </div>
                 </Link>
               );
