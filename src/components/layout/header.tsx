@@ -301,7 +301,7 @@ export function Header({ user, userRole }: HeaderProps) {
           {/* Notifications */}
           <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
             <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative subtle-icon-button">
+          <Button variant="ghost" size="icon" className="relative ultra-minimal-icon-button">
                 <Bell className="h-4 w-4" />
                 {recentActivity.length > 0 && (
             <Badge 
@@ -320,7 +320,7 @@ export function Header({ user, userRole }: HeaderProps) {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => fetchRecentActivity()}
-                  className="h-6 px-2 subtle-action-button"
+                  className="h-6 px-2 ultra-minimal-button"
                 >
                   <RefreshCw className="h-3 w-3" />
           </Button>

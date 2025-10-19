@@ -281,7 +281,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
         <div className="bg-white rounded-lg p-8 max-w-7xl w-full mx-4 max-h-[95vh] overflow-y-auto shadow-xl border border-gray-200">
           <div className="text-center py-12">
             <p className="text-red-600 mb-6 text-lg">{error || 'Client not found'}</p>
-            <Button onClick={onClose} className="subtle-button">
+            <Button onClick={onClose} className="ultra-minimal-button">
               Close
             </Button>
           </div>
@@ -298,7 +298,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
           <div>
             <h2 className="text-3xl page-title tracking-tight">Client Details</h2>
           </div>
-          <Button onClick={onClose} size="icon" className="minimal-icon-button">
+          <Button onClick={onClose} size="icon" className="ultra-minimal-icon-button">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -420,7 +420,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                   onClick={testAllPlatformAssets}
                   disabled={isTestingAllAssets || platformConnections.filter(conn => conn.platform !== 'shopify').length === 0}
                   size="sm"
-                  className="subtle-button"
+                  className="ultra-minimal-button"
                 >
                   {isTestingAllAssets ? (
                     'Testing platform connections...'
@@ -467,7 +467,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                               size="sm"
                               onClick={() => testPlatformAPI(connection.platform, connection)}
                               disabled={apiTestLoading[`${connection.platform}_${connection.id}`]}
-                              className="subtle-action-button"
+                              className="ultra-minimal-button"
                             >
                               {apiTestLoading[`${connection.platform}_${connection.id}`] ? (
                                 'Testing...'

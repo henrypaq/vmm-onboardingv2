@@ -204,13 +204,13 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
                 {/* 3-dots Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon"
-                      className="minimal-icon-button h-8 w-8"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
+        <Button
+          size="icon"
+          className="ultra-minimal-icon-button h-8 w-8"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreVertical className="h-4 w-4" />
+        </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuLabel>Client Actions</DropdownMenuLabel>
@@ -365,16 +365,16 @@ function ClientListItem({ client, onView }: ClientListItemProps) {
                 >
                   {linkUrl}
                 </div>
-                <Button
-                  size="sm"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity minimal-icon-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    copyToClipboard(linkUrl);
-                  }}
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
+        <Button
+          size="sm"
+          className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity ultra-minimal-icon-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            copyToClipboard(linkUrl);
+          }}
+        >
+          <Copy className="h-3 w-3" />
+        </Button>
               </div>
             ) : (
               <span className="text-sm text-foreground">—</span>
@@ -646,14 +646,14 @@ export default function ClientsPage() {
                 </div>
       </div>
               <div className="flex items-center gap-2">
-              <Button
-                onClick={fetchClients}
-                size="sm"
-                className="minimal-icon-button"
-                disabled={isLoading}
-              >
-            <RefreshCw className="h-4 w-4" />
-              </Button>
+        <Button
+          onClick={fetchClients}
+          size="sm"
+          className="ultra-minimal-icon-button"
+          disabled={isLoading}
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
               <div className="flex items-center gap-1">
                 <Button
                   onClick={() => setViewMode('list')}
@@ -672,10 +672,10 @@ export default function ClientsPage() {
             </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                  <Button size="sm" className="clean-filter-button flex items-center gap-1">
+                  <Button size="sm" className="ultra-minimal-button flex items-center gap-1">
                     Filter
                     <ChevronDown className="h-3 w-3" />
-                        </Button>
+                  </Button>
                       </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
