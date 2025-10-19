@@ -103,32 +103,34 @@ export default function ClientDashboardPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="p-6 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 mt-1">Manage your platform connections and assets</p>
+          </div>
+          <Button
+            onClick={fetchDashboardData}
+            size="sm"
+            className="gradient-secondary"
+          >
+            Refresh
+          </Button>
         </div>
-        <Button
-          onClick={fetchDashboardData}
-          variant="outline"
-          size="sm"
-          className="hover:bg-primary/10 hover:border-primary/30"
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
 
-      {/* Platform Connections - Full Width */}
-      <div className="w-full">
-        <Card className="hover:shadow-md transition-shadow duration-200 border border-gray-200">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <LinkIcon className="h-5 w-5 mr-2 text-primary" />
-              Platform Connections
-            </CardTitle>
-          </CardHeader>
+        {/* Platform Connections - Full Width */}
+        <div className="w-full">
+          <Card className="modern-card">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl font-semibold">
+                <LinkIcon className="h-6 w-6 mr-3 text-purple-600" />
+                Platform Connections
+              </CardTitle>
+            </CardHeader>
           <CardContent>
             {platformConnections.length === 0 ? (
               <div className="text-center py-12">

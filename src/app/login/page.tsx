@@ -110,14 +110,14 @@ function LoginForm() {
           </div>
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor="email">Email Address</Label>
+        <div className="space-y-3">
+          <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
           <Input
             id="email"
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className={errors.email ? 'border-red-300 focus:border-red-500' : ''}
+            className={`modern-input h-12 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : ''}`}
             placeholder="john@acme.com"
           />
           {errors.email && (
@@ -125,23 +125,23 @@ function LoginForm() {
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+        <div className="space-y-3">
+          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
               onChange={(e) => handleInputChange('password', e.target.value)}
-              className={errors.password ? 'border-red-300 focus:border-red-500 pr-10' : 'pr-10'}
+              className={`modern-input h-12 pr-12 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : ''}`}
               placeholder="Enter your password"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
           {errors.password && (

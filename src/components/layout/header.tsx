@@ -255,7 +255,7 @@ export function Header({ user, userRole }: HeaderProps) {
   const navItems = role === 'admin' ? adminNavItems : clientNavItems;
 
   return (
-        <header className="sticky top-0 z-40 flex h-20 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+        <header className="sticky top-0 z-40 flex h-20 items-center gap-4 border-b bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80 px-6 shadow-sm">
       <div className="flex w-full items-center justify-between">
         {/* Logo */}
         <div className="flex items-center w-48">
@@ -274,24 +274,21 @@ export function Header({ user, userRole }: HeaderProps) {
         </div>
 
         {/* Centered Navigation Links */}
-        <nav className="hidden md:flex items-center justify-center gap-2 absolute left-1/2 transform -translate-x-1/2">
+        <nav className="hidden md:flex items-center justify-center gap-1 absolute left-1/2 transform -translate-x-1/2">
             {navItems.map((item) => {
             const Icon = item.icon;
               const isActive = pathname === item.href;
             
               return (
               <Link key={item.href} href={item.href}>
-                <div className="relative px-4 py-2 group cursor-pointer">
+                <div className="relative px-6 py-3 group cursor-pointer rounded-xl transition-all duration-200 hover:bg-gray-50">
                   <div className="flex items-center gap-3">
-                    <Icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-gray-500")} />
-                    <span className={cn("text-base font-medium", isActive ? "text-primary" : "text-gray-500")}>{item.label}</span>
+                    <Icon className={cn("h-5 w-5 transition-colors", isActive ? "text-purple-600" : "text-gray-500 group-hover:text-purple-600")} />
+                    <span className={cn("text-base font-medium transition-colors", isActive ? "text-purple-600" : "text-gray-600 group-hover:text-purple-600")}>{item.label}</span>
                   </div>
-                  <div 
-                    className={cn(
-                      'absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-all',
-                      isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                    )}
-                  />
+                  {isActive && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full" />
+                  )}
                 </div>
                 </Link>
               );

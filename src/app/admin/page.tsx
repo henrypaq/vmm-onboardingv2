@@ -194,100 +194,108 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl page-title tracking-tight">Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="flex flex-1 flex-col gap-6 p-6 md:gap-8 md:p-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your platform.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={fetchDashboardData} size="sm" className="gradient-primary" disabled={isLoading}>
+              Refresh
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={fetchDashboardData} size="sm" className="gradient-primary" disabled={isLoading}>
-            Refresh
-          </Button>
-        </div>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-5">
-              <div className="flex items-center space-x-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-500">
-                  <Users className="h-7 w-7 text-white" />
+        {/* Stats Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="modern-card group hover:scale-105 transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Total Clients</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.totalClients}</p>
+                    <p className="text-xs text-green-600 font-medium">+12% from last month</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Clients</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalClients}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card className="relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-5">
-              <div className="flex items-center space-x-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-500">
-                  <LinkIcon className="h-7 w-7 text-white" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="modern-card group hover:scale-105 transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                    <LinkIcon className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Active Links</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.activeLinks}</p>
+                    <p className="text-xs text-emerald-600 font-medium">+8% from last month</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Active Links</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.activeLinks}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-5">
-              <div className="flex items-center space-x-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500">
-                  <CheckCircle className="h-7 w-7 text-white" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="modern-card group hover:scale-105 transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                    <CheckCircle className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.completedOnboardings}</p>
+                    <p className="text-xs text-purple-600 font-medium">+15% from last month</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.completedOnboardings}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-5">
-              <div className="flex items-center space-x-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-500">
-                  <Clock className="h-7 w-7 text-white" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card className="modern-card group hover:scale-105 transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                    <Clock className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Pending</p>
+                    <p className="text-3xl font-bold text-gray-900">{stats.pendingRequests}</p>
+                    <p className="text-xs text-amber-600 font-medium">Needs attention</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Pending</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.pendingRequests}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
       </div>
 
       {/* Recent Activity and Quick Actions - Side by Side */}
@@ -346,39 +354,40 @@ export default function AdminDashboardPage() {
         </Card>
 
         {/* Quick Actions */}
-        <Card className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+        <Card className="modern-card">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="text-xl font-semibold">Quick Actions</CardTitle>
+            <CardDescription>Common tasks to get started</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-3 h-full">
+            <div className="grid grid-cols-1 gap-4">
               <Button 
-                className="h-20 justify-center flex-col rounded-lg gradient-generate border-0 shadow-lg hover:shadow-xl transition-all duration-200" 
+                className="h-16 justify-center flex-col gradient-generate hover:scale-105 transition-all duration-300" 
                 onClick={() => {
                   router.push('/admin/links?openDialog=true');
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-medium text-black">Generate Link</span>
+                  <span className="text-lg font-semibold">Generate Link</span>
                 </div>
               </Button>
               <Button 
-                className="h-20 justify-center flex-col rounded-lg gradient-clients border-0 shadow-lg hover:shadow-xl transition-all duration-200" 
+                className="h-16 justify-center flex-col gradient-clients hover:scale-105 transition-all duration-300" 
                 onClick={() => router.push('/admin/clients')}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-medium text-black">View Clients</span>
+                  <span className="text-lg font-semibold">View Clients</span>
                 </div>
               </Button>
               <Button 
-                className="h-20 justify-center flex-col rounded-lg gradient-connections border-0 shadow-lg hover:shadow-xl transition-all duration-200" 
+                className="h-16 justify-center flex-col gradient-connections hover:scale-105 transition-all duration-300" 
                 onClick={() => {
                   // Trigger settings dialog via custom event
                   window.dispatchEvent(new CustomEvent('openSettings'));
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-medium text-black">Connections</span>
+                  <span className="text-lg font-semibold">Connections</span>
                 </div>
               </Button>
             </div>
