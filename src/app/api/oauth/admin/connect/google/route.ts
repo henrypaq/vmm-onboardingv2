@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminPlatformConnection, AdminPlatformConnection } from '@/lib/db/database';
+import { createClient } from '@/lib/supabase/server';
 
 // Consistent redirect URI construction
 function getGoogleRedirectUri(): string {
@@ -59,10 +60,21 @@ export async function GET(request: NextRequest) {
       console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
       console.log('redirectUri:', redirectUri);
       
-      const state = `admin_${Date.now()}`;
+      // Get authenticated user ID and store in state
+      const supabase = await createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=not_authenticated&message=Please log in to connect platforms`
+        );
+      }
+      
+      const adminId = session.user.id;
+      const state = `admin_${adminId}_${Date.now()}`;
       const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20email%20profile&response_type=code&state=${state}`;
       
-      console.log('Generated state:', state);
+      console.log('Generated state with admin ID:', state);
       
       console.log('🔗 Google OAuth: Redirecting to Google with basic scopes');
       console.log('🔗 Google OAuth: Scopes: openid, email, profile');
@@ -86,13 +98,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Validate state parameter (basic validation)
+    // Validate state parameter and extract admin ID
     if (!state || !state.startsWith('admin_')) {
       console.error('Google OAuth invalid state parameter:', state);
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_failed&platform=google&message=Invalid state parameter`
       );
     }
+    
+    // Extract admin ID from state: admin_{adminId}_{timestamp}
+    const stateParts = state.split('_');
+    const adminId = stateParts.length >= 2 ? stateParts[1] : null;
+    
+    if (!adminId) {
+      console.error('Google OAuth: Could not extract admin ID from state:', state);
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_failed&platform=google&message=Could not identify user`
+      );
+    }
+    
+    console.log('Extracted admin ID from state:', adminId);
 
     // Check environment variables
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
@@ -116,14 +141,13 @@ export async function GET(request: NextRequest) {
     console.log('✅ Google OAuth: User email:', userInfo.email);
     console.log('✅ Google OAuth: User name:', userInfo.name);
 
-    // TODO: Get real admin ID from authentication/session
-    // For now, using a mock admin ID - replace with real auth
-    const mockAdminId = '00000000-0000-0000-0000-000000000001';
+    // Use admin ID from state parameter
+    console.log('Using admin ID from OAuth state:', adminId);
 
     // Store the platform connection in the database
     console.log('Storing Google connection in database...');
     console.log('Account data:', {
-      admin_id: mockAdminId,
+      admin_id: adminId,
       platform: 'google',
       platform_user_id: userInfo.id,
       platform_username: userInfo.name,
@@ -137,7 +161,7 @@ export async function GET(request: NextRequest) {
     });
 
     const savedAccount = await createAdminPlatformConnection({
-      admin_id: mockAdminId,
+      admin_id: adminId,
       platform: 'google',
       platform_user_id: userInfo.id,
       platform_username: userInfo.name,

@@ -5,10 +5,11 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Mock user data - authentication will be handled client-side
+  // Header component will fetch real user data from Supabase session
+  // Pass placeholder that will be replaced by Header's useEffect
   const user = {
-    name: 'Admin User',
-    email: 'admin@example.com',
+    name: 'Loading...',
+    email: '',
     role: 'admin' as const,
   };
 

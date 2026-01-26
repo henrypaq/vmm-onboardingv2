@@ -204,12 +204,18 @@ export async function updateClient(id: string, updates: Partial<Client>): Promis
 }
 
 // Onboarding Link functions
-export async function getOnboardingLinks(): Promise<OnboardingLink[]> {
+export async function getOnboardingLinks(adminId?: string): Promise<OnboardingLink[]> {
   const supabaseAdmin = getSupabaseAdmin();
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from('onboarding_links')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .select('*');
+  
+  // Filter by admin_id if provided
+  if (adminId) {
+    query = query.eq('admin_id', adminId);
+  }
+  
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching onboarding links:', error);
@@ -386,13 +392,19 @@ export async function updateOnboardingRequest(id: string, updates: Partial<Onboa
 }
 
 // Admin Platform Connection functions
-export async function getAdminPlatformConnections(): Promise<AdminPlatformConnection[]> {
+export async function getAdminPlatformConnections(adminId?: string): Promise<AdminPlatformConnection[]> {
   const supabaseAdmin = getSupabaseAdmin();
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from('admin_platform_connections')
     .select('*')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
+    .eq('is_active', true);
+  
+  // Filter by admin_id if provided
+  if (adminId) {
+    query = query.eq('admin_id', adminId);
+  }
+  
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching admin platform connections:', error);

@@ -3,14 +3,24 @@ import { generateOnboardingLink } from '@/lib/links/link-generator';
 import { createOnboardingLink } from '@/lib/db/database';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { getGoogleScopesWithRequired } from '@/lib/scopes';
-// import { requireAuth } from '@/lib/auth/auth';
+import { getCurrentUserId } from '@/lib/auth/get-current-user';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🔗 Link generation API called');
     
-    // TODO: Implement proper authentication
-    // const session = await requireAuth('admin');
+    // Get authenticated user ID
+    const adminId = await getCurrentUserId();
+    
+    if (!adminId) {
+      console.log('❌ User not authenticated');
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    console.log('✅ Authenticated user ID:', adminId);
     
     const requestBody = await request.json();
     console.log('📝 Request body:', requestBody);
@@ -51,7 +61,7 @@ export async function POST(request: NextRequest) {
     const generatedLink = generateOnboardingLink({
       clientId: linkName, // Use link name as client ID for now
       expiresInDays,
-      createdBy: 'placeholder-admin-id', // TODO: Use actual admin ID from session
+      createdBy: adminId, // Use actual admin ID from session
     });
 
     console.log('✅ Link generated:', {
@@ -83,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
     
     const linkData = {
-      admin_id: '00000000-0000-0000-0000-000000000001', // TODO: Use actual admin ID from session
+      admin_id: adminId, // Use actual admin ID from session
       link_name: linkName, // Descriptive name for the onboarding link
       // client_id is intentionally omitted - onboarding links are public and don't require pre-existing clients
       token: generatedLink.token,

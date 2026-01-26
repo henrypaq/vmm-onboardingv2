@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminPlatformConnection, AdminPlatformConnection } from '@/lib/db/database';
+import { createClient } from '@/lib/supabase/server';
 
 // Consistent redirect URI construction
 function getMetaRedirectUri(): string {
@@ -46,10 +47,21 @@ export async function GET(request: NextRequest) {
       console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
       console.log('redirectUri:', redirectUri);
       
-      const state = `admin_${Date.now()}`;
+      // Get authenticated user ID and store in state
+      const supabase = await createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=not_authenticated&message=Please log in to connect platforms`
+        );
+      }
+      
+      const adminId = session.user.id;
+      const state = `admin_${adminId}_${Date.now()}`;
       const oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_show_list,ads_management&response_type=code&state=${state}`;
       
-      console.log('Generated state:', state);
+      console.log('Generated state with admin ID:', state);
       
       console.log('Redirecting to Meta OAuth:', oauthUrl);
       return NextResponse.redirect(oauthUrl);
@@ -71,13 +83,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Validate state parameter (basic validation)
+    // Validate state parameter and extract admin ID
     if (!state || !state.startsWith('admin_')) {
       console.error('Meta OAuth invalid state parameter:', state);
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_failed&platform=meta&message=Invalid state parameter`
       );
     }
+    
+    // Extract admin ID from state: admin_{adminId}_{timestamp}
+    const stateParts = state.split('_');
+    const adminId = stateParts.length >= 2 ? stateParts[1] : null;
+    
+    if (!adminId) {
+      console.error('Meta OAuth: Could not extract admin ID from state:', state);
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=oauth_failed&platform=meta&message=Could not identify user`
+      );
+    }
+    
+    console.log('Extracted admin ID from state:', adminId);
 
     // Check environment variables
     if (!process.env.NEXT_PUBLIC_META_APP_ID || !process.env.META_APP_SECRET) {
@@ -95,14 +120,13 @@ export async function GET(request: NextRequest) {
     const userInfo = await fetchMetaUserInfo(tokenResponse.access_token);
     console.log('User info fetched:', userInfo);
 
-    // TODO: Get real admin ID from authentication/session
-    // For now, using a mock admin ID - replace with real auth
-    const mockAdminId = '00000000-0000-0000-0000-000000000001';
+    // Use admin ID from state parameter
+    console.log('Using admin ID from OAuth state:', adminId);
 
     // Store the platform connection in the database
     console.log('Storing Meta connection in database...');
     console.log('Account data:', {
-      admin_id: mockAdminId,
+      admin_id: adminId,
       platform: 'meta',
       platform_user_id: userInfo.id,
       platform_username: userInfo.name,
@@ -116,7 +140,7 @@ export async function GET(request: NextRequest) {
     });
 
     const savedAccount = await createAdminPlatformConnection({
-      admin_id: mockAdminId,
+      admin_id: adminId,
       platform: 'meta',
       platform_user_id: userInfo.id,
       platform_username: userInfo.name,

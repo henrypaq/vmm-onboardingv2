@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminPlatformConnections } from '@/lib/db/database';
+import { getCurrentUserId } from '@/lib/auth/get-current-user';
 
 export async function GET(_request: NextRequest) {
   try {
-    // Fetch admin platform connections from database (shared across all admins)
-    const connections = await getAdminPlatformConnections();
+    // Get authenticated user ID
+    const adminId = await getCurrentUserId();
+    
+    if (!adminId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    // Fetch admin platform connections for this specific admin
+    const connections = await getAdminPlatformConnections(adminId);
 
     // Transform the data to match the expected format
     const formattedConnections = connections.map(conn => ({

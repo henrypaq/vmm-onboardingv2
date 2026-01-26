@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOnboardingLinks, deleteOnboardingLink } from '@/lib/db/database';
+import { getCurrentUserId } from '@/lib/auth/get-current-user';
 
 export async function GET(_request: NextRequest) {
   try {
-    // Fetch onboarding links from database (shared across all admins)
-    const links = await getOnboardingLinks();
+    // Get authenticated user ID
+    const adminId = await getCurrentUserId();
+    
+    if (!adminId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    // Fetch onboarding links for this specific admin
+    const links = await getOnboardingLinks(adminId);
 
     return NextResponse.json({
       links: links,
