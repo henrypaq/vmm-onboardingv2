@@ -381,10 +381,7 @@ export default function AdminDashboardPage() {
               </Button>
               <Button 
                 className="h-16 justify-center flex-col bg-white/60 border border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300" 
-                onClick={() => {
-                  // Trigger settings dialog via custom event
-                  window.dispatchEvent(new CustomEvent('openSettings'));
-                }}
+                onClick={() => router.push('/admin/settings')}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-semibold">Connections</span>

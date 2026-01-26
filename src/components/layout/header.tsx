@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-import { User, LogOut, Settings, LayoutDashboard, Users, Link as LinkIcon, Globe, Shield, Save, Plus, Trash2 } from 'lucide-react';
+import { User, LogOut, Settings, LayoutDashboard, Users, Link as LinkIcon } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,15 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
 
 interface HeaderProps {
   user?: {
@@ -62,16 +54,12 @@ export function Header({ user, userRole }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const role = userRole || user?.role;
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
-  const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<{
     name: string;
     email: string;
     role: string;
   } | null>(null);
-  const platforms = getAllPlatforms();
   
   const initials = (currentUser?.name || user?.name)
     ?.split(' ')
@@ -314,7 +302,7 @@ export function Header({ user, userRole }: HeaderProps) {
                 <span className="text-sm text-gray-700">Profile</span>
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => setSettingsOpen(true)}
+                onClick={() => router.push('/admin/settings')}
                 className="px-3 py-2 cursor-pointer focus:bg-gray-100 rounded-md"
               >
                 <Settings className="mr-2 h-4 w-4 text-gray-600" />
@@ -332,220 +320,6 @@ export function Header({ user, userRole }: HeaderProps) {
           </DropdownMenu>
         </div>
       </div>
-
-      {/* Settings Dialog */}
-      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="w-[80vw] h-[80vh] !max-w-[80vw] overflow-y-auto p-0 flex flex-col">
-          <DialogHeader className="px-6 pt-6">
-            <DialogTitle>Settings</DialogTitle>
-          </DialogHeader>
-          
-          <Tabs defaultValue="platforms" className="w-full flex flex-col flex-1 overflow-hidden">
-            <TabsList className="grid w-full grid-cols-2 px-6">
-              <TabsTrigger value="platforms">Platforms</TabsTrigger>
-              <TabsTrigger value="general">General</TabsTrigger>
-            </TabsList>
-
-            {/* Platform Connections Tab */}
-            <TabsContent value="platforms" className="space-y-4 p-6 flex-1 overflow-y-auto">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Globe className="h-5 w-5" />
-                    <span>Platform Connections</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <LoadingSpinner size="md" text="Loading..." />
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                      {platforms.map((platform) => {
-                        const isConnected = isPlatformConnected(platform.id);
-                        return (
-                          <div key={platform.id} className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
-                                <div className="p-2 rounded-lg">
-                                  {getPlatformLogo(platform.id)}
-                                </div>
-                                <div>
-                                  <h3 className="font-medium text-sm">{platform.name}</h3>
-                                  {isConnected && (
-              <p className="text-xs text-gray-500">
-                                      Connected as {connectedPlatforms.find(p => p.id === platform.id)?.username}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                {isConnected ? (
-                                  <>
-                                    <Badge variant="default" className="bg-green-100 text-green-800">
-                                      Connected
-                                    </Badge>
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm"
-                                      onClick={async () => {
-                                        try {
-                                          const response = await fetch(`/api/admin/platform-connections/${platform.id}`, {
-                                            method: 'DELETE',
-                                          });
-                                          if (response.ok) {
-                                            setConnectedPlatforms(prev => prev.filter(conn => conn.id !== platform.id));
-                                          }
-                                        } catch (error) {
-                                          console.error('Error disconnecting platform:', error);
-                                        }
-                                      }}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <Button 
-                                    size="sm" 
-                                    onClick={() => {
-                                      const oauthUrl = platform.id === 'meta' 
-                                        ? `/api/oauth/admin/connect/meta`
-                                        : platform.id === 'google'
-                                        ? `/api/oauth/admin/connect/google`
-                                        : `/api/oauth/admin/connect/${platform.id}`;
-                                      window.location.href = oauthUrl;
-                                    }}
-                                  >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                    Connect
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              <div className="flex flex-wrap gap-1">
-                                {platform.permissions.slice(0, 3).map((permission) => (
-                                  <Badge key={permission.id} variant="secondary" className="text-xs">
-                                    {permission.name}
-                                  </Badge>
-                                ))}
-                                {platform.permissions.length > 3 && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    +{platform.permissions.length - 3} more
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* General Tab */}
-            <TabsContent value="general" className="space-y-4 p-6 flex-1 overflow-y-auto">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Globe className="h-5 w-5" />
-                    <span>General Settings</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="platform-name">Platform Name</Label>
-                      <Input id="platform-name" defaultValue="VAST Onboarding Platform" className="mt-1" />
-                    </div>
-                    <div>
-                      <Label htmlFor="default-expiry">Default Link Expiry (days)</Label>
-                      <Input id="default-expiry" type="number" defaultValue="7" className="mt-1" />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="support-email">Support Email</Label>
-                    <Input id="support-email" type="email" defaultValue="support@vast.com" className="mt-1" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Notifications Section within General Tab */}
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <span>Notifications</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="email-notifications">Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Receive email alerts for new requests</p>
-                    </div>
-                    <Switch id="email-notifications" defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="link-expiry-alerts">Link Expiry Alerts</Label>
-                      <p className="text-sm text-muted-foreground">Get notified when links are about to expire</p>
-                    </div>
-                    <Switch id="link-expiry-alerts" defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="weekly-reports">Weekly Reports</Label>
-                      <p className="text-sm text-muted-foreground">Receive weekly summary reports</p>
-                    </div>
-                    <Switch id="weekly-reports" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Security Section within General Tab */}
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Shield className="h-5 w-5" />
-                    <span>Security</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="require-2fa">Require 2FA</Label>
-                      <p className="text-sm text-muted-foreground">Enforce two-factor authentication for all users</p>
-                    </div>
-                    <Switch id="require-2fa" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="session-timeout">Auto-logout after inactivity</Label>
-                      <p className="text-sm text-muted-foreground">Automatically log out users after 30 minutes of inactivity</p>
-                    </div>
-                    <Switch id="session-timeout" defaultChecked />
-            </div>
-                  <div>
-                    <Label htmlFor="allowed-domains">Allowed Domains</Label>
-                    <Input id="allowed-domains" placeholder="example.com, client.com" className="mt-1" />
-                    <p className="text-sm text-muted-foreground mt-1">Comma-separated list of allowed email domains</p>
-              </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            
-          </Tabs>
-
-          <div className="flex justify-end px-6 pb-6">
-            <Button className="flex items-center space-x-2">
-              <Save className="h-4 w-4" />
-              <span>Save Settings</span>
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Profile Dialog */}
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
