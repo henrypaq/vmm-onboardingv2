@@ -165,57 +165,73 @@ ALTER TABLE onboarding_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_platform_connections ENABLE ROW LEVEL SECURITY;
 
 -- Users table policies
-CREATE POLICY IF NOT EXISTS "Users can view their own profile" ON users
+DROP POLICY IF EXISTS "Users can view their own profile" ON users;
+CREATE POLICY "Users can view their own profile" ON users
   FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "Users can update their own profile" ON users
+DROP POLICY IF EXISTS "Users can update their own profile" ON users;
+CREATE POLICY "Users can update their own profile" ON users
   FOR UPDATE USING (auth.uid() = id);
 
 -- Admin platform connections policies
-CREATE POLICY IF NOT EXISTS "Admins can view their own platform connections" ON admin_platform_connections
+DROP POLICY IF EXISTS "Admins can view their own platform connections" ON admin_platform_connections;
+CREATE POLICY "Admins can view their own platform connections" ON admin_platform_connections
   FOR SELECT USING (auth.uid() = admin_id);
 
-CREATE POLICY IF NOT EXISTS "Admins can insert their own platform connections" ON admin_platform_connections
+DROP POLICY IF EXISTS "Admins can insert their own platform connections" ON admin_platform_connections;
+CREATE POLICY "Admins can insert their own platform connections" ON admin_platform_connections
   FOR INSERT WITH CHECK (auth.uid() = admin_id);
 
-CREATE POLICY IF NOT EXISTS "Admins can update their own platform connections" ON admin_platform_connections
+DROP POLICY IF EXISTS "Admins can update their own platform connections" ON admin_platform_connections;
+CREATE POLICY "Admins can update their own platform connections" ON admin_platform_connections
   FOR UPDATE USING (auth.uid() = admin_id);
 
-CREATE POLICY IF NOT EXISTS "Admins can delete their own platform connections" ON admin_platform_connections
+DROP POLICY IF EXISTS "Admins can delete their own platform connections" ON admin_platform_connections;
+CREATE POLICY "Admins can delete their own platform connections" ON admin_platform_connections
   FOR DELETE USING (auth.uid() = admin_id);
 
 -- Clients table policies
-CREATE POLICY IF NOT EXISTS "Admins can view their own clients" ON clients
+DROP POLICY IF EXISTS "Admins can view their own clients" ON clients;
+CREATE POLICY "Admins can view their own clients" ON clients
   FOR SELECT USING (auth.uid() = admin_id);
 
-CREATE POLICY IF NOT EXISTS "Admins can insert their own clients" ON clients
+DROP POLICY IF EXISTS "Admins can insert their own clients" ON clients;
+CREATE POLICY "Admins can insert their own clients" ON clients
   FOR INSERT WITH CHECK (auth.uid() = admin_id);
 
-CREATE POLICY IF NOT EXISTS "Admins can update their own clients" ON clients
+DROP POLICY IF EXISTS "Admins can update their own clients" ON clients;
+CREATE POLICY "Admins can update their own clients" ON clients
   FOR UPDATE USING (auth.uid() = admin_id);
 
-CREATE POLICY IF NOT EXISTS "Admins can delete their own clients" ON clients
+DROP POLICY IF EXISTS "Admins can delete their own clients" ON clients;
+CREATE POLICY "Admins can delete their own clients" ON clients
   FOR DELETE USING (auth.uid() = admin_id);
 
 -- Onboarding links policies
-CREATE POLICY IF NOT EXISTS "Admins can view their own onboarding links" ON onboarding_links
+DROP POLICY IF EXISTS "Admins can view their own onboarding links" ON onboarding_links;
+CREATE POLICY "Admins can view their own onboarding links" ON onboarding_links
   FOR SELECT USING (auth.uid() = admin_id);
 
-CREATE POLICY IF NOT EXISTS "Admins can insert their own onboarding links" ON onboarding_links
+DROP POLICY IF EXISTS "Admins can insert their own onboarding links" ON onboarding_links;
+CREATE POLICY "Admins can insert their own onboarding links" ON onboarding_links
   FOR INSERT WITH CHECK (auth.uid() = admin_id);
 
-CREATE POLICY IF NOT EXISTS "Admins can update their own onboarding links" ON onboarding_links
+DROP POLICY IF EXISTS "Admins can update their own onboarding links" ON onboarding_links;
+CREATE POLICY "Admins can update their own onboarding links" ON onboarding_links
   FOR UPDATE USING (auth.uid() = admin_id);
 
-CREATE POLICY IF NOT EXISTS "Admins can delete their own onboarding links" ON onboarding_links
+DROP POLICY IF EXISTS "Admins can delete their own onboarding links" ON onboarding_links;
+CREATE POLICY "Admins can delete their own onboarding links" ON onboarding_links
   FOR DELETE USING (auth.uid() = admin_id);
 
 -- Allow public access to onboarding links by token (for client onboarding)
-CREATE POLICY IF NOT EXISTS "Public can view onboarding links by token" ON onboarding_links
+DROP POLICY IF EXISTS "Public can view onboarding links by token" ON onboarding_links;
+CREATE POLICY "Public can view onboarding links by token" ON onboarding_links
   FOR SELECT USING (true); -- This allows clients to access their onboarding links
 
 -- Onboarding requests policies
-CREATE POLICY IF NOT EXISTS "Admins can view requests for their links" ON onboarding_requests
+DROP POLICY IF EXISTS "Admins can view requests for their links" ON onboarding_requests;
+CREATE POLICY "Admins can view requests for their links" ON onboarding_requests
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM onboarding_links 
@@ -224,10 +240,12 @@ CREATE POLICY IF NOT EXISTS "Admins can view requests for their links" ON onboar
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Public can insert onboarding requests" ON onboarding_requests
+DROP POLICY IF EXISTS "Public can insert onboarding requests" ON onboarding_requests;
+CREATE POLICY "Public can insert onboarding requests" ON onboarding_requests
   FOR INSERT WITH CHECK (true); -- Allow clients to submit onboarding requests
 
-CREATE POLICY IF NOT EXISTS "Admins can update requests for their links" ON onboarding_requests
+DROP POLICY IF EXISTS "Admins can update requests for their links" ON onboarding_requests;
+CREATE POLICY "Admins can update requests for their links" ON onboarding_requests
   FOR UPDATE USING (
     EXISTS (
       SELECT 1 FROM onboarding_links 
@@ -237,13 +255,16 @@ CREATE POLICY IF NOT EXISTS "Admins can update requests for their links" ON onbo
   );
 
 -- Client platform connections policies
-CREATE POLICY IF NOT EXISTS "Clients can view their own connections" ON client_platform_connections
+DROP POLICY IF EXISTS "Clients can view their own connections" ON client_platform_connections;
+CREATE POLICY "Clients can view their own connections" ON client_platform_connections
   FOR SELECT USING (true); -- Allow access for client onboarding
 
-CREATE POLICY IF NOT EXISTS "Clients can insert their own connections" ON client_platform_connections
+DROP POLICY IF EXISTS "Clients can insert their own connections" ON client_platform_connections;
+CREATE POLICY "Clients can insert their own connections" ON client_platform_connections
   FOR INSERT WITH CHECK (true); -- Allow clients to create connections during onboarding
 
-CREATE POLICY IF NOT EXISTS "Clients can update their own connections" ON client_platform_connections
+DROP POLICY IF EXISTS "Clients can update their own connections" ON client_platform_connections;
+CREATE POLICY "Clients can update their own connections" ON client_platform_connections
   FOR UPDATE USING (true); -- Allow clients to update connections
 
 -- =====================================================
@@ -260,22 +281,28 @@ END;
 $$ language 'plpgsql';
 
 -- Create triggers for all tables
-CREATE TRIGGER IF NOT EXISTS update_users_updated_at BEFORE UPDATE ON users
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_admin_platform_connections_updated_at BEFORE UPDATE ON admin_platform_connections
+DROP TRIGGER IF EXISTS update_admin_platform_connections_updated_at ON admin_platform_connections;
+CREATE TRIGGER update_admin_platform_connections_updated_at BEFORE UPDATE ON admin_platform_connections
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_clients_updated_at BEFORE UPDATE ON clients
+DROP TRIGGER IF EXISTS update_clients_updated_at ON clients;
+CREATE TRIGGER update_clients_updated_at BEFORE UPDATE ON clients
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_onboarding_links_updated_at BEFORE UPDATE ON onboarding_links
+DROP TRIGGER IF EXISTS update_onboarding_links_updated_at ON onboarding_links;
+CREATE TRIGGER update_onboarding_links_updated_at BEFORE UPDATE ON onboarding_links
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_onboarding_requests_updated_at BEFORE UPDATE ON onboarding_requests
+DROP TRIGGER IF EXISTS update_onboarding_requests_updated_at ON onboarding_requests;
+CREATE TRIGGER update_onboarding_requests_updated_at BEFORE UPDATE ON onboarding_requests
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_client_platform_connections_updated_at BEFORE UPDATE ON client_platform_connections
+DROP TRIGGER IF EXISTS update_client_platform_connections_updated_at ON client_platform_connections;
+CREATE TRIGGER update_client_platform_connections_updated_at BEFORE UPDATE ON client_platform_connections
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- =====================================================
