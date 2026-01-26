@@ -284,36 +284,49 @@ export function Header({ user, userRole }: HeaderProps) {
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-auto px-3 rounded-full flex items-center gap-2 hover:bg-gray-100">
-                <span className="hidden sm:inline-block text-sm font-medium">
+              <button 
+                type="button"
+                className="relative h-9 w-auto px-3 rounded-full flex items-center gap-2 hover:bg-gray-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              >
+                <span className="hidden sm:inline-block text-sm font-medium text-gray-700">
                   {currentUser?.name || user?.name || 'Guest User'}
                 </span>
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
+                <Avatar className="h-8 w-8 border-2 border-gray-200">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-              </Button>
+              </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg rounded-lg p-1">
+              <DropdownMenuLabel className="px-3 py-2">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{currentUser?.name || user?.name || 'Guest User'}</p>
+                  <p className="text-sm font-semibold text-gray-900">{currentUser?.name || user?.name || 'Guest User'}</p>
+                  <p className="text-xs text-gray-500">{currentUser?.email || user?.email || ''}</p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setProfileOpen(true)}>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
+              <DropdownMenuSeparator className="my-1" />
+              <DropdownMenuItem 
+                onClick={() => setProfileOpen(true)}
+                className="px-3 py-2 cursor-pointer focus:bg-gray-100 rounded-md"
+              >
+                <User className="mr-2 h-4 w-4 text-gray-600" />
+                <span className="text-sm text-gray-700">Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setSettingsOpen(true)}
+                className="px-3 py-2 cursor-pointer focus:bg-gray-100 rounded-md"
+              >
+                <Settings className="mr-2 h-4 w-4 text-gray-600" />
+                <span className="text-sm text-gray-700">Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="my-1" />
+              <DropdownMenuItem 
+                className="text-red-600 focus:text-red-700 focus:bg-red-50 px-3 py-2 cursor-pointer rounded-md" 
+                onClick={handleLogout}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
-                Log out
+                <span className="text-sm font-medium">Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
