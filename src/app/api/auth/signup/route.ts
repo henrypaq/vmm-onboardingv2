@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
           company_name: companyName,
           role: 'admin'
         },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/verify-email`
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/auth/callback`
       }
     });
 

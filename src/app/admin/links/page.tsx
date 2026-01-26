@@ -317,17 +317,21 @@ function LinksPageContent() {
                       <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                         <Button
                           size="sm"
-                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-100"
                           onClick={(e) => copyToClipboard(getOnboardingUrl(viewLinkData.token), e, viewLinkData.token)}
+                          title="Copy link"
                         >
-                          Copy
+                          <Copy className="h-3.5 w-3.5 text-gray-600" />
                         </Button>
                         <Button
                           size="sm"
-                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity gradient-primary"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-100"
                           onClick={() => window.open(getOnboardingUrl(viewLinkData.token), '_blank')}
+                          title="Open link"
                         >
-                          Open
+                          <ExternalLink className="h-3.5 w-3.5 text-gray-600" />
                         </Button>
                       </div>
                     )}

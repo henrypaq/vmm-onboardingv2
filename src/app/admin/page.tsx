@@ -212,22 +212,24 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="modern-card group hover:scale-105 transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                    <Users className="h-8 w-8 text-white" />
+            <Card className="border border-gray-200 bg-white hover:shadow-md transition-shadow duration-200">
+              <CardContent className="p-5">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
+                      <Users className="h-6 w-6 text-blue-600" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Total Clients</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.totalClients}</p>
-                    <p className="text-xs text-green-600 font-medium">+12% from last month</p>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Total Clients</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">{stats.totalClients}</p>
+                    <p className="text-xs text-gray-500">Active accounts</p>
                   </div>
                 </div>
               </CardContent>
@@ -239,16 +241,18 @@ export default function AdminDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="modern-card group hover:scale-105 transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                    <LinkIcon className="h-8 w-8 text-white" />
+            <Card className="border border-gray-200 bg-white hover:shadow-md transition-shadow duration-200">
+              <CardContent className="p-5">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
+                      <LinkIcon className="h-6 w-6 text-emerald-600" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Active Links</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.activeLinks}</p>
-                    <p className="text-xs text-emerald-600 font-medium">+8% from last month</p>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Active Links</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">{stats.activeLinks}</p>
+                    <p className="text-xs text-gray-500">Onboarding links</p>
                   </div>
                 </div>
               </CardContent>
@@ -260,16 +264,18 @@ export default function AdminDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="modern-card group hover:scale-105 transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                    <CheckCircle className="h-8 w-8 text-white" />
+            <Card className="border border-gray-200 bg-white hover:shadow-md transition-shadow duration-200">
+              <CardContent className="p-5">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50">
+                      <CheckCircle className="h-6 w-6 text-purple-600" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.completedOnboardings}</p>
-                    <p className="text-xs text-purple-600 font-medium">+15% from last month</p>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Completed</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">{stats.completedOnboardings}</p>
+                    <p className="text-xs text-gray-500">Finished onboardings</p>
                   </div>
                 </div>
               </CardContent>
@@ -281,22 +287,24 @@ export default function AdminDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="modern-card group hover:scale-105 transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                    <Clock className="h-8 w-8 text-white" />
+            <Card className="border border-gray-200 bg-white hover:shadow-md transition-shadow duration-200">
+              <CardContent className="p-5">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50">
+                      <Clock className="h-6 w-6 text-amber-600" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Pending</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.pendingRequests}</p>
-                    <p className="text-xs text-amber-600 font-medium">Needs attention</p>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Pending</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">{stats.pendingRequests}</p>
+                    <p className="text-xs text-gray-500">Awaiting action</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
-      </div>
+        </div>
 
       {/* Recent Activity and Quick Actions - Side by Side */}
       <div className="grid gap-4 md:grid-cols-2">

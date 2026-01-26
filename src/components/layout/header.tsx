@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-import { Bell, User, LogOut, Settings, LayoutDashboard, Users, Link as LinkIcon, Globe, Shield, Save, Plus, Trash2, ChevronDown, RefreshCw } from 'lucide-react';
+import { User, LogOut, Settings, LayoutDashboard, Users, Link as LinkIcon, Globe, Shield, Save, Plus, Trash2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,10 +64,8 @@ export function Header({ user, userRole }: HeaderProps) {
   const role = userRole || user?.role;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
   const [loading, setLoading] = useState(false);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<{
     name: string;
     email: string;
@@ -164,26 +162,11 @@ export function Header({ user, userRole }: HeaderProps) {
     }
   };
 
-  const fetchRecentActivity = async () => {
-    try {
-      const response = await fetch('/api/admin/recent-activity');
-      if (response.ok) {
-        const data = await response.json();
-        setRecentActivity(data.activities || []);
-      }
-    } catch (error) {
-      console.error('Error fetching recent activity:', error);
-    }
-  };
-
   useEffect(() => {
     if (settingsOpen) {
       fetchConnections();
     }
-    if (notificationsOpen) {
-      fetchRecentActivity();
-    }
-  }, [settingsOpen, notificationsOpen]);
+  }, [settingsOpen]);
 
   // Listen for custom event to open settings
   useEffect(() => {
@@ -298,73 +281,10 @@ export function Header({ user, userRole }: HeaderProps) {
 
         {/* Right side actions */}
         <div className="flex items-center gap-4 w-48 justify-end">
-          {/* Notifications */}
-          <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative ultra-minimal-icon-button">
-                <Bell className="h-4 w-4" />
-                {recentActivity.length > 0 && (
-            <Badge 
-              variant="destructive" 
-                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]"
-            >
-                    {recentActivity.length}
-            </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel className="flex items-center justify-between">
-                <span>Recent Activity</span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => fetchRecentActivity()}
-                  className="h-6 px-2 ultra-minimal-button"
-                >
-                  <RefreshCw className="h-3 w-3" />
-          </Button>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="max-h-80 overflow-y-auto">
-                {recentActivity.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No recent activity
-                  </div>
-                ) : (
-                  recentActivity.map((activity, index) => {
-                    const Icon = activity.icon === 'LinkIcon' ? LinkIcon : 
-                                activity.icon === 'Users' ? Users : Globe;
-                    const timeAgo = new Date(activity.timestamp).toLocaleString();
-                    
-                    return (
-                      <div key={activity.id} className="p-3 hover:bg-accent/50">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                            <Icon className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">{activity.title}</p>
-                            <p className="text-xs text-gray-500">{activity.description}</p>
-                            <p className="text-xs text-gray-500 mt-1">{timeAgo}</p>
-                          </div>
-                        </div>
-                        {index < recentActivity.length - 1 && (
-                          <div className="mt-2 border-b border-border/50" />
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-auto px-3 rounded-full flex items-center gap-2">
-                <ChevronDown className="h-3 w-3 opacity-50" />
+              <Button variant="ghost" className="relative h-9 w-auto px-3 rounded-full flex items-center gap-2 hover:bg-gray-100">
                 <span className="hidden sm:inline-block text-sm font-medium">
                   {currentUser?.name || user?.name || 'Guest User'}
                 </span>
@@ -542,7 +462,6 @@ export function Header({ user, userRole }: HeaderProps) {
               <Card className="mt-4">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <Bell className="h-5 w-5" />
                     <span>Notifications</span>
                   </CardTitle>
                 </CardHeader>
