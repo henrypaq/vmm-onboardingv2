@@ -49,9 +49,29 @@ export async function GET(request: NextRequest) {
       
       // Get authenticated user ID and store in state
       const supabase = await createClient();
-      const { data: { session } } = await supabase.auth.getSession();
       
+      // Try getSession first
+      let session = null;
+      const sessionResult = await supabase.auth.getSession();
+      session = sessionResult.data?.session;
+      
+      // If no session, try getUser as fallback
       if (!session?.user) {
+        console.log('No session from getSession, trying getUser...');
+        const userResult = await supabase.auth.getUser();
+        if (userResult.data?.user) {
+          console.log('getUser succeeded, using user ID:', userResult.data.user.id);
+          const adminId = userResult.data.user.id;
+          const state = `admin_${adminId}_${Date.now()}`;
+          const oauthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_show_list,ads_management&response_type=code&state=${state}`;
+          console.log('Generated state with admin ID:', state);
+          console.log('Redirecting to Meta OAuth:', oauthUrl);
+          return NextResponse.redirect(oauthUrl);
+        }
+        
+        console.error('No authenticated user found');
+        console.error('Session result:', sessionResult);
+        console.error('User result:', userResult);
         return NextResponse.redirect(
           `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=not_authenticated&message=Please log in to connect platforms`
         );
