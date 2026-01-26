@@ -470,8 +470,12 @@ export async function deleteAdminPlatformConnectionByAdminAndPlatform(adminId: s
 
   if (error) {
     console.error('Error deleting admin platform connection:', error);
+    console.error('Admin ID:', adminId);
+    console.error('Platform:', platform);
     throw new Error('Failed to delete platform connection');
   }
+  
+  console.log(`Successfully deactivated platform connection for admin ${adminId} and platform ${platform}`);
 }
 
 // Admin Account functions (new table)

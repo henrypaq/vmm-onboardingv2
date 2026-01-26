@@ -31,16 +31,27 @@ export default function AdminSettingsPage() {
   // Fetch platform connections from API
   const fetchConnections = async () => {
     try {
-      const response = await fetch('/api/admin/platform-connections');
+      const response = await fetch('/api/admin/platform-connections', {
+        method: 'GET',
+        credentials: 'include', // Include cookies for authentication
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setConnectedPlatforms(data.connections || []);
       } else {
-        console.error('Failed to fetch platform connections:', response.status);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to fetch platform connections:', response.status, errorData);
+        if (response.status === 401) {
+          toast.error('Please log in to view platform connections');
+        }
         setConnectedPlatforms([]);
       }
     } catch (error) {
       console.error('Error fetching platform connections:', error);
+      toast.error('Failed to load platform connections');
       setConnectedPlatforms([]);
     } finally {
       setLoading(false);
@@ -167,6 +178,10 @@ export default function AdminSettingsPage() {
                                   console.log(`Disconnecting ${platform.name}...`);
                                   const response = await fetch(`/api/admin/platform-connections/${platform.id}`, {
                                     method: 'DELETE',
+                                    credentials: 'include',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
                                   });
                                   
                                   if (response.ok) {
@@ -179,9 +194,13 @@ export default function AdminSettingsPage() {
                                     // Show success message
                                     toast.success(`${platform.name} disconnected successfully!`);
                                   } else {
-                                    const errorData = await response.json();
+                                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
                                     console.error('Failed to disconnect platform:', errorData);
-                                    toast.error(`Failed to disconnect ${platform.name}: ${errorData.error || 'Unknown error'}`);
+                                    if (response.status === 401) {
+                                      toast.error('Please log in to disconnect platforms');
+                                    } else {
+                                      toast.error(`Failed to disconnect ${platform.name}: ${errorData.error || 'Unknown error'}`);
+                                    }
                                   }
                                 } catch (error) {
                                   console.error('Error disconnecting platform:', error);

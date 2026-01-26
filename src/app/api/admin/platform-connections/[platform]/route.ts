@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteAdminPlatformConnectionByAdminAndPlatform } from '@/lib/db/database';
+import { getCurrentUserId } from '@/lib/auth/get-current-user';
 
 export async function DELETE(
   request: NextRequest,
@@ -8,12 +9,18 @@ export async function DELETE(
   try {
     const { platform } = await params;
     
-    // TODO: Get real admin ID from authentication/session
-    // For now, using a mock admin ID - replace with real auth
-    const mockAdminId = '00000000-0000-0000-0000-000000000001';
+    // Get authenticated user ID
+    const adminId = await getCurrentUserId();
+    
+    if (!adminId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
 
     // Delete the platform connection
-    await deleteAdminPlatformConnectionByAdminAndPlatform(mockAdminId, platform);
+    await deleteAdminPlatformConnectionByAdminAndPlatform(adminId, platform);
 
     return NextResponse.json({
       success: true,
