@@ -710,10 +710,27 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       });
       
       if (!response.ok) {
-        throw new Error('Failed to submit onboarding');
+        const errorText = await response.text();
+        console.error('❌ [UNIFIED FORM] Failed to submit onboarding:', errorText);
+        console.error('❌ [UNIFIED FORM] Response status:', response.status);
+        
+        // Try to parse error message
+        let errorMessage = 'Failed to submit onboarding';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorData.details || errorMessage;
+          console.error('❌ [UNIFIED FORM] Parsed error:', errorData);
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        // Show detailed error to user
+        toast.error(`Failed to complete onboarding: ${errorMessage}`);
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
+      console.log('✅ [UNIFIED FORM] Onboarding submission successful:', data);
       setCurrentStep('complete');
       toast.success('Onboarding completed successfully!');
       
@@ -723,8 +740,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       }, 2000);
       
     } catch (error) {
-      console.error('Submission error:', error);
-      toast.error('Failed to submit onboarding');
+      console.error('❌ [UNIFIED FORM] Submission error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit onboarding';
+      toast.error(`Failed to submit onboarding: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -1254,7 +1272,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                             // Show asset selection if assets exist
                             if (assets.length > 0) {
                               return (
-                            <div className="space-y-4">
+                                <div className="space-y-4">
                               {(() => {
                                 console.log('🔍 [RENDER DEBUG] Current platformAssets for', platform.id, 'before grouping:', platformAssets[platform.id]);
                                 console.log('🔍 [RENDER DEBUG] platformAssets state keys:', Object.keys(platformAssets));
