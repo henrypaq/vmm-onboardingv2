@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOnboardingLinkByToken, createOnboardingRequest, updateOnboardingRequest, getClientByEmail, upsertClientPlatformConnectionByStableId } from '@/lib/db/database';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const { token, platform, accessToken, refreshToken, tokenExpiresAt, scopes, platformUserId, platformUsername, client_email, client_name, company_name, assets } = await request.json();
@@ -30,8 +33,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if onboarding request already exists
-    const existingRequest = await getOnboardingRequestByLinkId(link.id);
+    // Check if onboarding request already exists (get most recent in_progress request)
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: existingRequests, error: findError } = await supabaseAdmin
+      .from('onboarding_requests')
+      .select('*')
+      .eq('link_id', link.id)
+      .eq('status', 'in_progress')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    const existingRequest = existingRequests || null;
+    
+    console.log('[Store OAuth] ===========================================');
+    console.log('[Store OAuth] CHECKING FOR EXISTING REQUEST');
+    console.log('[Store OAuth] ===========================================');
+    console.log('[Store OAuth] Existing request found:', !!existingRequest);
+    if (existingRequest) {
+      console.log('[Store OAuth] Existing request ID:', existingRequest.id);
+      console.log('[Store OAuth] Existing request client_email:', existingRequest.client_email);
+      console.log('[Store OAuth] Existing request client_name:', existingRequest.client_name);
+      console.log('[Store OAuth] Existing request company_name:', existingRequest.company_name);
+    }
+    console.log('[Store OAuth] ===========================================');
     
     const oauthData = {
       access_token: accessToken,
@@ -45,10 +70,13 @@ export async function POST(request: NextRequest) {
 
     if (existingRequest) {
       // Update existing request with new platform connection
+      // Preserve existing client info if it exists
       const updatedConnections = {
         ...existingRequest.platform_connections,
         [platform]: oauthData
       };
+      
+      console.log('[Store OAuth] Updating existing request, preserving client info...');
       
       await updateOnboardingRequest(existingRequest.id, {
         platform_connections: updatedConnections,
@@ -56,18 +84,34 @@ export async function POST(request: NextRequest) {
         granted_permissions: {
           ...existingRequest.granted_permissions,
           ...(scopes && scopes.length ? { [platform]: scopes } : {})
-        }
+        },
+        // Preserve client info if it exists
+        client_email: existingRequest.client_email || client_email || null,
+        client_name: existingRequest.client_name || client_name || null,
+        company_name: existingRequest.company_name || company_name || null,
       });
+      
+      console.log('[Store OAuth] ✅ Updated existing request with OAuth data');
     } else {
       // Create new onboarding request with platform connection
+      // Include client info if provided (from OAuth callback params)
+      console.log('[Store OAuth] No existing request found, creating new one...');
+      console.log('[Store OAuth] Client info from params:', { client_email, client_name, company_name });
+      
       await createOnboardingRequest({
         link_id: link.id,
         platform_connections: {
           [platform]: oauthData
         },
         granted_permissions: scopes && scopes.length ? { [platform]: scopes } : {},
-        status: 'in_progress'
+        status: 'in_progress',
+        // Include client info if provided
+        client_email: client_email || null,
+        client_name: client_name || null,
+        company_name: company_name || null,
       });
+      
+      console.log('[Store OAuth] ✅ Created new request with OAuth data');
     }
 
     // Also upsert into client_platform_connections immediately using stable id
