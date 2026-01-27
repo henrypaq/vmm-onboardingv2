@@ -234,19 +234,32 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       return;
     }
     
+    console.log('🟡 [UNIFIED FORM] ===========================================');
+    console.log('🟡 [UNIFIED FORM] SUBMITTING CLIENT INFO');
+    console.log('🟡 [UNIFIED FORM] ===========================================');
+    console.log('🟡 [UNIFIED FORM] Client Info State:', clientInfo);
+    console.log('🟡 [UNIFIED FORM] Name:', clientInfo.name);
+    console.log('🟡 [UNIFIED FORM] Email:', clientInfo.email);
+    console.log('🟡 [UNIFIED FORM] Company:', clientInfo.company);
+    console.log('🟡 [UNIFIED FORM] ===========================================');
+    
     try {
+      const requestPayload = {
+        token,
+        client_email: clientInfo.email,
+        client_name: clientInfo.name,
+        company_name: clientInfo.company || '',
+      };
+      
+      console.log('🟡 [UNIFIED FORM] Request payload:', requestPayload);
+      
       // Create or update onboarding request
       const response = await fetch('/api/onboarding/request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          token,
-          client_email: clientInfo.email,
-          client_name: clientInfo.name,
-          company_name: clientInfo.company || '',
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
       if (!response.ok) {
@@ -255,7 +268,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       }
 
       const data = await response.json();
-      console.log('Onboarding request created/updated:', data);
+      console.log('🟡 [UNIFIED FORM] ===========================================');
+      console.log('🟡 [UNIFIED FORM] ✅ CLIENT INFO SUBMITTED SUCCESSFULLY');
+      console.log('🟡 [UNIFIED FORM] ===========================================');
+      console.log('🟡 [UNIFIED FORM] Response data:', data);
+      console.log('🟡 [UNIFIED FORM] Request ID:', data.requestId);
+      console.log('🟡 [UNIFIED FORM] ===========================================');
       
       // Store the request ID for this flow
       if (data.requestId) {
@@ -703,23 +721,50 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       // Get client info from onboarding request if clientInfo state is empty
       let finalClientInfo = { ...clientInfo };
       
+      console.log('🟣 [UNIFIED FORM] ===========================================');
+      console.log('🟣 [UNIFIED FORM] CHECKING CLIENT INFO FOR SUBMISSION');
+      console.log('🟣 [UNIFIED FORM] ===========================================');
+      console.log('🟣 [UNIFIED FORM] ClientInfo state:', clientInfo);
+      console.log('🟣 [UNIFIED FORM] Has email:', !!finalClientInfo.email);
+      console.log('🟣 [UNIFIED FORM] Has name:', !!finalClientInfo.name);
+      console.log('🟣 [UNIFIED FORM] ===========================================');
+      
       if (!finalClientInfo.email || !finalClientInfo.name) {
-        console.log('🟣 [UNIFIED FORM] Client info missing, fetching from onboarding request...');
+        console.log('🟣 [UNIFIED FORM] Client info missing in state, fetching from onboarding request...');
         const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
+        console.log('🟣 [UNIFIED FORM] Request response status:', requestResponse.status);
+        
         if (requestResponse.ok) {
           const requestData = await requestResponse.json();
+          console.log('🟣 [UNIFIED FORM] Request data received:', requestData);
+          console.log('🟣 [UNIFIED FORM] Requests array:', requestData.requests);
+          console.log('🟣 [UNIFIED FORM] Requests length:', requestData.requests?.length || 0);
+          
           const latestRequest = requestData.requests && requestData.requests.length > 0 
             ? requestData.requests[0] 
             : null;
           
+          console.log('🟣 [UNIFIED FORM] Latest request:', latestRequest);
+          
           if (latestRequest) {
+            console.log('🟣 [UNIFIED FORM] Latest request details:', {
+              id: latestRequest.id,
+              client_email: latestRequest.client_email,
+              client_name: latestRequest.client_name,
+              company_name: latestRequest.company_name
+            });
+            
             finalClientInfo = {
               name: latestRequest.client_name || clientInfo.name || '',
               email: latestRequest.client_email || clientInfo.email || '',
               company: latestRequest.company_name || clientInfo.company || ''
             };
-            console.log('🟣 [UNIFIED FORM] Retrieved client info from request:', finalClientInfo);
+            console.log('🟣 [UNIFIED FORM] Final client info after retrieval:', finalClientInfo);
+          } else {
+            console.warn('🟣 [UNIFIED FORM] ⚠️ No request found in response!');
           }
+        } else {
+          console.error('🟣 [UNIFIED FORM] ❌ Failed to fetch request:', requestResponse.status);
         }
       }
       

@@ -84,7 +84,18 @@ export async function GET(request: NextRequest) {
 // Create or ensure an in_progress onboarding request when a client opens the link
 export async function POST(request: NextRequest) {
   try {
-    const { token, client_email, client_name, company_name } = await request.json();
+    const requestBody = await request.json();
+    const { token, client_email, client_name, company_name } = requestBody;
+
+    console.log('[Onboarding][request POST] ===========================================');
+    console.log('[Onboarding][request POST] CREATING ONBOARDING REQUEST');
+    console.log('[Onboarding][request POST] ===========================================');
+    console.log('[Onboarding][request POST] Request body:', requestBody);
+    console.log('[Onboarding][request POST] Token:', token);
+    console.log('[Onboarding][request POST] Client Email:', client_email);
+    console.log('[Onboarding][request POST] Client Name:', client_name);
+    console.log('[Onboarding][request POST] Company Name:', company_name);
+    console.log('[Onboarding][request POST] ===========================================');
 
     if (!token) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
@@ -101,29 +112,54 @@ export async function POST(request: NextRequest) {
     // Don't check for existing requests - each link opening is a fresh start
     // This ensures each client gets their own independent onboarding flow
 
+    const requestData = {
+      link_id: link.id,
+      client_email: client_email || null,
+      client_name: client_name || null,
+      company_name: company_name || null,
+      status: 'in_progress',
+      granted_permissions: {},
+      platform_connections: {}
+    };
+
+    console.log('[Onboarding][request POST] Data to insert:', requestData);
+
     // Create new in_progress request
     const { data: created, error: insErr } = await supabase
       .from('onboarding_requests')
-      .insert([{ 
-        link_id: link.id,
-        client_email,
-        client_name,
-        company_name,
-        status: 'in_progress',
-        granted_permissions: {},
-        platform_connections: {}
-      }])
+      .insert([requestData])
       .select()
       .single();
 
     if (insErr) {
-      console.error('[Onboarding][request POST] insert error:', insErr);
+      console.error('[Onboarding][request POST] ===========================================');
+      console.error('[Onboarding][request POST] ❌ INSERT ERROR');
+      console.error('[Onboarding][request POST] ===========================================');
+      console.error('[Onboarding][request POST] Error:', insErr);
+      console.error('[Onboarding][request POST] Error code:', insErr.code);
+      console.error('[Onboarding][request POST] Error message:', insErr.message);
+      console.error('[Onboarding][request POST] Data attempted:', requestData);
+      console.error('[Onboarding][request POST] ===========================================');
       return NextResponse.json({ error: 'Failed to start onboarding' }, { status: 500 });
     }
 
+    console.log('[Onboarding][request POST] ===========================================');
+    console.log('[Onboarding][request POST] ✅ REQUEST CREATED SUCCESSFULLY');
+    console.log('[Onboarding][request POST] ===========================================');
+    console.log('[Onboarding][request POST] Created request:', created);
+    console.log('[Onboarding][request POST] Request ID:', created.id);
+    console.log('[Onboarding][request POST] Client Email:', created.client_email);
+    console.log('[Onboarding][request POST] Client Name:', created.client_name);
+    console.log('[Onboarding][request POST] Company Name:', created.company_name);
+    console.log('[Onboarding][request POST] ===========================================');
+
     return NextResponse.json({ success: true, requestId: created.id });
   } catch (error) {
-    console.error('[Onboarding][request POST] error:', error);
+    console.error('[Onboarding][request POST] ===========================================');
+    console.error('[Onboarding][request POST] ❌ EXCEPTION');
+    console.error('[Onboarding][request POST] ===========================================');
+    console.error('[Onboarding][request POST] Error:', error);
+    console.error('[Onboarding][request POST] ===========================================');
     return NextResponse.json({ error: 'Failed to start onboarding' }, { status: 500 });
   }
 }
