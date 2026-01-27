@@ -147,11 +147,26 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
           .filter(Boolean);
         setPlatforms(requestedPlatforms);
         
-        // Initialize connection status
+        // Initialize connection status from existing requests
         const initialStatus: ConnectionStatus = {};
         requestedPlatforms.forEach((platform: any) => {
           initialStatus[platform.id] = { connected: false };
         });
+        
+        // Check if there are existing requests with platform connections
+        if (data.requests && data.requests.length > 0) {
+          const latestRequest = data.requests[0];
+          if (latestRequest.platform_connections && typeof latestRequest.platform_connections === 'object') {
+            // Mark platforms as connected if they exist in platform_connections
+            Object.keys(latestRequest.platform_connections).forEach((platformId) => {
+              if (initialStatus[platformId] !== undefined) {
+                initialStatus[platformId] = { connected: true };
+                console.log(`[UNIFIED FORM] Restored connection status for ${platformId} from existing request`);
+              }
+            });
+          }
+        }
+        
         setConnectionStatus(initialStatus);
         
         // If no requests exist, create one with basic info
@@ -192,6 +207,14 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         console.log('🔵 [UNIFIED FORM] Setting connection status for:', connectedPlatform);
         console.log('🔵 [UNIFIED FORM] ===========================================');
         
+        // Find the index of the connected platform
+        const platformIndex = platforms.findIndex(p => p.id === connectedPlatform);
+        if (platformIndex !== -1) {
+          // Set the current platform index to the connected platform
+          setCurrentPlatformIndex(platformIndex);
+        }
+        
+        // Mark platform as connected
         setConnectionStatus(prev => ({
           ...prev,
           [connectedPlatform]: { connected: true }
@@ -205,6 +228,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         // Fetch assets for this platform
         await fetchPlatformAssets(connectedPlatform);
         
+        // Ensure we're on the platforms step
         setCurrentStep('platforms');
         
         console.log('🔵 [UNIFIED FORM] OAuth callback processing complete');
