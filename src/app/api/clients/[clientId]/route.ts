@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { updateClient, deleteAdminPlatformConnectionByAdminAndPlatform } from '@/lib/db/database';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ clientId: string }> }

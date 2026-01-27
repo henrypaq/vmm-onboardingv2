@@ -103,16 +103,29 @@ export async function GET() {
       })));
     }
     
-    // Get client platform connections
+    // Get client platform connections for all clients
+    const clientIds = clients?.map(c => c.id) || [];
+    console.log(`[Detailed Clients API] Fetching connections for ${clientIds.length} clients:`, clientIds);
+    
     const { data: connections, error: connectionsError } = await supabaseAdmin
       .from('client_platform_connections')
       .select('*')
-      .in('client_id', clients?.map(c => c.id) || [])
+      .in('client_id', clientIds.length > 0 ? clientIds : [])
       .eq('is_active', true);
 
     if (connectionsError) {
       console.error('[Detailed Clients API] Error fetching connections:', connectionsError);
       throw new Error(`Failed to fetch connections: ${connectionsError.message}`);
+    }
+    
+    console.log(`[Detailed Clients API] Found ${connections?.length || 0} platform connections`);
+    if (connections && connections.length > 0) {
+      console.log(`[Detailed Clients API] Connection details:`, connections.map(c => ({
+        id: c.id,
+        client_id: c.client_id,
+        platform: c.platform,
+        is_active: c.is_active
+      })));
     }
 
     // Combine the data
@@ -153,8 +166,20 @@ export async function GET() {
         console.log(`[Detailed Clients API] Client ${client.id} link constructed:`, constructedUrl);
       }
       
-      // Find platform connections for this client
-      const clientConnections = connections?.filter(c => c.client_id === client.id) || [];
+      // Find platform connections for this client - try both string and UUID matching
+      const clientConnections = connections?.filter(c => 
+        c.client_id === client.id || 
+        c.client_id === client.id.toString() ||
+        c.client_id?.toString() === client.id?.toString()
+      ) || [];
+      
+      console.log(`[Detailed Clients API] Client ${client.id} connections:`, {
+        totalConnections: connections?.length || 0,
+        clientConnections: clientConnections.length,
+        connectionIds: clientConnections.map(c => ({ id: c.id, platform: c.platform, client_id: c.client_id })),
+        clientId: client.id,
+        clientIdType: typeof client.id
+      });
       
       // Determine status based on platform connections
       const hasConnections = clientConnections.length > 0;
@@ -162,6 +187,8 @@ export async function GET() {
       
       // Get platforms from connections
       const platforms = clientConnections.map(c => c.platform);
+      
+      console.log(`[Detailed Clients API] Client ${client.id} platforms:`, platforms);
 
       const constructedUrl = link ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/onboarding/${link.token}` : null;
       console.log(`[Detailed Clients API] Client ${client.id} final linkUrl:`, constructedUrl);
