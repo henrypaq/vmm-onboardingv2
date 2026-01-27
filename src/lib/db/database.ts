@@ -205,42 +205,69 @@ export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'u
   
   const supabaseAdmin = getSupabaseAdmin();
   
-  // First, verify the admin_id exists in the users table
-  // If not, try to create it from auth.users (auto-fix missing admin profile)
+  // Verify the admin_id exists in the users table
+  // If not found, try to auto-create from auth.users as fallback
   if (client.admin_id) {
-    console.log('[Database] Verifying admin_id exists in users table...');
-    let adminUser = null;
-    let adminCheckError = null;
+    console.log('[Database] ===========================================');
+    console.log('[Database] VERIFYING ADMIN_ID EXISTS');
+    console.log('[Database] ===========================================');
+    console.log('[Database] Admin ID to verify:', client.admin_id);
+    console.log('[Database] Admin ID type:', typeof client.admin_id);
+    console.log('[Database] ===========================================');
     
+    let adminUser = null;
+    
+    // First, try to find admin in public.users
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, email, role')
+      .select('id, email, role, full_name')
       .eq('id', client.admin_id)
       .maybeSingle();
     
-    adminUser = userData;
-    adminCheckError = userError && userError.code !== 'PGRST116' ? userError : null;
+    console.log('[Database] Query result:', {
+      found: !!userData,
+      error: userError ? {
+        code: userError.code,
+        message: userError.message,
+        details: userError.details,
+        hint: userError.hint
+      } : null
+    });
     
-    // If admin doesn't exist in users table, check if they exist in auth.users
-    if (!adminUser && !adminCheckError) {
-      console.log('[Database] Admin not found in users table, checking auth.users...');
+    if (userError && userError.code !== 'PGRST116') {
+      // PGRST116 is "not found" which is OK, but other errors are not
+      console.error('[Database] ===========================================');
+      console.error('[Database] ❌ ERROR QUERYING USERS TABLE');
+      console.error('[Database] ===========================================');
+      console.error('[Database] Error code:', userError.code);
+      console.error('[Database] Error message:', userError.message);
+      console.error('[Database] Error details:', userError.details);
+      console.error('[Database] Error hint:', userError.hint);
+      console.error('[Database] ===========================================');
+      throw new Error(`Failed to verify admin user: ${userError.message}`);
+    }
+    
+    adminUser = userData;
+    
+    // If admin not found in public.users, try to auto-create from auth.users
+    if (!adminUser) {
+      console.log('[Database] Admin not found in public.users, checking auth.users...');
       
       try {
-        // Try to get the user from auth.users
         const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(client.admin_id);
         
         if (authError || !authUser?.user) {
           console.error('[Database] ===========================================');
-          console.error('[Database] ❌ ADMIN_ID NOT FOUND IN AUTH.USERS');
+          console.error('[Database] ❌ ADMIN NOT FOUND IN AUTH.USERS EITHER');
           console.error('[Database] ===========================================');
           console.error('[Database] Admin ID:', client.admin_id);
           console.error('[Database] Auth error:', authError);
           console.error('[Database] ===========================================');
-          throw new Error(`Admin user not found in auth.users: ${client.admin_id}. Cannot create client without valid admin.`);
+          throw new Error(`Admin user not found: ${client.admin_id}. Please ensure the admin exists in the users table.`);
         }
         
-        // Admin exists in auth.users but not in public.users - create the profile
-        console.log('[Database] Admin exists in auth.users, creating profile in public.users...');
+        // Auto-create profile
+        console.log('[Database] Auto-creating admin profile from auth.users...');
         const { data: newAdminUser, error: createError } = await supabaseAdmin
           .from('users')
           .insert([{
@@ -255,26 +282,17 @@ export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'u
         
         if (createError || !newAdminUser) {
           console.error('[Database] ===========================================');
-          console.error('[Database] ❌ FAILED TO CREATE ADMIN PROFILE');
+          console.error('[Database] ❌ FAILED TO AUTO-CREATE ADMIN PROFILE');
           console.error('[Database] ===========================================');
-          console.error('[Database] Admin ID:', client.admin_id);
           console.error('[Database] Create error:', createError);
           console.error('[Database] ===========================================');
           throw new Error(`Failed to create admin profile: ${createError?.message || 'Unknown error'}`);
         }
         
         adminUser = newAdminUser;
-        console.log('[Database] ✅ Auto-created admin profile:', {
-          id: adminUser.id,
-          email: adminUser.email,
-          role: adminUser.role
-        });
+        console.log('[Database] ✅ Auto-created admin profile');
       } catch (autoCreateError) {
-        console.error('[Database] ===========================================');
-        console.error('[Database] ❌ AUTO-CREATE ADMIN PROFILE FAILED');
-        console.error('[Database] ===========================================');
-        console.error('[Database] Error:', autoCreateError);
-        console.error('[Database] ===========================================');
+        console.error('[Database] Auto-create failed:', autoCreateError);
         throw autoCreateError;
       }
     }
@@ -284,16 +302,18 @@ export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'u
       console.error('[Database] ❌ ADMIN_ID VALIDATION FAILED');
       console.error('[Database] ===========================================');
       console.error('[Database] Admin ID:', client.admin_id);
-      console.error('[Database] Error:', adminCheckError);
+      console.error('[Database] Admin user found:', adminUser);
       console.error('[Database] ===========================================');
       throw new Error(`Admin user not found: ${client.admin_id}. Please ensure the admin exists in the users table.`);
     }
     
-    console.log('[Database] ✅ Admin ID validated:', {
-      id: adminUser.id,
-      email: adminUser.email,
-      role: adminUser.role
-    });
+    console.log('[Database] ===========================================');
+    console.log('[Database] ✅ ADMIN_ID VALIDATED SUCCESSFULLY');
+    console.log('[Database] ===========================================');
+    console.log('[Database] Admin ID:', adminUser.id);
+    console.log('[Database] Admin Email:', adminUser.email);
+    console.log('[Database] Admin Role:', adminUser.role);
+    console.log('[Database] ===========================================');
   }
   
   const { data, error } = await supabaseAdmin
