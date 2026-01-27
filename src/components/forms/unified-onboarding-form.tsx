@@ -172,6 +172,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         setShowAssetSelection({});
         setShopifyStep(1);
         setShopifyData({ storeId: '', collaboratorCode: '' });
+        setCurrentRequestId(null); // Reset request ID for fresh flow
         
         // Don't create a request automatically - wait for user to submit client info
         // This ensures each flow starts completely fresh
