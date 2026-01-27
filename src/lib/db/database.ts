@@ -171,7 +171,46 @@ export async function getClientByEmail(adminId: string, email: string): Promise<
 }
 
 export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'updated_at'>): Promise<Client> {
+  console.log('[Database] ===========================================');
+  console.log('[Database] CREATING CLIENT');
+  console.log('[Database] ===========================================');
+  console.log('[Database] Client data:', client);
+  console.log('[Database] Admin ID:', client.admin_id);
+  console.log('[Database] Email:', client.email);
+  console.log('[Database] Full Name:', client.full_name);
+  console.log('[Database] Company:', client.company_name);
+  console.log('[Database] Status:', client.status);
+  console.log('[Database] ===========================================');
+  
   const supabaseAdmin = getSupabaseAdmin();
+  
+  // First, verify the admin_id exists in the users table
+  if (client.admin_id) {
+    console.log('[Database] Verifying admin_id exists in users table...');
+    const { data: adminUser, error: adminCheckError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, role')
+      .eq('id', client.admin_id)
+      .single();
+    
+    if (adminCheckError || !adminUser) {
+      console.error('[Database] ===========================================');
+      console.error('[Database] ❌ ADMIN_ID VALIDATION FAILED');
+      console.error('[Database] ===========================================');
+      console.error('[Database] Admin ID:', client.admin_id);
+      console.error('[Database] Error:', adminCheckError);
+      console.error('[Database] Admin user found:', adminUser);
+      console.error('[Database] ===========================================');
+      throw new Error(`Admin user not found: ${client.admin_id}. Please ensure the admin exists in the users table.`);
+    }
+    
+    console.log('[Database] ✅ Admin ID validated:', {
+      id: adminUser.id,
+      email: adminUser.email,
+      role: adminUser.role
+    });
+  }
+  
   const { data, error } = await supabaseAdmin
     .from('clients')
     .insert([client])
@@ -179,9 +218,35 @@ export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'u
     .single();
 
   if (error) {
-    console.error('Error creating client:', error);
-    throw new Error('Failed to create client');
+    console.error('[Database] ===========================================');
+    console.error('[Database] ❌ ERROR CREATING CLIENT');
+    console.error('[Database] ===========================================');
+    console.error('[Database] Supabase error:', error);
+    console.error('[Database] Error code:', error.code);
+    console.error('[Database] Error message:', error.message);
+    console.error('[Database] Error details:', error.details);
+    console.error('[Database] Error hint:', error.hint);
+    console.error('[Database] Client data attempted:', client);
+    console.error('[Database] ===========================================');
+    
+    // Provide more specific error messages
+    if (error.code === '23503') { // Foreign key violation
+      throw new Error(`Foreign key constraint violation: ${error.message}. This usually means the admin_id does not exist in the users table.`);
+    } else if (error.code === '23505') { // Unique constraint violation
+      throw new Error(`Unique constraint violation: ${error.message}. A client with this email may already exist for this admin.`);
+    } else if (error.code === '23502') { // Not null violation
+      throw new Error(`Required field missing: ${error.message}. Please ensure all required fields are provided.`);
+    }
+    
+    throw new Error(`Failed to create client: ${error.message}`);
   }
+
+  console.log('[Database] ===========================================');
+  console.log('[Database] ✅ CLIENT CREATED SUCCESSFULLY');
+  console.log('[Database] ===========================================');
+  console.log('[Database] Created client:', data);
+  console.log('[Database] Client ID:', data.id);
+  console.log('[Database] ===========================================');
 
   return data;
 }
