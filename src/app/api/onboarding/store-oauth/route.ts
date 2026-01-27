@@ -34,17 +34,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if onboarding request already exists (get most recent in_progress request)
+    // Prioritize requests with client info over OAuth-only requests
     const supabaseAdmin = getSupabaseAdmin();
-    const { data: existingRequests, error: findError } = await supabaseAdmin
+    const { data: allRequests, error: findError } = await supabaseAdmin
       .from('onboarding_requests')
       .select('*')
       .eq('link_id', link.id)
       .eq('status', 'in_progress')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order('created_at', { ascending: false });
     
-    const existingRequest = existingRequests || null;
+    console.log('[Store OAuth] All in_progress requests found:', allRequests?.length || 0);
+    
+    // Prioritize request with client info, otherwise use most recent
+    let existingRequest = null;
+    if (allRequests && allRequests.length > 0) {
+      // First try to find one with client info
+      const requestWithClientInfo = allRequests.find(req => req.client_email || req.client_name);
+      if (requestWithClientInfo) {
+        existingRequest = requestWithClientInfo;
+        console.log('[Store OAuth] Found request with client info:', requestWithClientInfo.id);
+      } else {
+        // Fall back to most recent
+        existingRequest = allRequests[0];
+        console.log('[Store OAuth] Using most recent request (no client info):', existingRequest.id);
+      }
+    }
     
     console.log('[Store OAuth] ===========================================');
     console.log('[Store OAuth] CHECKING FOR EXISTING REQUEST');
