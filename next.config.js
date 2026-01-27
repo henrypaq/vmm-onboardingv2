@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   /* config options here */
-  outputFileTracingRoot: __dirname,
+  // outputFileTracingRoot removed - not supported in Next.js 14
   // experimental: {
   //   esmExternals: false,
   // },

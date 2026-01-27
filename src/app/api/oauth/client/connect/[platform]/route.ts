@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Force dynamic rendering - this route uses request.url and OAuth
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 import { exchangeCodeForToken, fetchPlatformUserInfo, fetchPlatformAssets, discoverGoogleAssets } from '@/lib/oauth/oauth-utils';
 
 // Client OAuth connection endpoints
