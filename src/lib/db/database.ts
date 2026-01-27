@@ -437,45 +437,72 @@ export async function createAdminPlatformConnection(connection: Omit<AdminPlatfo
 export async function upsertAdminPlatformConnection(connection: Omit<AdminPlatformConnection, 'id' | 'created_at' | 'updated_at'>): Promise<AdminPlatformConnection> {
   const supabaseAdmin = getSupabaseAdmin();
   
+  console.log('🔄 Upserting admin platform connection:', {
+    admin_id: connection.admin_id,
+    platform: connection.platform,
+    platform_username: connection.platform_username
+  });
+  
   // First check if connection exists (check all connections, not just active ones)
   // This handles the case where a connection was deactivated and needs to be reactivated
-  const { data: existing } = await supabaseAdmin
+  // Use .maybeSingle() instead of .single() to avoid errors when no row exists
+  const { data: existing, error: queryError } = await supabaseAdmin
     .from('admin_platform_connections')
     .select('id, is_active')
     .eq('admin_id', connection.admin_id)
     .eq('platform', connection.platform)
-    .single();
+    .maybeSingle();
+
+  if (queryError && queryError.code !== 'PGRST116') { // PGRST116 is "not found" which is OK
+    console.error('Error querying for existing connection:', queryError);
+    throw new Error(`Failed to query existing connection: ${queryError.message}`);
+  }
 
   if (existing) {
     // Update existing connection (reactivate if it was deactivated)
-    console.log('Updating existing admin platform connection:', existing.id);
-    return await updateAdminPlatformConnection(existing.id, {
-      platform_user_id: connection.platform_user_id,
-      platform_username: connection.platform_username,
-      access_token: connection.access_token,
-      refresh_token: connection.refresh_token,
-      token_expires_at: connection.token_expires_at,
-      scopes: connection.scopes,
-      is_active: connection.is_active,
-    });
+    console.log('✅ Found existing connection, updating:', existing.id);
+    try {
+      const updated = await updateAdminPlatformConnection(existing.id, {
+        platform_user_id: connection.platform_user_id,
+        platform_username: connection.platform_username,
+        access_token: connection.access_token,
+        refresh_token: connection.refresh_token,
+        token_expires_at: connection.token_expires_at,
+        scopes: connection.scopes,
+        is_active: connection.is_active,
+      });
+      console.log('✅ Successfully updated connection:', updated.id);
+      return updated;
+    } catch (error) {
+      console.error('❌ Error updating connection:', error);
+      throw error;
+    }
   } else {
     // Create new connection
-    console.log('Creating new admin platform connection');
+    console.log('📝 No existing connection found, creating new one...');
     try {
-      return await createAdminPlatformConnection(connection);
+      const created = await createAdminPlatformConnection(connection);
+      console.log('✅ Successfully created new connection:', created.id);
+      return created;
     } catch (error: any) {
+      console.error('❌ Error creating connection:', error);
       // If insert fails due to UNIQUE constraint, try to find and update
-      if (error?.code === '23505' || error?.message?.includes('unique')) {
-        console.log('Insert failed due to unique constraint, attempting to find and update...');
-        const { data: found } = await supabaseAdmin
+      if (error?.code === '23505' || error?.message?.includes('unique') || error?.message?.includes('duplicate')) {
+        console.log('⚠️ Insert failed due to unique constraint, attempting to find and update...');
+        const { data: found, error: findError } = await supabaseAdmin
           .from('admin_platform_connections')
           .select('id')
           .eq('admin_id', connection.admin_id)
           .eq('platform', connection.platform)
-          .single();
+          .maybeSingle();
+        
+        if (findError && findError.code !== 'PGRST116') {
+          console.error('Error finding connection after unique constraint violation:', findError);
+          throw error; // Throw original error
+        }
         
         if (found) {
-          console.log('Found existing connection, updating:', found.id);
+          console.log('✅ Found existing connection after unique violation, updating:', found.id);
           return await updateAdminPlatformConnection(found.id, {
             platform_user_id: connection.platform_user_id,
             platform_username: connection.platform_username,
@@ -487,6 +514,7 @@ export async function upsertAdminPlatformConnection(connection: Omit<AdminPlatfo
           });
         }
       }
+      console.error('❌ Failed to create or update connection:', error);
       throw error;
     }
   }
