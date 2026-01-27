@@ -5,6 +5,10 @@ import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { getGoogleScopesWithRequired } from '@/lib/scopes';
 import { getCurrentUserId } from '@/lib/auth/get-current-user';
 
+// Force dynamic rendering - this route uses cookies and authentication
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🔗 Link generation API called');

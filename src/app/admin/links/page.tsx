@@ -405,13 +405,28 @@ function LinksPageContent() {
         >
             <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Custom Links</h2>
-            <Button 
-              onClick={() => setIsDialogOpen(true)}
-              size="default" 
-              className="h-10 gradient-generate"
-            >
-              Generate Link
-            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  onClick={() => {
+                    console.log('🔘 Generate Link button clicked');
+                    setIsDialogOpen(true);
+                  }}
+                  size="default" 
+                  className="h-10 px-6 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Generate Link
+                </Button>
+              </DialogTrigger>
+              <LinkGeneratorDialog 
+                onLinkGenerated={handleLinkGenerated}
+                onClose={() => {
+                  console.log('🔘 Dialog closed');
+                  setIsDialogOpen(false);
+                }}
+              />
+            </Dialog>
           </div>
         </motion.div>
 
