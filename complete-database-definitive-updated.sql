@@ -423,6 +423,7 @@ BEGIN
   RAISE NOTICE '🔒 Row Level Security policies applied';
   RAISE NOTICE '⚡ Performance indexes created';
   RAISE NOTICE '🔄 Auto-update triggers configured';
+  RAISE NOTICE '👤 Auto-create user profiles trigger installed';
   RAISE NOTICE '🛠️ Utility functions created';
   RAISE NOTICE '📝 Link name support included';
   RAISE NOTICE '🔗 Public onboarding links supported';
@@ -430,6 +431,7 @@ BEGIN
   RAISE NOTICE '✅ link_name column properly configured';
   RAISE NOTICE '✅ is_used column added to onboarding_links';
   RAISE NOTICE '✅ client_platform_connections table ready';
+  RAISE NOTICE '✅ User profiles will be automatically created for all new auth users';
   RAISE NOTICE '🚀 Ready for OAuth flows and link generation!';
 END $$;
 
