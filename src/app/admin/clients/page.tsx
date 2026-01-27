@@ -649,7 +649,16 @@ export default function ClientsPage() {
 
   useEffect(() => {
     fetchClients();
-    return () => {};
+    
+    // Auto-refresh clients every 10 seconds to catch newly created clients
+    const refreshInterval = setInterval(() => {
+      console.log('[Admin Clients] Auto-refreshing clients list...');
+      fetchClients();
+    }, 10000); // 10 seconds
+    
+    return () => {
+      clearInterval(refreshInterval);
+    };
   }, []);
 
   // Filter clients based on search term and filters

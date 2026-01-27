@@ -1,16 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
+import { getCurrentUserId } from '@/lib/auth/get-current-user';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET() {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
-    console.log(`[Detailed Clients API] Fetching detailed clients (shared across all admins)`);
+    // Get the current authenticated admin user
+    const adminId = await getCurrentUserId();
     
-    // Get clients (shared across all admins)
+    if (!adminId) {
+      console.error('[Detailed Clients API] No authenticated admin user found');
+      return NextResponse.json(
+        { error: 'Unauthorized', clients: [] },
+        { status: 401 }
+      );
+    }
+    
+    console.log(`[Detailed Clients API] Fetching detailed clients for admin: ${adminId}`);
+    
+    // Get clients for this specific admin
     const { data: clients, error: clientsError } = await supabaseAdmin
       .from('clients')
       .select('*')
+      .eq('admin_id', adminId)
       .order('created_at', { ascending: false });
 
     if (clientsError) {
@@ -18,10 +34,11 @@ export async function GET() {
       throw new Error(`Failed to fetch clients: ${clientsError.message}`);
     }
 
-    // Get onboarding links (shared across all admins)
+    // Get onboarding links for this admin
     const { data: links, error: linksError } = await supabaseAdmin
       .from('onboarding_links')
-      .select('*');
+      .select('*')
+      .eq('admin_id', adminId);
 
     if (linksError) {
       console.error('[Detailed Clients API] Error fetching links:', linksError);
