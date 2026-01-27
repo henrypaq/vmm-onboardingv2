@@ -71,27 +71,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Also upsert into client_platform_connections immediately using stable id
+    // NOTE: We do NOT create clients here - clients are only created when the full onboarding flow is completed
+    // in the /api/onboarding/submit route. This ensures clients are only created after all platforms are connected.
     try {
       let clientId: string | undefined = existingRequest?.client_id;
       const email = existingRequest?.client_email || client_email;
       const name = existingRequest?.client_name || client_name;
       const company = existingRequest?.company_name || company_name;
 
+      // Only use existing client ID if it exists - don't create new clients during OAuth flow
       if (!clientId && email) {
         const adminId = link.admin_id;
         const existingClient = await getClientByEmail(adminId, email);
         if (existingClient) {
           clientId = existingClient.id;
+          console.log('[Store OAuth] Using existing client ID:', clientId);
         } else {
-          const newClient = await createClientRecord({
-            admin_id: adminId,
-            email,
-            full_name: name,
-            company_name: company,
-            status: 'active' as const,
-            last_onboarding_at: new Date().toISOString(),
-          });
-          clientId = newClient.id;
+          // Don't create client here - wait for full flow completion
+          console.log('[Store OAuth] No existing client found. Client will be created when onboarding flow completes.');
+          clientId = undefined;
         }
       }
 
