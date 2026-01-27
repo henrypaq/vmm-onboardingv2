@@ -1500,13 +1500,17 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
             
             <div className="flex justify-center">
               <Button
-                onClick={() => {
+                onClick={async () => {
                   setOauthConfirmation(null);
                   // Move to next platform or complete if all done
                   if (currentPlatformIndex < platforms.length - 1) {
                     setCurrentPlatformIndex(currentPlatformIndex + 1);
                   } else if (allPlatformsConnected()) {
-                    setCurrentStep('complete');
+                    console.log('🟣 [UNIFIED FORM] All platforms connected via OAuth confirmation, auto-submitting...');
+                    // Auto-submit when all platforms are completed
+                    setTimeout(() => {
+                      handleFinalSubmit();
+                    }, 500);
                   }
                 }}
                 className="gradient-primary"
