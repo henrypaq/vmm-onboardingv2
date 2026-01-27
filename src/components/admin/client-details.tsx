@@ -513,18 +513,16 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                       <Button
                                         size="sm"
                                         onClick={() => {
-                                      const platformUrls = {
-                                        'google': `https://analytics.google.com/analytics/web/#/p${asset.id}`,
-                                        'meta': `https://business.facebook.com/`,
-                                        'shopify': `https://${connection.platform_username}.myshopify.com/admin`,
-                                        'tiktok': `https://ads.tiktok.com/marketing_api/`
-                                      };
-                                      const url = platformUrls[connection.platform as keyof typeof platformUrls] || '#';
-                                      window.open(url, '_blank');
-                                    }}
-                                    className="text-xs gradient-primary"
-                                  >
-                                    Open in {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
+                                          const url = getAssetUrl(connection.platform, asset);
+                                          if (url) {
+                                            window.open(url, '_blank');
+                                          } else {
+                                            toast.error(`Unable to open ${asset.name} - invalid asset type`);
+                                          }
+                                        }}
+                                        className="text-xs gradient-primary"
+                                      >
+                                        Open in {connection.platform.charAt(0).toUpperCase() + connection.platform.slice(1)}
                                       </Button>
                                 </div>
                               </div>
