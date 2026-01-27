@@ -518,7 +518,7 @@ export async function POST(request: NextRequest) {
               }
             } else {
               console.log(`[Onboarding Submit] No existing connection found, creating new one...`);
-              await upsertClientPlatformConnection({
+              const connectionResult = await upsertClientPlatformConnection({
                 client_id: clientId,
                 platform: platform as 'meta' | 'google' | 'tiktok' | 'shopify',
                 platform_user_id: connectionData.platform_user_id || '',
@@ -529,6 +529,14 @@ export async function POST(request: NextRequest) {
                 scopes: Array.isArray(connectionData.scopes) ? connectionData.scopes : [],
                 assets: finalAssets,
                 is_active: true
+              });
+              
+              console.log(`[Onboarding Submit] ✅ Created ${platform} connection for client ${clientId}`);
+              console.log(`[Onboarding Submit] Connection result:`, {
+                id: connectionResult.id,
+                client_id: connectionResult.client_id,
+                platform: connectionResult.platform,
+                assets_count: connectionResult.assets?.length || 0
               });
             }
           }
