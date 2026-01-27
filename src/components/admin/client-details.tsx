@@ -417,7 +417,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                 Platform Connections
               </CardTitle>
                 <Button
-                  onClick={testAllPlatformAssets}
+                  onClick={testAllAssets}
                   disabled={isTestingAllAssets || platformConnections.filter(conn => conn.platform !== 'shopify').length === 0}
                   size="sm"
                   className="ultra-minimal-button"
