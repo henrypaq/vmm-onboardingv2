@@ -64,7 +64,7 @@ DROP TABLE IF EXISTS onboarding_links CASCADE;
 
 CREATE TABLE onboarding_links (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  admin_id uuid NOT NULL REFERENCES users(id) ON DELETE RESTRICT, -- RESTRICT prevents automatic deletion of links when admin is deleted
   client_id uuid REFERENCES clients(id) ON DELETE SET NULL, -- Optional reference for public links
   link_name text, -- Descriptive name for the onboarding link (REQUIRED BY CODE)
   token text NOT NULL UNIQUE,
