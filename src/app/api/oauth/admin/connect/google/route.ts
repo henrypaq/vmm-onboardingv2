@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminPlatformConnection, AdminPlatformConnection } from '@/lib/db/database';
+import { upsertAdminPlatformConnection, AdminPlatformConnection } from '@/lib/db/database';
 import { createClient } from '@/lib/supabase/server';
 
 // Consistent redirect URI construction
@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
       is_active: true,
     });
 
-    const savedAccount = await createAdminPlatformConnection({
+    const savedAccount = await upsertAdminPlatformConnection({
       admin_id: adminId,
       platform: 'google',
       platform_user_id: userInfo.id,

@@ -430,6 +430,41 @@ export async function createAdminPlatformConnection(connection: Omit<AdminPlatfo
   return data;
 }
 
+/**
+ * Upsert admin platform connection - updates if exists, creates if not
+ * Uses the UNIQUE constraint on (admin_id, platform) to handle duplicates
+ */
+export async function upsertAdminPlatformConnection(connection: Omit<AdminPlatformConnection, 'id' | 'created_at' | 'updated_at'>): Promise<AdminPlatformConnection> {
+  const supabaseAdmin = getSupabaseAdmin();
+  
+  // First check if connection exists
+  const { data: existing } = await supabaseAdmin
+    .from('admin_platform_connections')
+    .select('id')
+    .eq('admin_id', connection.admin_id)
+    .eq('platform', connection.platform)
+    .eq('is_active', true)
+    .single();
+
+  if (existing) {
+    // Update existing connection
+    console.log('Updating existing admin platform connection:', existing.id);
+    return await updateAdminPlatformConnection(existing.id, {
+      platform_user_id: connection.platform_user_id,
+      platform_username: connection.platform_username,
+      access_token: connection.access_token,
+      refresh_token: connection.refresh_token,
+      token_expires_at: connection.token_expires_at,
+      scopes: connection.scopes,
+      is_active: connection.is_active,
+    });
+  } else {
+    // Create new connection
+    console.log('Creating new admin platform connection');
+    return await createAdminPlatformConnection(connection);
+  }
+}
+
 export async function updateAdminPlatformConnection(id: string, updates: Partial<AdminPlatformConnection>): Promise<AdminPlatformConnection> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminPlatformConnection, getAdminPlatformConnections } from '@/lib/db/database';
+import { upsertAdminPlatformConnection, getAdminPlatformConnections } from '@/lib/db/database';
 
 interface TikTokTokenResponse {
   access_token: string;
@@ -122,20 +122,9 @@ export async function GET(request: NextRequest) {
     console.log('Storing TikTok connection:', connectionData);
 
     // Check if connection already exists
-    const existingConnections = await getAdminPlatformConnections(mockAdminId);
-    const existingTikTokConnection = existingConnections.find(conn => conn.platform === 'tiktok');
-
-    let connection;
-    if (existingTikTokConnection) {
-      // Update existing connection
-      console.log('Updating existing TikTok connection');
-      connection = await createAdminPlatformConnection(connectionData);
-    } else {
-      // Create new connection
-      console.log('Creating new TikTok connection');
-      connection = await createAdminPlatformConnection(connectionData);
-    }
-
+    // Use upsert to handle both create and update cases
+    console.log('Upserting TikTok connection...');
+    const connection = await upsertAdminPlatformConnection(connectionData);
     console.log('TikTok connection stored successfully:', connection);
 
     // Redirect back to admin settings with success
