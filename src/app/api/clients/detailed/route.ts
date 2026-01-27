@@ -61,9 +61,20 @@ export async function GET() {
       throw new Error(`Failed to fetch requests: ${requestsError.message}`);
     }
 
-    console.log(`[Detailed Clients API] Found ${clients?.length || 0} clients`);
-    console.log(`[Detailed Clients API] Found ${links?.length || 0} onboarding links`);
+    console.log(`[Detailed Clients API] ===========================================`);
+    console.log(`[Detailed Clients API] QUERY RESULTS`);
+    console.log(`[Detailed Clients API] ===========================================`);
+    console.log(`[Detailed Clients API] Admin ID: ${adminId}`);
+    console.log(`[Detailed Clients API] Found ${clients?.length || 0} clients for this admin`);
+    console.log(`[Detailed Clients API] Found ${links?.length || 0} onboarding links for this admin`);
     console.log(`[Detailed Clients API] Found ${requests?.length || 0} onboarding requests`);
+    
+    if (clients && clients.length > 0) {
+      console.log(`[Detailed Clients API] Client IDs:`, clients.map(c => c.id));
+      console.log(`[Detailed Clients API] Client emails:`, clients.map(c => c.email));
+      console.log(`[Detailed Clients API] Client names:`, clients.map(c => c.full_name));
+      console.log(`[Detailed Clients API] Client admin_ids:`, clients.map(c => c.admin_id));
+    }
     
     // Debug: Log all links and requests for troubleshooting
     if (links && links.length > 0) {
@@ -174,6 +185,9 @@ export async function GET() {
       };
     }) || [];
 
+    console.log(`[Detailed Clients API] ===========================================`);
+    console.log(`[Detailed Clients API] FINAL RESULTS`);
+    console.log(`[Detailed Clients API] ===========================================`);
     console.log(`[Detailed Clients API] Found ${detailedClients.length} detailed clients`);
     
     // Debug: Log final client data with linkUrls
@@ -181,11 +195,20 @@ export async function GET() {
       console.log(`[Detailed Clients API] Final client ${index + 1}:`, {
         id: client.id,
         name: client.full_name,
+        email: client.email,
+        admin_id: client.admin_id,
         linkUrl: client.linkUrl,
         hasRequest: !!client.onboardingRequest,
-        requestLinkId: client.onboardingRequest?.link_id
+        requestLinkId: client.onboardingRequest?.link_id,
+        platforms: client.platforms,
+        status: client.status
       });
     });
+    
+    // Check if any clients were filtered out
+    if (clients && clients.length !== detailedClients.length) {
+      console.warn(`[Detailed Clients API] ⚠️ WARNING: ${clients.length} clients found but only ${detailedClients.length} returned in detailed list`);
+    }
     
     return NextResponse.json({ clients: detailedClients });
   } catch (error) {
