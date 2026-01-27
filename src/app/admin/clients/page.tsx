@@ -601,21 +601,34 @@ export default function ClientsPage() {
 
   const deleteClient = async (clientId: string) => {
     try {
+      console.log('[Admin Clients] Deleting client:', clientId);
+      
       const response = await fetch(`/api/clients/${clientId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('[Admin Clients] Delete failed:', errorData);
         throw new Error(errorData.error || 'Failed to delete client');
       }
 
-      // Remove client from local state
-      setClients(prev => prev.filter(client => client.id !== clientId));
+      // Remove client from local state immediately
+      setClients(prev => {
+        const filtered = prev.filter(client => client.id !== clientId);
+        console.log('[Admin Clients] Client removed from UI. Remaining clients:', filtered.length);
+        return filtered;
+      });
+      
+      // Close details panel if it's open for this client
+      if (selectedClientId === clientId) {
+        setSelectedClientId(null);
+      }
       
       toast.success('Client deleted successfully');
     } catch (error) {
-      console.error('Error deleting client:', error);
+      console.error('[Admin Clients] Error deleting client:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to delete client');
     }
   };
