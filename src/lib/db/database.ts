@@ -316,6 +316,14 @@ export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'u
     console.log('[Database] ===========================================');
   }
   
+  console.log('[Database] ===========================================');
+  console.log('[Database] ATTEMPTING TO INSERT CLIENT');
+  console.log('[Database] ===========================================');
+  console.log('[Database] Client data to insert:', JSON.stringify(client, null, 2));
+  console.log('[Database] Admin ID type:', typeof client.admin_id);
+  console.log('[Database] Email type:', typeof client.email);
+  console.log('[Database] ===========================================');
+  
   const { data, error } = await supabaseAdmin
     .from('clients')
     .insert([client])
@@ -326,24 +334,38 @@ export async function createClient(client: Omit<Client, 'id' | 'created_at' | 'u
     console.error('[Database] ===========================================');
     console.error('[Database] ❌ ERROR CREATING CLIENT');
     console.error('[Database] ===========================================');
-    console.error('[Database] Supabase error:', error);
+    console.error('[Database] Supabase error object:', JSON.stringify(error, null, 2));
     console.error('[Database] Error code:', error.code);
     console.error('[Database] Error message:', error.message);
     console.error('[Database] Error details:', error.details);
     console.error('[Database] Error hint:', error.hint);
-    console.error('[Database] Client data attempted:', client);
+    console.error('[Database] Error name:', error.name);
+    console.error('[Database] Client data attempted:', JSON.stringify(client, null, 2));
+    console.error('[Database] Admin ID value:', client.admin_id);
+    console.error('[Database] Email value:', client.email);
     console.error('[Database] ===========================================');
     
     // Provide more specific error messages
     if (error.code === '23503') { // Foreign key violation
-      throw new Error(`Foreign key constraint violation: ${error.message}. This usually means the admin_id does not exist in the users table.`);
+      console.error('[Database] Foreign key violation detected!');
+      console.error('[Database] This means admin_id does not exist in users table');
+      console.error('[Database] Admin ID that failed:', client.admin_id);
+      throw new Error(`Foreign key constraint violation: ${error.message}. Admin ID ${client.admin_id} does not exist in the users table.`);
     } else if (error.code === '23505') { // Unique constraint violation
-      throw new Error(`Unique constraint violation: ${error.message}. A client with this email may already exist for this admin.`);
+      console.error('[Database] Unique constraint violation detected!');
+      console.error('[Database] A client with this email may already exist for this admin');
+      throw new Error(`Unique constraint violation: ${error.message}. A client with email ${client.email} may already exist for admin ${client.admin_id}.`);
     } else if (error.code === '23502') { // Not null violation
-      throw new Error(`Required field missing: ${error.message}. Please ensure all required fields are provided.`);
+      console.error('[Database] Not null violation detected!');
+      console.error('[Database] A required field is missing');
+      throw new Error(`Required field missing: ${error.message}. Please ensure all required fields (admin_id, email) are provided.`);
+    } else if (error.code === '22P02') { // Invalid input syntax (e.g., invalid UUID)
+      console.error('[Database] Invalid UUID format detected!');
+      console.error('[Database] Admin ID format may be invalid:', client.admin_id);
+      throw new Error(`Invalid UUID format: ${error.message}. Please check that admin_id is a valid UUID.`);
     }
     
-    throw new Error(`Failed to create client: ${error.message}`);
+    throw new Error(`Failed to create client: ${error.message} (Code: ${error.code})`);
   }
 
   console.log('[Database] ===========================================');
