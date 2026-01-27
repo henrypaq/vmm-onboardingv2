@@ -93,6 +93,65 @@ export default function ClientDashboardPage() {
     });
   };
 
+  // Generate correct URL for platform assets based on type
+  const getAssetUrl = (platform: string, asset: PlatformAsset, connection?: PlatformConnection): string | null => {
+    if (!asset || !asset.id || !asset.type) {
+      return null;
+    }
+
+    switch (platform.toLowerCase()) {
+      case 'google':
+        switch (asset.type) {
+          case 'analytics_property':
+            return `https://analytics.google.com/analytics/web/#/p${asset.id}/`;
+          case 'tagmanager_account':
+            return `https://tagmanager.google.com/#/container/accounts/${asset.id}`;
+          case 'searchconsole_site':
+            const siteUrl = asset.id.startsWith('http') ? asset.id : `https://${asset.id}`;
+            return `https://search.google.com/search-console?resource_id=${encodeURIComponent(siteUrl)}`;
+          case 'ads_account':
+            return `https://ads.google.com/aw/overview?accountId=${asset.id}`;
+          case 'business_account':
+          case 'business_profile':
+            return `https://business.google.com/manage/${asset.id}`;
+          case 'merchant_account':
+          case 'merchant_center':
+            return `https://merchants.google.com/mc/overview?accountId=${asset.id}`;
+          default:
+            return `https://analytics.google.com/analytics/web/#/p${asset.id}/`;
+        }
+      case 'meta':
+      case 'facebook':
+        switch (asset.type) {
+          case 'page':
+            return `https://www.facebook.com/${asset.id}`;
+          case 'ad_account':
+            return `https://business.facebook.com/adsmanager/manage/campaigns?act=${asset.id}`;
+          case 'instagram':
+          case 'instagram_account':
+            return asset.id.startsWith('http') ? asset.id : `https://www.instagram.com/${asset.id}/`;
+          case 'catalog':
+            return `https://business.facebook.com/commerce/catalogs/${asset.id}`;
+          default:
+            return `https://business.facebook.com/`;
+        }
+      case 'tiktok':
+        switch (asset.type) {
+          case 'ad_account':
+            return `https://ads.tiktok.com/marketing_api/accounts/${asset.id}`;
+          case 'business_account':
+            return `https://ads.tiktok.com/business/`;
+          default:
+            return `https://ads.tiktok.com/`;
+        }
+      case 'shopify':
+        const storeName = connection?.username || asset.id;
+        return `https://${storeName}.myshopify.com/admin`;
+      default:
+        return null;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -202,14 +261,12 @@ export default function ClientDashboardPage() {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => {
-                                    const platformUrls = {
-                                      'google': `https://analytics.google.com/analytics/web/#/p${asset.id}`,
-                                      'meta': `https://business.facebook.com/`,
-                                      'shopify': `https://${connection.username}.myshopify.com/admin`,
-                                      'tiktok': `https://ads.tiktok.com/marketing_api/`
-                                    };
-                                    const url = platformUrls[connection.platform as keyof typeof platformUrls] || '#';
-                                    window.open(url, '_blank');
+                                    const url = getAssetUrl(connection.platform, asset, connection);
+                                    if (url) {
+                                      window.open(url, '_blank');
+                                    } else {
+                                      toast.error(`Unable to open ${asset.name} - invalid asset type`);
+                                    }
                                   }}
                                   className="text-xs hover:bg-primary/10 hover:border-primary/30"
                                 >
