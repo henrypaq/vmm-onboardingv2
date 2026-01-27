@@ -150,21 +150,42 @@ export async function getClient(id: string): Promise<Client | null> {
 }
 
 export async function getClientByEmail(adminId: string, email: string): Promise<Client | null> {
+  console.log('[Database] ===========================================');
+  console.log('[Database] GETTING CLIENT BY EMAIL');
+  console.log('[Database] ===========================================');
+  console.log('[Database] Admin ID:', adminId);
+  console.log('[Database] Email:', email);
+  console.log('[Database] ===========================================');
+  
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('clients')
     .select('*')
     .eq('admin_id', adminId)
     .eq('email', email)
-    .single();
+    .maybeSingle();
 
   if (error) {
     if (error.code === 'PGRST116') {
       // No rows found
+      console.log('[Database] ℹ️ No existing client found (PGRST116)');
       return null;
     }
-    console.error('Error fetching client by email:', error);
+    console.error('[Database] ===========================================');
+    console.error('[Database] ❌ ERROR FETCHING CLIENT BY EMAIL');
+    console.error('[Database] ===========================================');
+    console.error('[Database] Error:', error);
+    console.error('[Database] Error code:', error.code);
+    console.error('[Database] Admin ID:', adminId);
+    console.error('[Database] Email:', email);
+    console.error('[Database] ===========================================');
     return null;
+  }
+
+  if (data) {
+    console.log('[Database] ✅ Found existing client:', data.id);
+  } else {
+    console.log('[Database] ℹ️ No existing client found');
   }
 
   return data;
