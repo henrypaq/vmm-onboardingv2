@@ -17,10 +17,8 @@ BEGIN
   ELSE
     RAISE NOTICE 'ℹ️ assets column already exists in client_platform_connections table';
   END IF;
-  
-  -- Create index on assets for better query performance (GIN index for JSONB)
-  CREATE INDEX IF NOT EXISTS idx_client_platform_connections_assets 
-  ON client_platform_connections USING GIN (assets);
-  
-  RAISE NOTICE '✅ Assets column migration complete!';
 END $$;
+
+-- Create index on assets for better query performance (GIN index for JSONB)
+CREATE INDEX IF NOT EXISTS idx_client_platform_connections_assets 
+ON client_platform_connections USING GIN (assets);
