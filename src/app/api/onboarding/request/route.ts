@@ -40,27 +40,54 @@ export async function GET(request: NextRequest) {
       .eq('link_id', link.id)
       .eq('status', 'in_progress')
       .gte('created_at', fiveMinutesAgo)
-      .order('created_at', { ascending: false })
-      .limit(1);
+      .order('created_at', { ascending: false });
     
-    // Return the request if it has either:
-    // 1. Client info (client_email, client_name) - from initial form submission
-    // 2. Platform connections (OAuth data) - from OAuth callback
+    console.log('[Onboarding][request GET] ===========================================');
+    console.log('[Onboarding][request GET] FETCHING ONBOARDING REQUESTS');
+    console.log('[Onboarding][request GET] ===========================================');
+    console.log('[Onboarding][request GET] Link ID:', link.id);
+    console.log('[Onboarding][request GET] Recent requests found:', recentRequests?.length || 0);
+    if (recentRequests && recentRequests.length > 0) {
+      recentRequests.forEach((req, idx) => {
+        console.log(`[Onboarding][request GET] Request ${idx + 1}:`, {
+          id: req.id,
+          client_email: req.client_email,
+          client_name: req.client_name,
+          company_name: req.company_name,
+          has_oauth: !!(req.platform_connections && Object.keys(req.platform_connections).length > 0),
+          created_at: req.created_at
+        });
+      });
+    }
+    console.log('[Onboarding][request GET] ===========================================');
+    
+    // Prioritize requests with client info, but also return requests with OAuth data
+    // If multiple exist, prefer the one with client info
     let requests: any[] = [];
     if (recentRequests && recentRequests.length > 0) {
-      const recentRequest = recentRequests[0];
-      const hasClientInfo = recentRequest.client_email || recentRequest.client_name;
-      const hasOAuthData = recentRequest.platform_connections && Object.keys(recentRequest.platform_connections).length > 0;
+      // First, try to find one with client info
+      const requestWithClientInfo = recentRequests.find(req => req.client_email || req.client_name);
       
-      if (hasClientInfo || hasOAuthData) {
-        requests = [recentRequest];
-        console.log('[Onboarding][request GET] Returning recent request:', {
-          id: recentRequest.id,
-          hasClientInfo,
-          hasOAuthData,
-          client_email: recentRequest.client_email,
-          client_name: recentRequest.client_name
+      if (requestWithClientInfo) {
+        requests = [requestWithClientInfo];
+        console.log('[Onboarding][request GET] ✅ Returning request with client info:', {
+          id: requestWithClientInfo.id,
+          client_email: requestWithClientInfo.client_email,
+          client_name: requestWithClientInfo.client_name
         });
+      } else {
+        // Fall back to most recent request with OAuth data
+        const requestWithOAuth = recentRequests.find(req => 
+          req.platform_connections && Object.keys(req.platform_connections).length > 0
+        );
+        
+        if (requestWithOAuth) {
+          requests = [requestWithOAuth];
+          console.log('[Onboarding][request GET] ⚠️ Returning request with OAuth data (no client info):', {
+            id: requestWithOAuth.id,
+            has_oauth: true
+          });
+        }
       }
     }
     
