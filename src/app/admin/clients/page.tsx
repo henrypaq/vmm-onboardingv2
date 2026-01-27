@@ -221,24 +221,21 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
                 </Badge>
                 
                 {/* 3-dots Menu */}
-                <div onClick={(e) => e.stopPropagation()}>
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 hover:bg-gray-100"
+                      <button
+                        type="button"
+                        className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
                         onClick={(e) => {
                           e.stopPropagation();
-                          e.preventDefault();
                         }}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                        }}
-                        type="button"
                       >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+                        <MoreVertical className="h-4 w-4 text-gray-600" />
+                      </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent 
                       align="end" 
