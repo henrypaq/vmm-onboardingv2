@@ -170,19 +170,26 @@ export default function AdminSettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {platforms.map((platform) => {
                 const isConnected = isPlatformConnected(platform.id);
+                const isDisabled = platform.id === 'tiktok' || platform.id === 'shopify';
                 return (
-                  <div key={platform.id} className="border rounded-lg p-4">
+                  <div 
+                    key={platform.id} 
+                    className={`border rounded-lg p-4 ${isDisabled ? 'opacity-60' : ''}`}
+                  >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <div className="p-2 rounded-lg">
                           {getPlatformLogo(platform.id)}
                         </div>
                         <div>
-                          <h3 className="font-medium">{platform.name}</h3>
+                          <h3 className={`font-medium ${isDisabled ? 'text-gray-500' : ''}`}>{platform.name}</h3>
                           {isConnected && (
                             <p className="text-sm text-gray-500">
                               Connected as {connectedPlatforms.find(p => p.id === platform.id)?.username}
                             </p>
+                          )}
+                          {isDisabled && (
+                            <p className="text-sm text-gray-400 italic">Coming soon</p>
                           )}
                         </div>
                       </div>
@@ -237,7 +244,10 @@ export default function AdminSettingsPage() {
                           <Button 
                             size="sm" 
                             className="flex items-center space-x-2"
+                            disabled={isDisabled}
                             onClick={() => {
+                              if (isDisabled) return;
+                              
                               console.log(`Connecting to ${platform.name}...`);
                               console.log(`Platform ID: ${platform.id}`);
                               
