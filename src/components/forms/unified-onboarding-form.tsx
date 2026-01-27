@@ -1149,10 +1149,6 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                     {isConnected && showAssetSelection[platform.id] && !isShopify && (
                       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                         <div className="space-y-4">
-                          <p className="text-sm text-gray-600">
-                            Choose which {platform.name} assets you'd like to share with your team.
-                          </p>
-                          
                           {isLoadingAssets[platform.id] ? (
                             <div className="flex items-center justify-center py-8">
                               <LoadingSpinner size="md" text="Loading assets..." />
@@ -1227,53 +1223,42 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               )}
                             </div>
                           ) : (
-                            <div className="space-y-4 py-8">
-                              <div className="text-center">
-                                <p className="text-sm text-gray-500 mb-4">
-                                  No assets available to select
-                                </p>
-                                <p className="text-xs text-gray-400 mb-6">
-                                  This account doesn't have any ad accounts, pages, or catalogs yet.
-                                </p>
-                              </div>
-                              
-                              {/* Show requested permissions/scopes */}
-                              {linkData?.requested_permissions?.[platform.id] && 
-                               linkData.requested_permissions[platform.id].length > 0 && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                  <h4 className="text-sm font-semibold text-blue-900 mb-3">
-                                    Permissions Granted
-                                  </h4>
-                                  <p className="text-xs text-blue-700 mb-3">
-                                    You've granted access to the following permissions:
-                                  </p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {linkData.requested_permissions[platform.id].map((scope: string, index: number) => {
-                                      // Get scope description if available
-                                      const scopeDescription = getScopeDescription(platform.id as keyof typeof scopes, scope);
-                                      return (
-                                        <div
-                                          key={index}
-                                          className="bg-white border border-blue-300 rounded-md px-3 py-2"
-                                        >
-                                          <p className="text-xs font-medium text-blue-900">
-                                            {scope.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            /* Show requested permissions/scopes when no assets */
+                            linkData?.requested_permissions?.[platform.id] && 
+                            linkData.requested_permissions[platform.id].length > 0 && (
+                              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                                <h4 className="text-base font-semibold text-gray-900 mb-4">
+                                  Permissions Granted
+                                </h4>
+                                <div className="space-y-3">
+                                  {linkData.requested_permissions[platform.id].map((scope: string, index: number) => {
+                                    // Get scope description if available
+                                    const scopeDescription = getScopeDescription(platform.id as keyof typeof scopes, scope);
+                                    const scopeName = scope.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                    return (
+                                      <div
+                                        key={index}
+                                        className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                                      >
+                                        <div className="flex-shrink-0 mt-0.5">
+                                          <CheckCircle className="h-5 w-5 text-green-600" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-sm font-medium text-gray-900">
+                                            {scopeName}
                                           </p>
                                           {scopeDescription && scopeDescription !== scope && (
-                                            <p className="text-xs text-blue-600 mt-1">
+                                            <p className="text-xs text-gray-600 mt-1">
                                               {scopeDescription}
                                             </p>
                                           )}
                                         </div>
-                                      );
-                                    })}
-                                  </div>
-                                  <p className="text-xs text-blue-600 mt-3">
-                                    You can continue even without selecting assets. The permissions above have already been granted.
-                                  </p>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              )}
-                            </div>
+                              </div>
+                            )
                           )}
                           
                           <div className="flex justify-end space-x-3 pt-6">
