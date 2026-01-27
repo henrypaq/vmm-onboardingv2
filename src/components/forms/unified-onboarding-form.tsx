@@ -26,6 +26,7 @@ import {
   Globe 
 } from 'lucide-react';
 import { getAllPlatforms } from '@/lib/platforms/platform-definitions';
+import { getScopeDescription, scopes } from '@/lib/scopes';
 import { toast } from 'sonner';
 
 interface OnboardingFormProps {
@@ -1226,10 +1227,52 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               )}
                             </div>
                           ) : (
-                            <div className="text-center py-8">
-                              <p className="text-sm text-gray-500">
-                                No assets available to select
-                              </p>
+                            <div className="space-y-4 py-8">
+                              <div className="text-center">
+                                <p className="text-sm text-gray-500 mb-4">
+                                  No assets available to select
+                                </p>
+                                <p className="text-xs text-gray-400 mb-6">
+                                  This account doesn't have any ad accounts, pages, or catalogs yet.
+                                </p>
+                              </div>
+                              
+                              {/* Show requested permissions/scopes */}
+                              {linkData?.requested_permissions?.[platform.id] && 
+                               linkData.requested_permissions[platform.id].length > 0 && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                  <h4 className="text-sm font-semibold text-blue-900 mb-3">
+                                    Permissions Granted
+                                  </h4>
+                                  <p className="text-xs text-blue-700 mb-3">
+                                    You've granted access to the following permissions:
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {linkData.requested_permissions[platform.id].map((scope: string, index: number) => {
+                                      // Get scope description if available
+                                      const scopeDescription = getScopeDescription(platform.id as keyof typeof scopes, scope);
+                                      return (
+                                        <div
+                                          key={index}
+                                          className="bg-white border border-blue-300 rounded-md px-3 py-2"
+                                        >
+                                          <p className="text-xs font-medium text-blue-900">
+                                            {scope.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                          </p>
+                                          {scopeDescription && scopeDescription !== scope && (
+                                            <p className="text-xs text-blue-600 mt-1">
+                                              {scopeDescription}
+                                            </p>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <p className="text-xs text-blue-600 mt-3">
+                                    You can continue even without selecting assets. The permissions above have already been granted.
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           )}
                           
@@ -1245,7 +1288,13 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                               onClick={() => handleAssetSelectionComplete(platform.id)}
                               className="gradient-primary"
                               size="sm"
-                              disabled={!selectedAssets[platform.id] || Object.keys(selectedAssets[platform.id] || {}).length === 0}
+                              disabled={
+                                // Allow continue if no assets but permissions were granted
+                                !(platformAssets[platform.id] && platformAssets[platform.id].length > 0) &&
+                                !(linkData?.requested_permissions?.[platform.id] && linkData.requested_permissions[platform.id].length > 0)
+                                  ? false // Enable if permissions exist even without assets
+                                  : !selectedAssets[platform.id] || Object.keys(selectedAssets[platform.id] || {}).length === 0
+                              }
                             >
                               Continue
                             </Button>
