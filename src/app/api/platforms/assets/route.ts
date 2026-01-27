@@ -69,66 +69,99 @@ export async function GET(request: NextRequest) {
       console.log('Found client:', requestId);
     }
 
-    // Now look for platform connection using the correct ID
+    // Now look for platform connection
     console.log('Looking for platform connection with requestId:', { requestId, platform });
     
-    // First try to find connection using the onboarding request ID
-    let { data: connection, error: connectionError } = await supabase
-      .from('client_platform_connections')
-      .select('*')
-      .eq('client_id', requestId)
-      .eq('platform', platform)
-      .eq('is_active', true)
-      .single();
-
-    console.log('First attempt - connection lookup:', { connection, connectionError });
-
-    // If not found and this is an onboarding request, try to find the actual client ID
-    if (connectionError && onboardingRequest) {
-      console.log('🔍 [ASSETS API] Connection not found with onboarding request ID, trying to find actual client...');
-      console.log('🔍 [ASSETS API] Onboarding request client_id:', onboardingRequest.client_id);
+    let connection: any = null;
+    let connectionError: any = null;
+    
+    // If this is an onboarding request, first check the platform_connections field in the request
+    if (onboardingRequest) {
+      console.log('🔍 [ASSETS API] This is an onboarding request, checking platform_connections field...');
       
-      // Get the actual client ID from the onboarding request
-      const actualClientId = onboardingRequest.client_id;
-      console.log('🔍 [ASSETS API] Actual client ID from onboarding request:', actualClientId);
+      // Get the full onboarding request with platform_connections
+      const { data: fullRequest, error: fullRequestError } = await supabase
+        .from('onboarding_requests')
+        .select('platform_connections')
+        .eq('id', requestId)
+        .single();
       
-      if (actualClientId) {
-        // Try to find connection using the actual client ID
-        const { data: actualConnection, error: actualError } = await supabase
-          .from('client_platform_connections')
-          .select('*')
-          .eq('client_id', actualClientId)
-          .eq('platform', platform)
-          .eq('is_active', true)
-          .single();
-
-        console.log('🔍 [ASSETS API] Second attempt - actual client connection lookup:', { actualConnection, actualError });
+      if (!fullRequestError && fullRequest?.platform_connections) {
+        const platformConnections = fullRequest.platform_connections as Record<string, any>;
+        const platformData = platformConnections[platform];
         
-        if (actualConnection && !actualError) {
-          connection = actualConnection;
-          connectionError = null;
-          console.log('🔍 [ASSETS API] Found connection using actual client ID!');
+        if (platformData && platformData.access_token) {
+          console.log('🔍 [ASSETS API] Found OAuth data in onboarding request platform_connections!');
+          // Convert the platform_connections data to the format expected by the rest of the code
+          connection = {
+            id: requestId, // Use request ID as connection ID
+            client_id: requestId,
+            platform: platform,
+            platform_user_id: platformData.platform_user_id || '',
+            platform_username: platformData.platform_username || '',
+            access_token: platformData.access_token,
+            refresh_token: platformData.refresh_token || null,
+            token_expires_at: platformData.token_expires_at || null,
+            scopes: platformData.scopes || [],
+            assets: platformData.assets || [],
+            is_active: true
+          };
+          console.log('🔍 [ASSETS API] Using OAuth data from onboarding request');
+        } else {
+          console.log('🔍 [ASSETS API] No OAuth data found in onboarding request for platform:', platform);
         }
+      }
+    }
+    
+    // If not found in onboarding request, try client_platform_connections table
+    if (!connection) {
+      console.log('🔍 [ASSETS API] Trying client_platform_connections table...');
+      
+      // First try to find connection using the onboarding request ID
+      let { data: clientConnection, error: clientConnectionError } = await supabase
+        .from('client_platform_connections')
+        .select('*')
+        .eq('client_id', requestId)
+        .eq('platform', platform)
+        .eq('is_active', true)
+        .single();
+
+      console.log('First attempt - connection lookup:', { clientConnection, clientConnectionError });
+
+      // If not found and this is an onboarding request, try to find the actual client ID
+      if (clientConnectionError && onboardingRequest) {
+        console.log('🔍 [ASSETS API] Connection not found with onboarding request ID, trying to find actual client...');
+        console.log('🔍 [ASSETS API] Onboarding request client_id:', onboardingRequest.client_id);
+        
+        // Get the actual client ID from the onboarding request
+        const actualClientId = onboardingRequest.client_id;
+        console.log('🔍 [ASSETS API] Actual client ID from onboarding request:', actualClientId);
+        
+        if (actualClientId) {
+          // Try to find connection using the actual client ID
+          const { data: actualConnection, error: actualError } = await supabase
+            .from('client_platform_connections')
+            .select('*')
+            .eq('client_id', actualClientId)
+            .eq('platform', platform)
+            .eq('is_active', true)
+            .single();
+
+          console.log('🔍 [ASSETS API] Second attempt - actual client connection lookup:', { actualConnection, actualError });
+          
+          if (actualConnection && !actualError) {
+            clientConnection = actualConnection;
+            clientConnectionError = null;
+            console.log('🔍 [ASSETS API] Found connection using actual client ID!');
+          }
+        }
+      }
+      
+      if (clientConnection && !clientConnectionError) {
+        connection = clientConnection;
+        connectionError = null;
       } else {
-        console.log('🔍 [ASSETS API] No actual client ID found in onboarding request');
-        
-        // Try to find any connection for this platform by searching all connections
-        console.log('🔍 [ASSETS API] Searching all platform connections for platform:', platform);
-        const { data: allConnections, error: allError } = await supabase
-          .from('client_platform_connections')
-          .select('*')
-          .eq('platform', platform)
-          .eq('is_active', true)
-          .limit(10);
-        
-        console.log('🔍 [ASSETS API] All connections for platform:', { allConnections, allError });
-        
-        if (allConnections && allConnections.length > 0) {
-          // Use the most recent connection
-          connection = allConnections[0];
-          connectionError = null;
-          console.log('🔍 [ASSETS API] Using most recent connection:', connection);
-        }
+        connectionError = clientConnectionError;
       }
     }
 
