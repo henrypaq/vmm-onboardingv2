@@ -95,6 +95,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   const [linkData, setLinkData] = useState<LinkData | null>(null);
   const [platforms, setPlatforms] = useState<any[]>([]);
   
+  // Current onboarding request ID for this flow (created when client info is submitted or during OAuth)
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  
   // Platform connection status
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({});
   
@@ -253,6 +256,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       const data = await response.json();
       console.log('Onboarding request created/updated:', data);
       
+      // Store the request ID for this flow
+      if (data.requestId) {
+        setCurrentRequestId(data.requestId);
+        console.log('[UNIFIED FORM] Stored current request ID:', data.requestId);
+      }
+      
       setCurrentStep('platforms');
       // Auto-expand first platform
       if (platforms.length > 0) {
@@ -365,52 +374,58 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       console.log('🟢 [UNIFIED FORM] Request data.requests:', requestData.requests);
       console.log('🟢 [UNIFIED FORM] Request data.requests length:', requestData.requests?.length);
       
-      // Get the current in_progress request for this flow
-      // If no request exists yet, we need to create one first
-      let latestRequest = requestData.requests && requestData.requests.length > 0 
-        ? requestData.requests[0] 
-        : null;
+      // Use the current request ID from state if available (created during this flow)
+      // Otherwise, try to get from API response, or create a new one
+      let requestId = currentRequestId;
       
-      // If no request exists, create one now (this happens when OAuth callback occurs before client info is submitted)
-      if (!latestRequest) {
-        console.log('🟢 [UNIFIED FORM] No request found, creating one for asset fetching...');
-        try {
-          const createResponse = await fetch('/api/onboarding/request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              token,
-              client_email: '',
-              client_name: '',
-              company_name: '',
-            }),
-          });
-          
-          if (createResponse.ok) {
-            const createData = await createResponse.json();
-            // Fetch the newly created request
-            const newRequestResponse = await fetch(`/api/onboarding/request?token=${token}`);
-            if (newRequestResponse.ok) {
-              const newRequestData = await newRequestResponse.json();
-              latestRequest = newRequestData.requests?.[0] || null;
+      if (!requestId) {
+        // Try to get from API response (should be empty for fresh flows, but check anyway)
+        const latestRequest = requestData.requests && requestData.requests.length > 0 
+          ? requestData.requests[0] 
+          : null;
+        
+        if (latestRequest?.id) {
+          requestId = latestRequest.id;
+          setCurrentRequestId(requestId);
+          console.log('🟢 [UNIFIED FORM] Using request ID from API response:', requestId);
+        } else {
+          // Create a new request for this flow (happens when OAuth callback occurs before client info is submitted)
+          console.log('🟢 [UNIFIED FORM] No request found, creating one for asset fetching...');
+          try {
+            const createResponse = await fetch('/api/onboarding/request', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                token,
+                client_email: '',
+                client_name: '',
+                company_name: '',
+              }),
+            });
+            
+            if (createResponse.ok) {
+              const createData = await createResponse.json();
+              if (createData.requestId) {
+                requestId = createData.requestId;
+                setCurrentRequestId(requestId);
+                console.log('🟢 [UNIFIED FORM] Created new request for asset fetching:', requestId);
+              }
             }
+          } catch (createError) {
+            console.error('🔴 [UNIFIED FORM] Error creating request for asset fetch:', createError);
           }
-        } catch (createError) {
-          console.error('🔴 [UNIFIED FORM] Error creating request for asset fetch:', createError);
         }
+      } else {
+        console.log('🟢 [UNIFIED FORM] Using stored request ID:', requestId);
       }
       
-      console.log('🟢 [UNIFIED FORM] Latest request:', latestRequest);
-      console.log('🟢 [UNIFIED FORM] Latest request ID:', latestRequest?.id);
-      console.log('🟢 [UNIFIED FORM] Latest request platform_connections:', latestRequest?.platform_connections);
-      
-      if (!latestRequest || !latestRequest.id) {
-        console.error('🔴 [UNIFIED FORM] Client ID not found in request data');
-        throw new Error('Client ID not found - please submit your information first');
+      if (!requestId) {
+        console.error('🔴 [UNIFIED FORM] Request ID not found');
+        throw new Error('Request ID not found - please submit your information first');
       }
 
-      console.log('🟢 [UNIFIED FORM] Step 2: Making assets API call...');
-      const assetsUrl = `/api/platforms/assets?platform=${platformId}&clientId=${latestRequest.id}`;
+      console.log('🟢 [UNIFIED FORM] Step 2: Making assets API call with request ID:', requestId);
+      const assetsUrl = `/api/platforms/assets?platform=${platformId}&clientId=${requestId}`;
       console.log('🟢 [UNIFIED FORM] Assets URL:', assetsUrl);
 
       // Fetch assets from platform API
