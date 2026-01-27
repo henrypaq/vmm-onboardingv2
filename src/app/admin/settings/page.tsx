@@ -69,20 +69,42 @@ export default function AdminSettingsPage() {
     if (!hasLoadedOnce) {
       fetchConnections();
     }
+  }, [hasLoadedOnce]);
 
-    // If redirected from OAuth success, do a single refresh then clear URL params
+  // Separate effect to handle OAuth redirects
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('connected') && urlParams.get('success')) {
-      fetchConnections();
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (urlParams.get('error')) {
-      const error = urlParams.get('error');
-      const platform = urlParams.get('platform');
-      const message = urlParams.get('message');
+    const connected = urlParams.get('connected');
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
+    const platform = urlParams.get('platform');
+    const message = urlParams.get('message');
+    const username = urlParams.get('username');
+
+    if (connected && success) {
+      console.log(`OAuth success for ${connected}, refreshing connections...`);
+      // Refresh connections after OAuth success
+      fetchConnections().then(() => {
+        // Show success message
+        if (username) {
+          toast.success(`${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully as ${decodeURIComponent(username)}!`);
+        } else {
+          toast.success(`${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully!`);
+        }
+        // Clear URL params
+        window.history.replaceState({}, document.title, window.location.pathname);
+      });
+    } else if (error) {
       console.error(`OAuth error for ${platform}: ${error}`);
+      if (message) {
+        toast.error(`Failed to connect ${platform}: ${decodeURIComponent(message)}`);
+      } else {
+        toast.error(`Failed to connect ${platform || 'platform'}`);
+      }
+      // Clear URL params
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [hasLoadedOnce]);
+  }, []); // Run once on mount to check for redirect params
 
   const getPlatformLogo = (platformId: string) => {
     const logoMap: { [key: string]: string } = {
