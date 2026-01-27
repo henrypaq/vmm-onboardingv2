@@ -398,16 +398,53 @@ export async function updateClient(id: string, updates: Partial<Client>): Promis
 // Onboarding Link functions
 export async function getOnboardingLinks(adminId?: string): Promise<OnboardingLink[]> {
   const supabaseAdmin = getSupabaseAdmin();
-  let query = supabaseAdmin
-    .from('onboarding_links')
-    .select('*');
   
-  // Filter by admin_id if provided
+  // If adminId is provided, try to fetch with exact match first
   if (adminId) {
-    query = query.eq('admin_id', adminId);
+    const { data, error } = await supabaseAdmin
+      .from('onboarding_links')
+      .select('*')
+      .eq('admin_id', adminId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching onboarding links:', error);
+      return [];
+    }
+    
+    // If we found links, return them
+    if (data && data.length > 0) {
+      return data;
+    }
+    
+    // If no links found with exact match, try fetching all and filtering manually
+    // This handles potential UUID type mismatches
+    console.log('[Database] No links found with exact admin_id match, trying manual filter...');
+    const { data: allLinks } = await supabaseAdmin
+      .from('onboarding_links')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    
+    if (allLinks) {
+      // Filter manually to handle UUID type mismatches
+      const filteredLinks = allLinks.filter(link => 
+        link.admin_id === adminId ||
+        link.admin_id?.toString() === adminId?.toString() ||
+        String(link.admin_id) === String(adminId)
+      );
+      console.log('[Database] Found', filteredLinks.length, 'links after manual filtering');
+      return filteredLinks;
+    }
+    
+    return [];
   }
   
-  const { data, error } = await query.order('created_at', { ascending: false });
+  // If no adminId provided, return all links (for backwards compatibility)
+  const { data, error } = await supabaseAdmin
+    .from('onboarding_links')
+    .select('*')
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching onboarding links:', error);
