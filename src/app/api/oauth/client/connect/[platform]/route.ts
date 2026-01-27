@@ -225,10 +225,11 @@ export async function GET(
       }
       
       console.log('[ClientOAuth][meta] Final scopes', metaScopes);
-      // Add auth_type=reauthorize to force fresh login and prevent "reconnect" dialog
-      // Add auth_nonce with timestamp to make each request unique
+      // Add auth_type=rerequest to force fresh authorization prompt (not reconnect dialog)
+      // Add auth_nonce with unique timestamp to make each request unique
+      // This ensures each link opening prompts for fresh login, even in private browser
       const authNonce = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(metaScopes.join(','))}&response_type=code&state=${encodeURIComponent(state)}&auth_type=reauthorize&auth_nonce=${encodeURIComponent(authNonce)}`;
+      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(metaScopes.join(','))}&response_type=code&state=${encodeURIComponent(state)}&auth_type=rerequest&auth_nonce=${encodeURIComponent(authNonce)}`;
       break;
     case 'google':
       // Get Google scopes from the onboarding request or use defaults
