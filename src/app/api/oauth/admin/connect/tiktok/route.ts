@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { upsertAdminPlatformConnection, getAdminPlatformConnections } from '@/lib/db/database';
 import { createClient } from '@/lib/supabase/server';
 
+// Force dynamic rendering - this route uses request.url, cookies, and OAuth
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 interface TikTokTokenResponse {
   access_token: string;
   expires_in: number;

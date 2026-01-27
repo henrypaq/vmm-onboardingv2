@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering - this route uses request.url and OAuth
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 interface TikTokTokenResponse {
   access_token: string;
   expires_in: number;

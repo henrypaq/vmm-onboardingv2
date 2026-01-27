@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { upsertAdminPlatformConnection, AdminPlatformConnection } from '@/lib/db/database';
 import { createClient } from '@/lib/supabase/server';
 
+// Force dynamic rendering - this route uses request.url, cookies, and OAuth
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Consistent redirect URI construction
 function getGoogleRedirectUri(): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app';

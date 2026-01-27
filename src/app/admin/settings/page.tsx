@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +23,7 @@ interface PlatformConnection {
   connectedAt: string;
 }
 
-export default function AdminSettingsPage() {
+function AdminSettingsPageContent() {
   const platforms = getAllPlatforms();
   const searchParams = useSearchParams();
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
@@ -441,5 +441,20 @@ export default function AdminSettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminSettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl page-title text-gray-900">Settings</h1>
+          <p className="text-gray-600 mt-2">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AdminSettingsPageContent />
+    </Suspense>
   );
 }

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { fetchPlatformAssets } from '@/lib/oauth/oauth-utils';
 
+// Force dynamic rendering - this route uses request.url
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   console.log('=== PLATFORM ASSETS API START ===');
   

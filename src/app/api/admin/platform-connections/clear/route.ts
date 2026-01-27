@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { getCurrentUserId } from '@/lib/auth/get-current-user';
 
+// Force dynamic rendering - this route uses authentication
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * Clear all admin platform connections for the current user
  * POST /api/admin/platform-connections/clear

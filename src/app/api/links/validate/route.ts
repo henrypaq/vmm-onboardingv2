@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Force dynamic rendering - this route uses request.url
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 import { getOnboardingLinkByToken } from '@/lib/db/database';
 import { isLinkValid } from '@/lib/links/link-generator';
 

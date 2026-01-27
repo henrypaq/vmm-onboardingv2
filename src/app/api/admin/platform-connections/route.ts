@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminPlatformConnections } from '@/lib/db/database';
 import { getCurrentUserId } from '@/lib/auth/get-current-user';
 
+// Force dynamic rendering - this route uses cookies and authentication
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(_request: NextRequest) {
   try {
     // Get authenticated user ID

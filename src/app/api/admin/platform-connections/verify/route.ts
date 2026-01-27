@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { getCurrentUserId } from '@/lib/auth/get-current-user';
 
+// Force dynamic rendering - this route uses request.url and authentication
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * Diagnostic endpoint to verify if a platform connection exists in the database
  * Usage: /api/admin/platform-connections/verify?platform=meta
