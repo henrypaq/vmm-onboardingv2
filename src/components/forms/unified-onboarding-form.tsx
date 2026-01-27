@@ -1202,7 +1202,58 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                             <div className="flex items-center justify-center py-8">
                               <LoadingSpinner size="md" text="Loading assets..." />
                             </div>
-                          ) : platformAssets[platform.id] && platformAssets[platform.id].length > 0 ? (
+                          ) : (() => {
+                            // For Meta, prioritize showing permissions if they exist
+                            // Only show asset selection if there are meaningful assets beyond just catalogs
+                            const assets = platformAssets[platform.id] || [];
+                            const hasNonCatalogAssets = assets.some(asset => 
+                              asset.type !== 'catalog' && 
+                              asset.type !== 'business_dataset'
+                            );
+                            
+                            // For Meta: Show permissions if no meaningful assets, or if only catalogs exist
+                            if (platform.id === 'meta' && linkData?.requested_permissions?.[platform.id]?.length > 0) {
+                              if (!hasNonCatalogAssets) {
+                                // Show permissions instead of asset selection
+                                return (
+                                  <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                                    <h4 className="text-base font-semibold text-gray-900 mb-4">
+                                      Permissions Granted
+                                    </h4>
+                                    <div className="space-y-3">
+                                      {linkData.requested_permissions[platform.id].map((scope: string, index: number) => {
+                                        const scopeDescription = getScopeDescription(platform.id as keyof typeof scopes, scope);
+                                        const scopeName = scope.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        return (
+                                          <div
+                                            key={index}
+                                            className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                                          >
+                                            <div className="flex-shrink-0 mt-0.5">
+                                              <CheckCircle className="h-5 w-5 text-green-600" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-sm font-medium text-gray-900">
+                                                {scopeName}
+                                              </p>
+                                              {scopeDescription && scopeDescription !== scope && (
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                  {scopeDescription}
+                                                </p>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            }
+                            
+                            // Show asset selection if assets exist
+                            if (assets.length > 0) {
+                              return (
                             <div className="space-y-4">
                               {(() => {
                                 console.log('🔍 [RENDER DEBUG] Current platformAssets for', platform.id, 'before grouping:', platformAssets[platform.id]);
@@ -1271,44 +1322,65 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                 </div>
                               )}
                             </div>
-                          ) : (
-                            /* Show requested permissions/scopes when no assets */
-                            linkData?.requested_permissions?.[platform.id] && 
-                            linkData.requested_permissions[platform.id].length > 0 && (
-                              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                                <h4 className="text-base font-semibold text-gray-900 mb-4">
-                                  Permissions Granted
-                                </h4>
-                                <div className="space-y-3">
-                                  {linkData.requested_permissions[platform.id].map((scope: string, index: number) => {
-                                    // Get scope description if available
-                                    const scopeDescription = getScopeDescription(platform.id as keyof typeof scopes, scope);
-                                    const scopeName = scope.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                    return (
-                                      <div
-                                        key={index}
-                                        className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                                      >
-                                        <div className="flex-shrink-0 mt-0.5">
-                                          <CheckCircle className="h-5 w-5 text-green-600" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-sm font-medium text-gray-900">
-                                            {scopeName}
-                                          </p>
-                                          {scopeDescription && scopeDescription !== scope && (
-                                            <p className="text-xs text-gray-600 mt-1">
-                                              {scopeDescription}
-                                            </p>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            )
-                          )}
+                            );
+                            }
+                            
+                            // Fallback: Show permissions if available, otherwise show empty state
+                            return null;
+                          })()}
+                          
+                          {/* Show requested permissions/scopes when no assets or for Meta with only catalogs */}
+                          {(() => {
+                            const assets = platformAssets[platform.id] || [];
+                            const hasAssets = assets.length > 0;
+                            const hasNonCatalogAssets = assets.some(asset => 
+                              asset.type !== 'catalog' && 
+                              asset.type !== 'business_dataset'
+                            );
+                            
+                            // Show permissions if:
+                            // 1. No assets at all, OR
+                            // 2. Meta platform with only catalog assets (permissions already shown above, but this is fallback)
+                            if (!hasAssets || (platform.id === 'meta' && !hasNonCatalogAssets)) {
+                              if (linkData?.requested_permissions?.[platform.id] && 
+                                  linkData.requested_permissions[platform.id].length > 0) {
+                                return (
+                                  <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                                    <h4 className="text-base font-semibold text-gray-900 mb-4">
+                                      Permissions Granted
+                                    </h4>
+                                    <div className="space-y-3">
+                                      {linkData.requested_permissions[platform.id].map((scope: string, index: number) => {
+                                        const scopeDescription = getScopeDescription(platform.id as keyof typeof scopes, scope);
+                                        const scopeName = scope.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        return (
+                                          <div
+                                            key={index}
+                                            className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                                          >
+                                            <div className="flex-shrink-0 mt-0.5">
+                                              <CheckCircle className="h-5 w-5 text-green-600" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-sm font-medium text-gray-900">
+                                                {scopeName}
+                                              </p>
+                                              {scopeDescription && scopeDescription !== scope && (
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                  {scopeDescription}
+                                                </p>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            }
+                            return null;
+                          })()}
                           
                           <div className="flex justify-end pt-6">
                             <Button
