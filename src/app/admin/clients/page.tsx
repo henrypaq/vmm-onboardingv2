@@ -160,10 +160,25 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
   };
 
   const handleDelete = (e: React.MouseEvent) => {
+    console.log('[ClientGridItem] Delete button clicked', { clientId: client.id, clientName: client.full_name });
     e.stopPropagation();
+    e.preventDefault();
     if (confirm(`Are you sure you want to delete ${client.full_name || 'this client'}? This action cannot be undone.`)) {
+      console.log('[ClientGridItem] Delete confirmed, calling onDelete');
       onDelete(client.id);
+    } else {
+      console.log('[ClientGridItem] Delete cancelled');
     }
+  };
+
+  const handleMenuButtonClick = (e: React.MouseEvent) => {
+    console.log('[ClientGridItem] Menu button clicked', { clientId: client.id });
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
+  const handleMenuOpenChange = (open: boolean) => {
+    console.log('[ClientGridItem] Menu open state changed', { open, clientId: client.id });
   };
 
   // Debug logging
@@ -202,30 +217,59 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
                 </Badge>
                 
                 {/* 3-dots Menu */}
-                <div onClick={(e) => e.stopPropagation()}>
-                  <DropdownMenu>
+                <div 
+                  onClick={(e) => {
+                    console.log('[ClientGridItem] Wrapper div clicked');
+                    e.stopPropagation();
+                  }}
+                  onMouseDown={(e) => {
+                    console.log('[ClientGridItem] Wrapper div mousedown');
+                    e.stopPropagation();
+                  }}
+                >
+                  <DropdownMenu onOpenChange={handleMenuOpenChange}>
                     <DropdownMenuTrigger asChild>
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 hover:bg-gray-100"
-                        onClick={(e) => {
+                        className="h-8 w-8 hover:bg-gray-100 relative z-10"
+                        onClick={handleMenuButtonClick}
+                        onMouseDown={(e) => {
+                          console.log('[ClientGridItem] Button mousedown');
                           e.stopPropagation();
                           e.preventDefault();
                         }}
+                        type="button"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuContent 
+                      align="end" 
+                      className="w-48 z-50" 
+                      onClick={(e) => {
+                        console.log('[ClientGridItem] Menu content clicked');
+                        e.stopPropagation();
+                      }}
+                      onMouseDown={(e) => {
+                        console.log('[ClientGridItem] Menu content mousedown');
+                        e.stopPropagation();
+                      }}
+                    >
                       <DropdownMenuLabel>Client Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={(e) => {
+                          console.log('[ClientGridItem] Delete menu item clicked');
                           e.stopPropagation();
+                          e.preventDefault();
                           handleDelete(e);
                         }}
-                        className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                        onMouseDown={(e) => {
+                          console.log('[ClientGridItem] Delete menu item mousedown');
+                          e.stopPropagation();
+                        }}
+                        className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete Client
