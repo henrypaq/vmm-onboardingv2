@@ -430,7 +430,7 @@ export async function createAdminPlatformConnection(connection: Omit<AdminPlatfo
     throw new Error('Platform user ID is required and cannot be empty');
   }
   
-  // Verify admin_id exists in users table
+  // Verify admin_id exists in users table, create if missing
   const { data: userExists, error: userCheckError } = await supabaseAdmin
     .from('users')
     .select('id')
@@ -438,8 +438,36 @@ export async function createAdminPlatformConnection(connection: Omit<AdminPlatfo
     .single();
   
   if (userCheckError || !userExists) {
-    console.error('❌ Admin user not found in database:', connection.admin_id);
-    throw new Error(`Admin user not found: ${connection.admin_id}. Please ensure the user exists in the users table.`);
+    console.log('⚠️ User profile not found in users table, checking auth.users...');
+    
+    // Check if user exists in auth.users
+    const { data: authUser, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(connection.admin_id);
+    
+    if (authUserError || !authUser?.user) {
+      console.error('❌ Admin user not found in auth.users:', connection.admin_id);
+      throw new Error(`Admin user not found: ${connection.admin_id}. Please ensure the user exists in Supabase Auth.`);
+    }
+    
+    // User exists in auth but not in users table - create profile
+    console.log('📝 Creating user profile in users table...');
+    const { data: newUser, error: createUserError } = await supabaseAdmin
+      .from('users')
+      .insert({
+        id: authUser.user.id,
+        email: authUser.user.email || '',
+        role: 'admin',
+        full_name: authUser.user.user_metadata?.full_name || authUser.user.user_metadata?.name || '',
+        company_name: authUser.user.user_metadata?.company_name || ''
+      })
+      .select()
+      .single();
+    
+    if (createUserError || !newUser) {
+      console.error('❌ Failed to create user profile:', createUserError);
+      throw new Error(`Failed to create user profile: ${createUserError?.message || 'Unknown error'}`);
+    }
+    
+    console.log('✅ User profile created successfully:', newUser.id);
   }
   
   console.log('📝 Creating admin platform connection with data:', {
