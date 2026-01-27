@@ -2,17 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOnboardingLinks, deleteOnboardingLink } from '@/lib/db/database';
 import { getCurrentUserId } from '@/lib/auth/get-current-user';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(_request: NextRequest) {
   try {
+    console.log('[Admin Links API] ===========================================');
+    console.log('[Admin Links API] Fetching links for authenticated admin');
+    console.log('[Admin Links API] ===========================================');
+    
     // Get authenticated user ID
     const adminId = await getCurrentUserId();
     
+    console.log('[Admin Links API] Admin ID from session:', adminId);
+    
     if (!adminId) {
+      console.error('[Admin Links API] ❌ No authenticated user found');
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
+    
+    console.log('[Admin Links API] ✅ Authenticated admin:', adminId);
     
     // Fetch onboarding links for this specific admin
     const links = await getOnboardingLinks(adminId);

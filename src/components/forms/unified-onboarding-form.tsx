@@ -1533,7 +1533,9 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
               <Button
                 onClick={() => {
                   // Redirect to admin dashboard
-                  window.location.href = '/admin';
+                  // Redirect to client dashboard after successful onboarding
+                  // Note: Client may not be authenticated yet, so redirect to a success page
+                  window.location.href = '/client?onboarding=complete';
                 }}
                 className="gradient-primary"
                 size="lg"
