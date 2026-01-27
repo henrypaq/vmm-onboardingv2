@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOnboardingLinkByToken, getOnboardingRequests } from '@/lib/db/database';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -23,9 +26,11 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Check if there's an in_progress request that was just created by an OAuth callback
-    // This allows the form to find the request that contains OAuth data
-    // Only return requests that were created in the last 5 minutes (recent OAuth callbacks)
+    // Check if there's an in_progress request that was created recently
+    // This could be from:
+    // 1. Client info submission (has client_email, client_name)
+    // 2. OAuth callback (has platform_connections)
+    // Only return requests that were created in the last 5 minutes
     const supabase = (await import('@/lib/supabase/server')).getSupabaseAdmin();
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     
@@ -38,15 +43,24 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(1);
     
-    // If there's a recent request with OAuth data, return it
-    // Otherwise return empty (fresh start)
+    // Return the request if it has either:
+    // 1. Client info (client_email, client_name) - from initial form submission
+    // 2. Platform connections (OAuth data) - from OAuth callback
     let requests: any[] = [];
     if (recentRequests && recentRequests.length > 0) {
       const recentRequest = recentRequests[0];
-      // Only return if it has platform connections (OAuth data was stored)
-      if (recentRequest.platform_connections && Object.keys(recentRequest.platform_connections).length > 0) {
+      const hasClientInfo = recentRequest.client_email || recentRequest.client_name;
+      const hasOAuthData = recentRequest.platform_connections && Object.keys(recentRequest.platform_connections).length > 0;
+      
+      if (hasClientInfo || hasOAuthData) {
         requests = [recentRequest];
-        console.log('[Onboarding][request GET] Returning recent request with OAuth data:', recentRequest.id);
+        console.log('[Onboarding][request GET] Returning recent request:', {
+          id: recentRequest.id,
+          hasClientInfo,
+          hasOAuthData,
+          client_email: recentRequest.client_email,
+          client_name: recentRequest.client_name
+        });
       }
     }
     
