@@ -13,11 +13,31 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.json();
     const token: string | undefined = rawBody.token;
     const testMode: boolean = Boolean(rawBody.testMode);
-    const data: { name?: string; email?: string; company?: string } = rawBody.data ?? {
-      name: rawBody.client_name,
-      email: rawBody.client_email,
-      company: rawBody.company_name,
-    };
+    // Handle both payload formats:
+    // Format 1: { token, data: { name, email, company } }
+    // Format 2: { token, client_name, client_email, company_name }
+    let data: { name?: string; email?: string; company?: string };
+    
+    if (rawBody.data && typeof rawBody.data === 'object') {
+      // Format 1: data object exists
+      data = {
+        name: rawBody.data.name,
+        email: rawBody.data.email,
+        company: rawBody.data.company
+      };
+    } else {
+      // Format 2: flat structure
+      data = {
+        name: rawBody.client_name,
+        email: rawBody.client_email,
+        company: rawBody.company_name
+      };
+    }
+    
+    // Trim whitespace from all fields
+    if (data.name) data.name = data.name.trim();
+    if (data.email) data.email = data.email.trim();
+    if (data.company) data.company = data.company.trim();
     let permissions: string[] | undefined = Array.isArray(rawBody.permissions)
       ? rawBody.permissions as string[]
       : undefined;
