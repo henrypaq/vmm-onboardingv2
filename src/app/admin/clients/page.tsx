@@ -181,13 +181,25 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
     console.log('[ClientGridItem] Menu open state changed', { open, clientId: client.id });
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    console.log('[ClientGridItem] Card clicked', { target: e.target, currentTarget: e.currentTarget });
+    // Only trigger onView if the click wasn't on the menu button or menu content
+    const target = e.target as HTMLElement;
+    if (!target.closest('[data-slot="dropdown-menu"]') && !target.closest('[data-slot="dropdown-menu-trigger"]')) {
+      console.log('[ClientGridItem] Card click not on menu, calling onView');
+      onView();
+    } else {
+      console.log('[ClientGridItem] Card click on menu, ignoring');
+    }
+  };
+
   // Debug logging
   console.log(`[ClientGridItem] Client ${client.id} (${client.full_name}) linkUrl:`, client.linkUrl);
 
   return (
     <Card 
       className="cursor-pointer bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-      onClick={onView}
+      onClick={handleCardClick}
     >
       <CardContent className="p-6">
         <div className="space-y-4">
