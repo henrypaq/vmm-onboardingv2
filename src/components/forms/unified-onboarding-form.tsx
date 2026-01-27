@@ -1261,25 +1261,12 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                             )
                           )}
                           
-                          <div className="flex justify-end space-x-3 pt-6">
-                            <Button
-                              onClick={() => setShowAssetSelection(prev => ({ ...prev, [platform.id]: false }))}
-                              size="sm"
-                              className="gradient-primary"
-                            >
-                              Skip
-                            </Button>
+                          <div className="flex justify-end pt-6">
                             <Button
                               onClick={() => handleAssetSelectionComplete(platform.id)}
                               className="gradient-primary"
                               size="sm"
-                              disabled={
-                                // Allow continue if no assets but permissions were granted
-                                !(platformAssets[platform.id] && platformAssets[platform.id].length > 0) &&
-                                !(linkData?.requested_permissions?.[platform.id] && linkData.requested_permissions[platform.id].length > 0)
-                                  ? false // Enable if permissions exist even without assets
-                                  : !selectedAssets[platform.id] || Object.keys(selectedAssets[platform.id] || {}).length === 0
-                              }
+                              disabled={false}
                             >
                               Continue
                             </Button>
