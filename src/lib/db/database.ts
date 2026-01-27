@@ -437,17 +437,17 @@ export async function createAdminPlatformConnection(connection: Omit<AdminPlatfo
 export async function upsertAdminPlatformConnection(connection: Omit<AdminPlatformConnection, 'id' | 'created_at' | 'updated_at'>): Promise<AdminPlatformConnection> {
   const supabaseAdmin = getSupabaseAdmin();
   
-  // First check if connection exists
+  // First check if connection exists (check all connections, not just active ones)
+  // This handles the case where a connection was deactivated and needs to be reactivated
   const { data: existing } = await supabaseAdmin
     .from('admin_platform_connections')
-    .select('id')
+    .select('id, is_active')
     .eq('admin_id', connection.admin_id)
     .eq('platform', connection.platform)
-    .eq('is_active', true)
     .single();
 
   if (existing) {
-    // Update existing connection
+    // Update existing connection (reactivate if it was deactivated)
     console.log('Updating existing admin platform connection:', existing.id);
     return await updateAdminPlatformConnection(existing.id, {
       platform_user_id: connection.platform_user_id,
@@ -461,7 +461,34 @@ export async function upsertAdminPlatformConnection(connection: Omit<AdminPlatfo
   } else {
     // Create new connection
     console.log('Creating new admin platform connection');
-    return await createAdminPlatformConnection(connection);
+    try {
+      return await createAdminPlatformConnection(connection);
+    } catch (error: any) {
+      // If insert fails due to UNIQUE constraint, try to find and update
+      if (error?.code === '23505' || error?.message?.includes('unique')) {
+        console.log('Insert failed due to unique constraint, attempting to find and update...');
+        const { data: found } = await supabaseAdmin
+          .from('admin_platform_connections')
+          .select('id')
+          .eq('admin_id', connection.admin_id)
+          .eq('platform', connection.platform)
+          .single();
+        
+        if (found) {
+          console.log('Found existing connection, updating:', found.id);
+          return await updateAdminPlatformConnection(found.id, {
+            platform_user_id: connection.platform_user_id,
+            platform_username: connection.platform_username,
+            access_token: connection.access_token,
+            refresh_token: connection.refresh_token,
+            token_expires_at: connection.token_expires_at,
+            scopes: connection.scopes,
+            is_active: connection.is_active,
+          });
+        }
+      }
+      throw error;
+    }
   }
 }
 

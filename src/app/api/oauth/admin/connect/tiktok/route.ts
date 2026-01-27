@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { upsertAdminPlatformConnection, getAdminPlatformConnections } from '@/lib/db/database';
+import { createClient } from '@/lib/supabase/server';
 
 interface TikTokTokenResponse {
   access_token: string;
@@ -45,11 +46,42 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      // Get authenticated user ID and store in state
+      const supabase = await createClient();
+      
+      // Try getSession first
+      let session = null;
+      const sessionResult = await supabase.auth.getSession();
+      session = sessionResult.data?.session;
+      
+      // If no session, try getUser as fallback
+      if (!session?.user) {
+        console.log('No session from getSession, trying getUser...');
+        const userResult = await supabase.auth.getUser();
+        if (userResult.data?.user) {
+          console.log('getUser succeeded, using user ID:', userResult.data.user.id);
+          const adminId = userResult.data.user.id;
+          const state = `admin_${adminId}_${Date.now()}`;
+          const redirectUri = getTikTokRedirectUri();
+          const oauthUrl = `https://www.tiktok.com/auth/authorize/?client_key=${process.env.TIKTOK_CLIENT_KEY}&scope=user.info.basic,video.list&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+          console.log('🔗 TikTok OAuth: Redirecting to TikTok');
+          return NextResponse.redirect(oauthUrl);
+        }
+        
+        console.error('No authenticated user found');
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?error=not_authenticated&message=Please log in to connect platforms`
+        );
+      }
+      
+      const adminId = session.user.id;
+      const state = `admin_${adminId}_${Date.now()}`;
       const redirectUri = getTikTokRedirectUri();
       
       console.log('Environment check:');
       console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
       console.log('redirectUri:', redirectUri);
+      console.log('Generated state with admin ID:', state);
       
       const state = `admin_${Date.now()}`;
       const oauthUrl = `https://www.tiktok.com/auth/authorize/?client_key=${process.env.TIKTOK_CLIENT_KEY}&scope=user.info.basic,video.list&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
@@ -100,13 +132,9 @@ export async function GET(request: NextRequest) {
     const userInfo = await fetchTikTokUserInfo(tokenResponse.access_token);
     console.log('User info fetched:', userInfo);
 
-    // TODO: Get real admin ID from authentication/session
-    // For now, using a mock admin ID - replace with real auth
-    const mockAdminId = '00000000-0000-0000-0000-000000000001';
-
     // Store the platform connection in the database
     const connectionData = {
-      admin_id: mockAdminId,
+      admin_id: adminId,
       platform: 'tiktok',
       platform_user_id: userInfo.data.user.open_id,
       platform_username: userInfo.data.user.display_name,
@@ -129,7 +157,7 @@ export async function GET(request: NextRequest) {
 
     // Redirect back to admin settings with success
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?connected=tiktok&message=TikTok account connected successfully`
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/admin/settings?connected=tiktok&success=true&username=${encodeURIComponent(userInfo.data.user.display_name || 'Connected')}`
     );
 
   } catch (error) {
