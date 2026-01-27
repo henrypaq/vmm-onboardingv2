@@ -133,19 +133,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange code for access token
+    console.log('🔄 Meta OAuth: Exchanging code for token...');
     const tokenResponse = await exchangeCodeForToken(code);
-    console.log('Token exchange successful');
+    console.log('✅ Meta OAuth: Token exchange successful');
 
     // Fetch user information from Meta
+    console.log('🔄 Meta OAuth: Fetching user info...');
     const userInfo = await fetchMetaUserInfo(tokenResponse.access_token);
-    console.log('User info fetched:', userInfo);
+    console.log('✅ Meta OAuth: User info fetched:', {
+      id: userInfo.id,
+      name: userInfo.name
+    });
 
     // Use admin ID from state parameter
-    console.log('Using admin ID from OAuth state:', adminId);
+    console.log('🔄 Meta OAuth: Using admin ID from OAuth state:', adminId);
 
     // Store the platform connection in the database
-    console.log('Storing Meta connection in database...');
-    console.log('Account data:', {
+    console.log('🔄 Meta OAuth: Storing connection in database...');
+    console.log('📝 Meta OAuth: Account data:', {
       admin_id: adminId,
       platform: 'meta',
       platform_user_id: userInfo.id,
@@ -159,21 +164,37 @@ export async function GET(request: NextRequest) {
       is_active: true,
     });
 
-    const savedAccount = await upsertAdminPlatformConnection({
-      admin_id: adminId,
-      platform: 'meta',
-      platform_user_id: userInfo.id,
-      platform_username: userInfo.name,
-      access_token: tokenResponse.access_token,
-      refresh_token: tokenResponse.refresh_token,
-      token_expires_at: tokenResponse.expires_in 
-        ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
-        : undefined,
-      scopes: ['pages_show_list', 'ads_management'],
-      is_active: true,
-    });
+    try {
+      const savedAccount = await upsertAdminPlatformConnection({
+        admin_id: adminId,
+        platform: 'meta',
+        platform_user_id: userInfo.id,
+        platform_username: userInfo.name,
+        access_token: tokenResponse.access_token,
+        refresh_token: tokenResponse.refresh_token,
+        token_expires_at: tokenResponse.expires_in 
+          ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
+          : undefined,
+        scopes: ['pages_show_list', 'ads_management'],
+        is_active: true,
+      });
 
-    console.log('Meta connection stored successfully:', savedAccount);
+      console.log('✅ Meta OAuth: Connection stored successfully:', {
+        id: savedAccount.id,
+        platform: savedAccount.platform,
+        username: savedAccount.platform_username
+      });
+    } catch (saveError: any) {
+      console.error('❌ Meta OAuth: Failed to save connection:', saveError);
+      console.error('❌ Meta OAuth: Error details:', {
+        message: saveError?.message,
+        code: saveError?.code,
+        details: saveError?.details,
+        hint: saveError?.hint,
+        stack: saveError?.stack
+      });
+      throw new Error(`Failed to save connection: ${saveError?.message || 'Unknown error'}`);
+    }
 
     // Redirect back to admin settings with success
     return NextResponse.redirect(

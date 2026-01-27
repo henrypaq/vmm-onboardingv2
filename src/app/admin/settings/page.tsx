@@ -111,10 +111,18 @@ export default function AdminSettingsPage() {
       });
     } else if (error) {
       console.error(`❌ OAuth error for ${platform}: ${error}`);
+      console.error(`❌ Error message: ${message || 'No message provided'}`);
+      console.error(`❌ Full URL params:`, { connected, success, error, platform, message, username });
       if (message) {
-        toast.error(`Failed to connect ${platform}: ${decodeURIComponent(message)}`);
+        const decodedMessage = decodeURIComponent(message);
+        console.error(`❌ Decoded error message: ${decodedMessage}`);
+        toast.error(`Failed to connect ${platform}: ${decodedMessage}`, {
+          duration: 10000, // Show for 10 seconds so user can read it
+        });
       } else {
-        toast.error(`Failed to connect ${platform || 'platform'}`);
+        toast.error(`Failed to connect ${platform || 'platform'}. Check console for details.`, {
+          duration: 10000,
+        });
       }
       // Clear URL params
       setTimeout(() => {
