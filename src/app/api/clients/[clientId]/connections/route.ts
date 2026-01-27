@@ -12,9 +12,18 @@ export async function GET(
     const supabase = getSupabaseAdmin();
     const { clientId } = await params;
 
+    if (!clientId) {
+      console.error('[Client Connections API] No clientId provided');
+      return NextResponse.json(
+        { error: 'Client ID is required', connections: [] },
+        { status: 400 }
+      );
+    }
+
     console.log('[Client Connections API] ===========================================');
     console.log('[Client Connections API] Fetching connections for client:', clientId);
     console.log('[Client Connections API] Client ID type:', typeof clientId);
+    console.log('[Client Connections API] Client ID value:', clientId);
 
     // Fetch platform connections for this client
     // Try both exact match and string conversion to handle UUID type mismatches
