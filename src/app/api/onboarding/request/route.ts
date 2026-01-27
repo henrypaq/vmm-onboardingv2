@@ -23,30 +23,16 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Only get in_progress requests for this link (not completed ones)
-    // This ensures each new client flow starts fresh
-    // IMPORTANT: Only return requests that were created in the last 24 hours to prevent
-    // old in_progress requests from affecting new flows
-    const supabase = (await import('@/lib/supabase/server')).getSupabaseAdmin();
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    
-    const { data: inProgressRequests } = await supabase
-      .from('onboarding_requests')
-      .select('*')
-      .eq('link_id', link.id)
-      .eq('status', 'in_progress')
-      .gte('created_at', oneDayAgo) // Only get requests from last 24 hours
-      .order('created_at', { ascending: false });
-    
-    console.log('[Onboarding Request API] Found in_progress requests:', inProgressRequests?.length || 0);
-    
+    // Don't return any existing requests - each link opening should be completely fresh
+    // Links are reusable and each client should start with a blank slate
+    // Only return the link configuration, not any previous flow data
     return NextResponse.json({ 
       link: {
         platforms: link.platforms,
         requested_permissions: link.requested_permissions,
         link_name: link.link_name
       },
-      requests: inProgressRequests || []
+      requests: [] // Always return empty array - no previous flow data
     });
   } catch (error) {
     console.error('Error fetching onboarding request:', error);
@@ -73,32 +59,9 @@ export async function POST(request: NextRequest) {
 
     const supabase = (await import('@/lib/supabase/server')).getSupabaseAdmin();
 
-    // Only find in_progress requests for this link (not completed ones)
-    // This ensures each new client gets a fresh flow
-    const { data: existing, error } = await supabase
-      .from('onboarding_requests')
-      .select('*')
-      .eq('link_id', link.id)
-      .eq('status', 'in_progress')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error('[Onboarding][request POST] fetch existing error:', error);
-    }
-
-    // Only update if there's an in_progress request AND we're providing new client info
-    // Otherwise, create a new request for a fresh flow
-    if (existing && client_email && client_name) {
-      // Update lightweight client info if provided
-      const { error: updErr } = await supabase
-        .from('onboarding_requests')
-        .update({ client_email, client_name, company_name })
-        .eq('id', existing.id);
-      if (updErr) console.warn('[Onboarding][request POST] update meta error:', updErr);
-      return NextResponse.json({ success: true, requestId: existing.id });
-    }
+    // Always create a new request for each flow - links are reusable
+    // Don't check for existing requests - each link opening is a fresh start
+    // This ensures each client gets their own independent onboarding flow
 
     // Create new in_progress request
     const { data: created, error: insErr } = await supabase

@@ -365,9 +365,40 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       console.log('🟢 [UNIFIED FORM] Request data.requests:', requestData.requests);
       console.log('🟢 [UNIFIED FORM] Request data.requests length:', requestData.requests?.length);
       
-      const latestRequest = requestData.requests && requestData.requests.length > 0 
+      // Get the current in_progress request for this flow
+      // If no request exists yet, we need to create one first
+      let latestRequest = requestData.requests && requestData.requests.length > 0 
         ? requestData.requests[0] 
         : null;
+      
+      // If no request exists, create one now (this happens when OAuth callback occurs before client info is submitted)
+      if (!latestRequest) {
+        console.log('🟢 [UNIFIED FORM] No request found, creating one for asset fetching...');
+        try {
+          const createResponse = await fetch('/api/onboarding/request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token,
+              client_email: '',
+              client_name: '',
+              company_name: '',
+            }),
+          });
+          
+          if (createResponse.ok) {
+            const createData = await createResponse.json();
+            // Fetch the newly created request
+            const newRequestResponse = await fetch(`/api/onboarding/request?token=${token}`);
+            if (newRequestResponse.ok) {
+              const newRequestData = await newRequestResponse.json();
+              latestRequest = newRequestData.requests?.[0] || null;
+            }
+          }
+        } catch (createError) {
+          console.error('🔴 [UNIFIED FORM] Error creating request for asset fetch:', createError);
+        }
+      }
       
       console.log('🟢 [UNIFIED FORM] Latest request:', latestRequest);
       console.log('🟢 [UNIFIED FORM] Latest request ID:', latestRequest?.id);
@@ -375,7 +406,7 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       
       if (!latestRequest || !latestRequest.id) {
         console.error('🔴 [UNIFIED FORM] Client ID not found in request data');
-        throw new Error('Client ID not found');
+        throw new Error('Client ID not found - please submit your information first');
       }
 
       console.log('🟢 [UNIFIED FORM] Step 2: Making assets API call...');
