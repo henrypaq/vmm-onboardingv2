@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     const supabase = getSupabaseAdmin();
@@ -30,6 +33,7 @@ export async function GET() {
     }
 
     // Get recent platform connections
+    // Note: The client relationship might fail if client_id is a text field, so handle gracefully
     const { data: connections, error: connectionsError } = await supabase
       .from('client_platform_connections')
       .select(`
@@ -37,11 +41,7 @@ export async function GET() {
         platform,
         platform_username,
         created_at,
-        client:clients(
-          id,
-          full_name,
-          email
-        )
+        client_id
       `)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
@@ -49,7 +49,31 @@ export async function GET() {
 
     if (connectionsError) {
       console.error('[Recent Activity API] Error fetching connections:', connectionsError);
-      throw new Error(`Failed to fetch connections: ${connectionsError.message}`);
+      // Don't throw - just log and continue without connections
+      console.warn('[Recent Activity API] Continuing without connections data');
+    }
+
+    // If we have connections, try to fetch client data separately
+    let connectionsWithClients = connections || [];
+    if (connections && connections.length > 0) {
+      const clientIds = connections
+        .map(c => c.client_id)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0);
+      
+      if (clientIds.length > 0) {
+        const { data: clients, error: clientsError } = await supabase
+          .from('clients')
+          .select('id, full_name, email')
+          .in('id', clientIds);
+        
+        if (!clientsError && clients) {
+          const clientMap = new Map(clients.map(c => [c.id, c]));
+          connectionsWithClients = connections.map(conn => ({
+            ...conn,
+            client: clientMap.get(conn.client_id as string) ? [clientMap.get(conn.client_id as string)!] : []
+          }));
+        }
+      }
     }
 
     // Get recent link generations
@@ -91,18 +115,19 @@ export async function GET() {
     });
 
     // Add platform connections
-    connections?.forEach(connection => {
+    connectionsWithClients?.forEach(connection => {
+      const client = (connection as any).client?.[0];
       activities.push({
         id: `connection-${connection.id}`,
         type: 'platform_connected',
         title: 'Platform Connected',
-        description: `${connection.client?.[0]?.full_name || connection.client?.[0]?.email || 'Client'} connected to ${connection.platform}`,
+        description: `${client?.full_name || client?.email || 'Client'} connected to ${connection.platform}`,
         timestamp: connection.created_at,
         icon: 'LinkIcon',
         metadata: {
           platform: connection.platform,
-          clientName: connection.client?.[0]?.full_name,
-          clientEmail: connection.client?.[0]?.email,
+          clientName: client?.full_name,
+          clientEmail: client?.email,
           platformUsername: connection.platform_username
         }
       });

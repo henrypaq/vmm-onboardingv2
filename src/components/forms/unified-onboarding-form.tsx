@@ -730,7 +730,20 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       }
       
       const data = await response.json();
-      console.log('✅ [UNIFIED FORM] Onboarding submission successful:', data);
+      console.log('✅ [UNIFIED FORM] ===========================================');
+      console.log('✅ [UNIFIED FORM] ONBOARDING SUBMISSION SUCCESSFUL');
+      console.log('✅ [UNIFIED FORM] ===========================================');
+      console.log('✅ [UNIFIED FORM] Response data:', data);
+      console.log('✅ [UNIFIED FORM] Request ID:', data.requestId);
+      console.log('✅ [UNIFIED FORM] Client ID:', data.clientId);
+      console.log('✅ [UNIFIED FORM] Client Created:', data.clientCreated);
+      console.log('✅ [UNIFIED FORM] ===========================================');
+      
+      if (!data.clientCreated) {
+        console.warn('⚠️ [UNIFIED FORM] WARNING: Client was not created!');
+        console.warn('⚠️ [UNIFIED FORM] This may indicate an issue with client creation');
+      }
+      
       setCurrentStep('complete');
       toast.success('Onboarding completed successfully!');
       

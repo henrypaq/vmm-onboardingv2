@@ -22,7 +22,12 @@ export async function POST(request: NextRequest) {
       ? rawBody.permissions as string[]
       : undefined;
     
-    console.log('[Onboarding] Submit request received:', { token, testMode, data });
+    console.log('[Onboarding] ===========================================');
+    console.log('[Onboarding] 🚀 SUBMIT REQUEST RECEIVED 🚀');
+    console.log('[Onboarding] ===========================================');
+    console.log('[Onboarding] Token:', token);
+    console.log('[Onboarding] Test Mode:', testMode);
+    console.log('[Onboarding] Data:', data);
     console.log('[Onboarding] Full request body:', { token, permissions, data, testMode });
     console.log('[Onboarding] Raw request body:', rawBody);
     console.log('[Onboarding] Data validation:', {
@@ -35,6 +40,7 @@ export async function POST(request: NextRequest) {
     });
     console.log('[Onboarding] Data object type:', typeof data);
     console.log('[Onboarding] Data object keys:', data ? Object.keys(data) : 'null');
+    console.log('[Onboarding] ===========================================');
     
     if (!token) {
       return NextResponse.json(
@@ -44,14 +50,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate the link
+    console.log('[Onboarding] ===========================================');
+    console.log('[Onboarding] 🔍 VALIDATING ONBOARDING LINK');
+    console.log('[Onboarding] ===========================================');
     const link = await getOnboardingLinkByToken(token);
     
     if (!link) {
+      console.error('[Onboarding] ❌ Invalid link - token not found:', token);
       return NextResponse.json(
         { error: 'Invalid link' },
         { status: 404 }
       );
     }
+    
+    console.log('[Onboarding] ✅ Link validated:', {
+      linkId: link.id,
+      adminId: link.admin_id,
+      platforms: link.platforms,
+      linkName: link.link_name
+    });
+    console.log('[Onboarding] ===========================================');
 
     // Note: Links can be used multiple times, so we don't check if already completed
 
@@ -487,12 +505,24 @@ export async function POST(request: NextRequest) {
       // Non-fatal
     }
 
-    console.log(`[Onboarding] Completed for token ${token}`);
+    console.log('[Onboarding] ===========================================');
+    console.log('[Onboarding] ✅ ONBOARDING SUBMISSION COMPLETE');
+    console.log('[Onboarding] ===========================================');
+    console.log('[Onboarding] Token:', token);
+    console.log('[Onboarding] Client ID:', clientId);
+    console.log('[Onboarding] Onboarding Request ID:', onboardingRequest?.id);
+    console.log('[Onboarding] Client Email:', data?.email);
+    console.log('[Onboarding] Client Name:', data?.name);
+    console.log('[Onboarding] Company:', data?.company);
+    console.log('[Onboarding] Admin ID:', link.admin_id);
+    console.log('[Onboarding] ===========================================');
 
     return NextResponse.json({
       success: true,
       requestId: onboardingRequest?.id || 'unknown',
-      message: 'Onboarding request submitted successfully'
+      clientId: clientId || null,
+      message: 'Onboarding request submitted successfully',
+      clientCreated: !!clientId
     });
   } catch (error) {
     console.error('Onboarding submission error:', error);
