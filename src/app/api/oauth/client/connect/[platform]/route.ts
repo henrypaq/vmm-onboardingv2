@@ -192,12 +192,15 @@ export async function GET(
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/?error=missing_onboarding_token`);
   }
 
-  // Put token and platform inside state to ensure round-trip integrity
+  // Put token, platform, and unique timestamp in state to ensure round-trip integrity
+  // The unique timestamp makes each OAuth request appear as a new authorization
+  // This helps prevent Meta from showing "reconnect" dialog
   const stateObject = {
     flow: 'client',
     platform,
     token: onboardingToken,
-    ts: Date.now()
+    ts: Date.now(),
+    nonce: Math.random().toString(36).substring(7) // Add random nonce for extra uniqueness
   };
   console.log('[ClientOAuth] State (outgoing)', stateObject);
   const state = JSON.stringify(stateObject);
@@ -225,11 +228,12 @@ export async function GET(
       }
       
       console.log('[ClientOAuth][meta] Final scopes', metaScopes);
-      // Add auth_type=rerequest to force fresh authorization prompt (not reconnect dialog)
-      // Add auth_nonce with unique timestamp to make each request unique
-      // This ensures each link opening prompts for fresh login, even in private browser
-      const authNonce = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(metaScopes.join(','))}&response_type=code&state=${encodeURIComponent(state)}&auth_type=rerequest&auth_nonce=${encodeURIComponent(authNonce)}`;
+      // Don't use auth_type - let Meta treat each request as new
+      // The unique state parameter (with token and timestamp) makes each request unique
+      // This should prevent the "reconnect" dialog and show fresh login prompt
+      // Note: Meta may still show reconnect if user is logged in, but this is expected behavior
+      // The state already contains unique token + timestamp to differentiate each flow
+      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(metaScopes.join(','))}&response_type=code&state=${encodeURIComponent(state)}`;
       break;
     case 'google':
       // Get Google scopes from the onboarding request or use defaults
