@@ -416,6 +416,44 @@ export async function getAdminPlatformConnections(adminId?: string): Promise<Adm
 
 export async function createAdminPlatformConnection(connection: Omit<AdminPlatformConnection, 'id' | 'created_at' | 'updated_at'>): Promise<AdminPlatformConnection> {
   const supabaseAdmin = getSupabaseAdmin();
+  
+  // Validate required fields
+  if (!connection.access_token || connection.access_token.trim() === '') {
+    throw new Error('Access token is required and cannot be empty');
+  }
+  
+  if (!connection.admin_id || connection.admin_id.trim() === '') {
+    throw new Error('Admin ID is required and cannot be empty');
+  }
+  
+  if (!connection.platform_user_id || connection.platform_user_id.trim() === '') {
+    throw new Error('Platform user ID is required and cannot be empty');
+  }
+  
+  // Verify admin_id exists in users table
+  const { data: userExists, error: userCheckError } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('id', connection.admin_id)
+    .single();
+  
+  if (userCheckError || !userExists) {
+    console.error('❌ Admin user not found in database:', connection.admin_id);
+    throw new Error(`Admin user not found: ${connection.admin_id}. Please ensure the user exists in the users table.`);
+  }
+  
+  console.log('📝 Creating admin platform connection with data:', {
+    admin_id: connection.admin_id,
+    platform: connection.platform,
+    platform_user_id: connection.platform_user_id,
+    platform_username: connection.platform_username,
+    access_token: connection.access_token ? `Present (${connection.access_token.length} chars)` : 'MISSING',
+    refresh_token: connection.refresh_token ? `Present (${connection.refresh_token.length} chars)` : 'Missing',
+    token_expires_at: connection.token_expires_at,
+    scopes: connection.scopes,
+    is_active: connection.is_active
+  });
+  
   const { data, error } = await supabaseAdmin
     .from('admin_platform_connections')
     .insert([connection])
@@ -423,10 +461,15 @@ export async function createAdminPlatformConnection(connection: Omit<AdminPlatfo
     .single();
 
   if (error) {
-    console.error('Error creating admin platform connection:', error);
-    throw new Error('Failed to create platform connection');
+    console.error('❌ Error creating admin platform connection:', error);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error details:', error.details);
+    console.error('❌ Error hint:', error.hint);
+    throw new Error(`Failed to create platform connection: ${error.message}${error.details ? ` (${error.details})` : ''}${error.hint ? ` Hint: ${error.hint}` : ''}`);
   }
 
+  console.log('✅ Successfully created admin platform connection:', data.id);
   return data;
 }
 
