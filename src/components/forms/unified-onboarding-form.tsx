@@ -147,30 +147,31 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
           .filter(Boolean);
         setPlatforms(requestedPlatforms);
         
-        // Initialize connection status from existing requests
+        // Initialize connection status - always start fresh for new flows
         const initialStatus: ConnectionStatus = {};
         requestedPlatforms.forEach((platform: any) => {
           initialStatus[platform.id] = { connected: false };
         });
-        
-        // Check if there are existing requests with platform connections
-        if (data.requests && data.requests.length > 0) {
-          const latestRequest = data.requests[0];
-          if (latestRequest.platform_connections && typeof latestRequest.platform_connections === 'object') {
-            // Mark platforms as connected if they exist in platform_connections
-            Object.keys(latestRequest.platform_connections).forEach((platformId) => {
-              if (initialStatus[platformId] !== undefined) {
-                initialStatus[platformId] = { connected: true };
-                console.log(`[UNIFIED FORM] Restored connection status for ${platformId} from existing request`);
-              }
-            });
-          }
-        }
-        
         setConnectionStatus(initialStatus);
         
-        // If no requests exist, create one with basic info
-        if (!data.requests || data.requests.length === 0) {
+        // Reset client info to ensure fresh start for each new flow
+        setClientInfo({
+          name: '',
+          email: '',
+          company: ''
+        });
+        
+        // Reset all other state for fresh flow
+        setCurrentStep('info');
+        setCurrentPlatformIndex(0);
+        setPlatformAssets({});
+        setSelectedAssets({});
+        setShowAssetSelection({});
+        setShopifyStep(1);
+        setShopifyData({ storeId: '', collaboratorCode: '' });
+        
+        // Don't create a request automatically - wait for user to submit client info
+        // This ensures each flow starts completely fresh
           console.log('No onboarding requests found, creating one...');
           try {
             const createResponse = await fetch('/api/onboarding/request', {

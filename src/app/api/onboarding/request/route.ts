@@ -23,8 +23,15 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Then get requests for this link
-    const requests = await getOnboardingRequests(link.id);
+    // Only get in_progress requests for this link (not completed ones)
+    // This ensures each new client flow starts fresh
+    const supabase = (await import('@/lib/supabase/server')).getSupabaseAdmin();
+    const { data: inProgressRequests } = await supabase
+      .from('onboarding_requests')
+      .select('*')
+      .eq('link_id', link.id)
+      .eq('status', 'in_progress')
+      .order('created_at', { ascending: false });
     
     return NextResponse.json({ 
       link: {
@@ -32,7 +39,7 @@ export async function GET(request: NextRequest) {
         requested_permissions: link.requested_permissions,
         link_name: link.link_name
       },
-      requests 
+      requests: inProgressRequests || []
     });
   } catch (error) {
     console.error('Error fetching onboarding request:', error);
@@ -59,11 +66,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = (await import('@/lib/supabase/server')).getSupabaseAdmin();
 
-    // Try to find existing request for this link
+    // Only find in_progress requests for this link (not completed ones)
+    // This ensures each new client gets a fresh flow
     const { data: existing, error } = await supabase
       .from('onboarding_requests')
       .select('*')
       .eq('link_id', link.id)
+      .eq('status', 'in_progress')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -72,7 +81,9 @@ export async function POST(request: NextRequest) {
       console.error('[Onboarding][request POST] fetch existing error:', error);
     }
 
-    if (existing) {
+    // Only update if there's an in_progress request AND we're providing new client info
+    // Otherwise, create a new request for a fresh flow
+    if (existing && client_email && client_name) {
       // Update lightweight client info if provided
       const { error: updErr } = await supabase
         .from('onboarding_requests')
