@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -24,6 +25,7 @@ interface PlatformConnection {
 
 export default function AdminSettingsPage() {
   const platforms = getAllPlatforms();
+  const searchParams = useSearchParams();
   const [connectedPlatforms, setConnectedPlatforms] = useState<PlatformConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -71,40 +73,52 @@ export default function AdminSettingsPage() {
     }
   }, [hasLoadedOnce]);
 
-  // Separate effect to handle OAuth redirects
+  // Separate effect to handle OAuth redirects - runs whenever search params change
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const connected = urlParams.get('connected');
-    const success = urlParams.get('success');
-    const error = urlParams.get('error');
-    const platform = urlParams.get('platform');
-    const message = urlParams.get('message');
-    const username = urlParams.get('username');
+    if (!searchParams) return;
+    
+    const connected = searchParams.get('connected');
+    const success = searchParams.get('success');
+    const error = searchParams.get('error');
+    const platform = searchParams.get('platform');
+    const message = searchParams.get('message');
+    const username = searchParams.get('username');
+
+    console.log('🔍 Settings page URL params:', { connected, success, error, platform, message, username });
 
     if (connected && success) {
-      console.log(`OAuth success for ${connected}, refreshing connections...`);
+      console.log(`✅ OAuth success detected for ${connected}, refreshing connections...`);
       // Refresh connections after OAuth success
       fetchConnections().then(() => {
+        console.log('✅ Connections refreshed after OAuth success');
+        console.log('✅ Current connected platforms:', connectedPlatforms);
         // Show success message
         if (username) {
           toast.success(`${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully as ${decodeURIComponent(username)}!`);
         } else {
           toast.success(`${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully!`);
         }
-        // Clear URL params
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // Clear URL params after a short delay to ensure state is updated
+        setTimeout(() => {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }, 100);
+      }).catch((err) => {
+        console.error('❌ Error refreshing connections after OAuth:', err);
+        toast.error('Connection saved but failed to refresh UI. Please reload the page.');
       });
     } else if (error) {
-      console.error(`OAuth error for ${platform}: ${error}`);
+      console.error(`❌ OAuth error for ${platform}: ${error}`);
       if (message) {
         toast.error(`Failed to connect ${platform}: ${decodeURIComponent(message)}`);
       } else {
         toast.error(`Failed to connect ${platform || 'platform'}`);
       }
       // Clear URL params
-      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(() => {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }, 100);
     }
-  }, []); // Run once on mount to check for redirect params
+  }, [searchParams]); // Watch for search param changes
 
   const getPlatformLogo = (platformId: string) => {
     const logoMap: { [key: string]: string } = {
