@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS client_platform_connections (
   refresh_token text, -- encrypted
   token_expires_at timestamptz,
   scopes text[] DEFAULT '{}',
+  assets jsonb DEFAULT '[]'::jsonb, -- JSONB array of platform assets (ad accounts, pages, etc.)
   is_active boolean DEFAULT true,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now(),
@@ -151,6 +152,7 @@ CREATE INDEX IF NOT EXISTS idx_onboarding_requests_status ON onboarding_requests
 CREATE INDEX IF NOT EXISTS idx_client_platform_connections_client_id ON client_platform_connections(client_id);
 CREATE INDEX IF NOT EXISTS idx_client_platform_connections_platform ON client_platform_connections(platform);
 CREATE INDEX IF NOT EXISTS idx_client_platform_connections_active ON client_platform_connections(is_active);
+CREATE INDEX IF NOT EXISTS idx_client_platform_connections_assets ON client_platform_connections USING GIN (assets);
 
 -- =====================================================
 -- 8. ROW LEVEL SECURITY (RLS) POLICIES
