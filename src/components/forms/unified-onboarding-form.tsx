@@ -1292,11 +1292,8 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
                                 <div key={assetType} className="space-y-2">
                                   <Label className="text-sm font-medium text-gray-700">
                                     {getAssetTypeDisplayName(assetType)}
-                                    {assetType === 'catalog' && (
-                                      <span className="ml-1 text-gray-400">?</span>
-                                    )}
-                                    {assetType === 'business_dataset' && (
-                                      <span className="ml-1 text-gray-400">?</span>
+                                    {(assetType === 'catalog' || assetType === 'business_dataset') && (
+                                      <span className="ml-2 text-xs font-normal text-gray-500">(Optional)</span>
                                     )}
                                   </Label>
                                   <Select
