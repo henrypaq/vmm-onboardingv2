@@ -33,6 +33,7 @@ export default function AdminSettingsPage() {
   // Fetch platform connections from API
   const fetchConnections = async () => {
     try {
+      console.log('🔄 Fetching platform connections...');
       const response = await fetch('/api/admin/platform-connections', {
         method: 'GET',
         credentials: 'include', // Include cookies for authentication
@@ -42,17 +43,19 @@ export default function AdminSettingsPage() {
       });
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Fetched connections:', data.connections);
+        console.log('✅ Connection count:', data.connections?.length || 0);
         setConnectedPlatforms(data.connections || []);
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Failed to fetch platform connections:', response.status, errorData);
+        console.error('❌ Failed to fetch platform connections:', response.status, errorData);
         if (response.status === 401) {
           toast.error('Please log in to view platform connections');
         }
         setConnectedPlatforms([]);
       }
     } catch (error) {
-      console.error('Error fetching platform connections:', error);
+      console.error('❌ Error fetching platform connections:', error);
       toast.error('Failed to load platform connections');
       setConnectedPlatforms([]);
     } finally {
