@@ -174,14 +174,13 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger onView if clicking on the menu button or menu content
     const target = e.target as HTMLElement;
-    const isMenuClick = target.closest('button[type="button"]')?.querySelector('svg') ||
-                        target.closest('[data-slot="dropdown-menu"]') ||
-                        target.closest('[data-slot="dropdown-menu-content"]') ||
-                        target.closest('[data-slot="dropdown-menu-item"]') ||
-                        target.closest('[role="menuitem"]');
+    const clickedButton = target.closest('button');
+    const isMenuButton = clickedButton && clickedButton.querySelector('svg');
+    const isMenuContent = target.closest('[data-slot="dropdown-menu-content"]') ||
+                          target.closest('[data-slot="dropdown-menu-item"]') ||
+                          target.closest('[role="menuitem"]');
     
-    if (!isMenuClick) {
-      console.log('[ClientGridItem] Card clicked, opening details', { clientId: client.id });
+    if (!isMenuButton && !isMenuContent) {
       onView();
     }
   };
@@ -222,44 +221,47 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
                 </Badge>
                 
                 {/* 3-dots Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 hover:bg-gray-100 relative z-50"
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 hover:bg-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                        }}
+                        type="button"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent 
+                      align="end" 
+                      className="w-48"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log('[ClientGridItem] Menu button clicked', { clientId: client.id });
                       }}
-                      type="button"
                     >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    align="end" 
-                    className="w-48 z-[100]" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    <DropdownMenuLabel>Client Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log('[ClientGridItem] Delete menu item clicked', { clientId: client.id });
-                        handleDelete(e);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Client
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuLabel>Client Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(e);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Client
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
           </div>
@@ -635,16 +637,6 @@ export default function ClientsPage() {
 
   useEffect(() => {
     fetchClients();
-    
-    // Auto-refresh clients every 10 seconds to catch newly created clients
-    const refreshInterval = setInterval(() => {
-      console.log('[Admin Clients] Auto-refreshing clients list...');
-      fetchClients();
-    }, 10000); // 10 seconds
-    
-    return () => {
-      clearInterval(refreshInterval);
-    };
   }, []);
 
   // Filter clients based on search term and filters
