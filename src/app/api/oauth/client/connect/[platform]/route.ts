@@ -225,7 +225,10 @@ export async function GET(
       }
       
       console.log('[ClientOAuth][meta] Final scopes', metaScopes);
-      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(metaScopes.join(','))}&response_type=code&state=${encodeURIComponent(state)}`;
+      // Add auth_type=reauthorize to force fresh login and prevent "reconnect" dialog
+      // Add auth_nonce with timestamp to make each request unique
+      const authNonce = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(metaScopes.join(','))}&response_type=code&state=${encodeURIComponent(state)}&auth_type=reauthorize&auth_nonce=${encodeURIComponent(authNonce)}`;
       break;
     case 'google':
       // Get Google scopes from the onboarding request or use defaults
@@ -246,7 +249,9 @@ export async function GET(
       }
       
       console.log('[ClientOAuth][google] Final scopes', googleScopes);
-      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(googleScopes.join(' '))}&response_type=code&state=${encodeURIComponent(state)}`;
+      // Add prompt=consent to force fresh login and account selection
+      // Add prompt=select_account to show account picker even if logged in
+      oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(googleScopes.join(' '))}&response_type=code&state=${encodeURIComponent(state)}&prompt=consent%20select_account`;
       break;
     case 'tiktok':
       oauthUrl = `https://www.tiktok.com/auth/authorize/?client_key=${process.env.TIKTOK_CLIENT_KEY}&scope=user.info.basic,video.list&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`;
