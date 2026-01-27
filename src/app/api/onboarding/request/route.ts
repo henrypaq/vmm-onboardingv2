@@ -23,16 +23,40 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Don't return any existing requests - each link opening should be completely fresh
-    // Links are reusable and each client should start with a blank slate
-    // Only return the link configuration, not any previous flow data
+    // Check if there's an in_progress request that was just created by an OAuth callback
+    // This allows the form to find the request that contains OAuth data
+    // Only return requests that were created in the last 5 minutes (recent OAuth callbacks)
+    const supabase = (await import('@/lib/supabase/server')).getSupabaseAdmin();
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    
+    const { data: recentRequests, error: requestsError } = await supabase
+      .from('onboarding_requests')
+      .select('id, status, platform_connections, client_email, client_name, company_name, created_at')
+      .eq('link_id', link.id)
+      .eq('status', 'in_progress')
+      .gte('created_at', fiveMinutesAgo)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    // If there's a recent request with OAuth data, return it
+    // Otherwise return empty (fresh start)
+    let requests: any[] = [];
+    if (recentRequests && recentRequests.length > 0) {
+      const recentRequest = recentRequests[0];
+      // Only return if it has platform connections (OAuth data was stored)
+      if (recentRequest.platform_connections && Object.keys(recentRequest.platform_connections).length > 0) {
+        requests = [recentRequest];
+        console.log('[Onboarding][request GET] Returning recent request with OAuth data:', recentRequest.id);
+      }
+    }
+    
     return NextResponse.json({ 
       link: {
         platforms: link.platforms,
         requested_permissions: link.requested_permissions,
         link_name: link.link_name
       },
-      requests: [] // Always return empty array - no previous flow data
+      requests: requests // Return recent request with OAuth data, or empty for fresh start
     });
   } catch (error) {
     console.error('Error fetching onboarding request:', error);
