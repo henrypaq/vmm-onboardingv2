@@ -25,13 +25,20 @@ export async function GET(request: NextRequest) {
     
     // Only get in_progress requests for this link (not completed ones)
     // This ensures each new client flow starts fresh
+    // IMPORTANT: Only return requests that were created in the last 24 hours to prevent
+    // old in_progress requests from affecting new flows
     const supabase = (await import('@/lib/supabase/server')).getSupabaseAdmin();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
     const { data: inProgressRequests } = await supabase
       .from('onboarding_requests')
       .select('*')
       .eq('link_id', link.id)
       .eq('status', 'in_progress')
+      .gte('created_at', oneDayAgo) // Only get requests from last 24 hours
       .order('created_at', { ascending: false });
+    
+    console.log('[Onboarding Request API] Found in_progress requests:', inProgressRequests?.length || 0);
     
     return NextResponse.json({ 
       link: {
