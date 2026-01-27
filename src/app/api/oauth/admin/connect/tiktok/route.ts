@@ -83,11 +83,10 @@ export async function GET(request: NextRequest) {
       console.log('redirectUri:', redirectUri);
       console.log('Generated state with admin ID:', state);
       
-      const state = `admin_${Date.now()}`;
       const oauthUrl = `https://www.tiktok.com/auth/authorize/?client_key=${process.env.TIKTOK_CLIENT_KEY}&scope=user.info.basic,video.list&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
       
-      console.log('Generated state:', state);
       console.log('🔗 TikTok OAuth: Redirecting to TikTok');
+      console.log('🔗 TikTok OAuth: OAuth URL:', oauthUrl);
 
       return NextResponse.redirect(oauthUrl);
     }
