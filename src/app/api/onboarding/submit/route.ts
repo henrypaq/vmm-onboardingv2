@@ -425,6 +425,7 @@ export async function POST(request: NextRequest) {
         console.log(`[Onboarding Submit] ===========================================`);
         console.log(`[Onboarding Submit] STARTING PLATFORM CONNECTION PROCESSING`);
         console.log(`[Onboarding Submit] Client ID: ${clientId}`);
+        console.log(`[Onboarding Submit] Client ID type: ${typeof clientId}`);
         console.log(`[Onboarding Submit] Stored platform connections:`, connections);
         console.log(`[Onboarding Submit] Connections object keys:`, Object.keys(connections));
         console.log(`[Onboarding Submit] Connections count:`, Object.keys(connections).length);
