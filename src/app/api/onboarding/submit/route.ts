@@ -281,7 +281,24 @@ export async function POST(request: NextRequest) {
 
     // NOW create/update client since onboarding request was successful
     // CRITICAL: Client must be created before we can persist platform connections
-    if (data?.email) {
+    // Validate email and name are not just truthy, but actual non-empty strings
+    const hasValidEmail = data?.email && typeof data.email === 'string' && data.email.trim().length > 0;
+    const hasValidName = data?.name && typeof data.name === 'string' && data.name.trim().length > 0;
+    
+    console.log(`[Onboarding] ===========================================`);
+    console.log(`[Onboarding] CLIENT CREATION VALIDATION`);
+    console.log(`[Onboarding] ===========================================`);
+    console.log(`[Onboarding] Data object:`, data);
+    console.log(`[Onboarding] Email value:`, data?.email);
+    console.log(`[Onboarding] Name value:`, data?.name);
+    console.log(`[Onboarding] Company value:`, data?.company);
+    console.log(`[Onboarding] Has valid email:`, hasValidEmail);
+    console.log(`[Onboarding] Has valid name:`, hasValidName);
+    console.log(`[Onboarding] Email type:`, typeof data?.email);
+    console.log(`[Onboarding] Name type:`, typeof data?.name);
+    console.log(`[Onboarding] ===========================================`);
+    
+    if (hasValidEmail && hasValidName) {
       console.log(`[Onboarding] ===========================================`);
       console.log(`[Onboarding] CREATING/UPDATING CLIENT`);
       console.log(`[Onboarding] ===========================================`);
@@ -363,11 +380,22 @@ export async function POST(request: NextRequest) {
         );
       }
     } else {
-      console.warn(`[Onboarding] No email provided, skipping client creation`);
-      return NextResponse.json(
-        { error: 'Email is required to create client' },
-        { status: 400 }
-      );
+      console.error(`[Onboarding] ===========================================`);
+      console.error(`[Onboarding] ❌ CLIENT CREATION SKIPPED - INVALID DATA`);
+      console.error(`[Onboarding] ===========================================`);
+      console.error(`[Onboarding] Email provided:`, !!data?.email);
+      console.error(`[Onboarding] Email value:`, data?.email);
+      console.error(`[Onboarding] Email valid:`, hasValidEmail);
+      console.error(`[Onboarding] Name provided:`, !!data?.name);
+      console.error(`[Onboarding] Name value:`, data?.name);
+      console.error(`[Onboarding] Name valid:`, hasValidName);
+      console.error(`[Onboarding] Full data object:`, data);
+      console.error(`[Onboarding] ===========================================`);
+      
+      // Don't return error - allow onboarding request to be marked as completed
+      // But log that client wasn't created
+      console.warn(`[Onboarding] ⚠️ WARNING: Client not created due to missing/invalid email or name`);
+      console.warn(`[Onboarding] Onboarding request will be marked as completed, but no client record exists`);
     }
 
     // After we have clientId, persist permanent platform connections
@@ -510,19 +538,33 @@ export async function POST(request: NextRequest) {
     console.log('[Onboarding] ===========================================');
     console.log('[Onboarding] Token:', token);
     console.log('[Onboarding] Client ID:', clientId);
+    console.log('[Onboarding] Client Created:', !!clientId);
     console.log('[Onboarding] Onboarding Request ID:', onboardingRequest?.id);
     console.log('[Onboarding] Client Email:', data?.email);
     console.log('[Onboarding] Client Name:', data?.name);
     console.log('[Onboarding] Company:', data?.company);
     console.log('[Onboarding] Admin ID:', link.admin_id);
     console.log('[Onboarding] ===========================================');
+    
+    if (!clientId) {
+      console.error('[Onboarding] ===========================================');
+      console.error('[Onboarding] ⚠️ WARNING: NO CLIENT WAS CREATED');
+      console.error('[Onboarding] ===========================================');
+      console.error('[Onboarding] This means the client will not appear in the admin dashboard');
+      console.error('[Onboarding] Email provided:', data?.email);
+      console.error('[Onboarding] Name provided:', data?.name);
+      console.error('[Onboarding] ===========================================');
+    }
 
     return NextResponse.json({
       success: true,
       requestId: onboardingRequest?.id || 'unknown',
       clientId: clientId || null,
-      message: 'Onboarding request submitted successfully',
-      clientCreated: !!clientId
+      message: clientId 
+        ? 'Onboarding request submitted successfully and client created' 
+        : 'Onboarding request submitted successfully, but client was not created',
+      clientCreated: !!clientId,
+      warning: !clientId ? 'Client was not created. Please check logs for details.' : undefined
     });
   } catch (error) {
     console.error('Onboarding submission error:', error);
