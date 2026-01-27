@@ -182,11 +182,17 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    console.log('[ClientGridItem] Card clicked', { target: e.target, currentTarget: e.currentTarget });
+    console.log('[ClientGridItem] Card clicked', { target: e.target, currentTarget: e.currentTarget, clientId: client.id });
     // Only trigger onView if the click wasn't on the menu button or menu content
     const target = e.target as HTMLElement;
-    if (!target.closest('[data-slot="dropdown-menu"]') && !target.closest('[data-slot="dropdown-menu-trigger"]')) {
+    const isMenuClick = target.closest('[data-slot="dropdown-menu"]') || 
+                        target.closest('[data-slot="dropdown-menu-trigger"]') ||
+                        target.closest('.dropdown-menu-trigger') ||
+                        target.closest('[role="menuitem"]');
+    
+    if (!isMenuClick) {
       console.log('[ClientGridItem] Card click not on menu, calling onView');
+      e.stopPropagation();
       onView();
     } else {
       console.log('[ClientGridItem] Card click on menu, ignoring');
@@ -323,7 +329,9 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
             <Button 
               className="flex-1 h-9 gradient-primary text-sm"
               onClick={(e) => {
+                console.log('[ClientGridItem] See Details button clicked', { clientId: client.id });
                 e.stopPropagation();
+                e.preventDefault();
                 onView();
               }}
             >
@@ -847,7 +855,10 @@ export default function ClientsPage() {
                 <ClientListItem
                   key={client.id}
                   client={client}
-                  onView={() => setSelectedClientId(client.id)}
+                  onView={() => {
+                    console.log('[Admin Clients] Opening details for client:', client.id);
+                    setSelectedClientId(client.id);
+                  }}
                 />
               ))
             )}
@@ -874,7 +885,10 @@ export default function ClientsPage() {
                 <ClientGridItem
                   key={client.id}
                   client={client}
-                  onView={() => setSelectedClientId(client.id)}
+                  onView={() => {
+                    console.log('[Admin Clients] Opening details for client:', client.id);
+                    setSelectedClientId(client.id);
+                  }}
                   onDelete={deleteClient}
                 />
               ))
