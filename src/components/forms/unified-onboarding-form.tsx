@@ -700,14 +700,57 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
     setIsSubmitting(true);
     
     try {
+      // Get client info from onboarding request if clientInfo state is empty
+      let finalClientInfo = { ...clientInfo };
+      
+      if (!finalClientInfo.email || !finalClientInfo.name) {
+        console.log('🟣 [UNIFIED FORM] Client info missing, fetching from onboarding request...');
+        const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
+        if (requestResponse.ok) {
+          const requestData = await requestResponse.json();
+          const latestRequest = requestData.requests && requestData.requests.length > 0 
+            ? requestData.requests[0] 
+            : null;
+          
+          if (latestRequest) {
+            finalClientInfo = {
+              name: latestRequest.client_name || clientInfo.name || '',
+              email: latestRequest.client_email || clientInfo.email || '',
+              company: latestRequest.company_name || clientInfo.company || ''
+            };
+            console.log('🟣 [UNIFIED FORM] Retrieved client info from request:', finalClientInfo);
+          }
+        }
+      }
+      
+      // Validate we have required fields
+      if (!finalClientInfo.email || !finalClientInfo.name) {
+        const errorMsg = 'Email and name are required to create client. Please go back and fill in your information.';
+        console.error('❌ [UNIFIED FORM] Missing required client info:', finalClientInfo);
+        toast.error(errorMsg);
+        setIsSubmitting(false);
+        // Go back to info step
+        setCurrentStep('info');
+        return;
+      }
+      
+      console.log('🟣 [UNIFIED FORM] ===========================================');
+      console.log('🟣 [UNIFIED FORM] SUBMITTING ONBOARDING');
+      console.log('🟣 [UNIFIED FORM] ===========================================');
+      console.log('🟣 [UNIFIED FORM] Token:', token);
+      console.log('🟣 [UNIFIED FORM] Client Name:', finalClientInfo.name);
+      console.log('🟣 [UNIFIED FORM] Client Email:', finalClientInfo.email);
+      console.log('🟣 [UNIFIED FORM] Company:', finalClientInfo.company);
+      console.log('🟣 [UNIFIED FORM] ===========================================');
+      
       const response = await fetch('/api/onboarding/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,
-          client_name: clientInfo.name,
-          client_email: clientInfo.email,
-          company_name: clientInfo.company,
+          client_name: finalClientInfo.name,
+          client_email: finalClientInfo.email,
+          company_name: finalClientInfo.company,
           platform_connections: platforms.map(p => p.id),
         }),
       });
