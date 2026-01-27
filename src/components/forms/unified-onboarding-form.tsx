@@ -172,68 +172,45 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         
         // Don't create a request automatically - wait for user to submit client info
         // This ensures each flow starts completely fresh
-          console.log('No onboarding requests found, creating one...');
-          try {
-            const createResponse = await fetch('/api/onboarding/request', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                token,
-                client_email: '',
-                client_name: '',
-                company_name: '',
-              }),
-            });
-            
-            if (createResponse.ok) {
-              const createData = await createResponse.json();
-              console.log('Onboarding request created:', createData);
-            }
-          } catch (createError) {
-            console.error('Error creating initial onboarding request:', createError);
-          }
-        }
         
         // Check for OAuth callback
         const connectedPlatform = searchParams.get('connected');
         const success = searchParams.get('success');
         
-      if (connectedPlatform && success === 'true') {
-        console.log('🔵 [UNIFIED FORM] ===========================================');
-        console.log('🔵 [UNIFIED FORM] OAUTH CALLBACK DETECTED');
-        console.log('🔵 [UNIFIED FORM] Connected Platform:', connectedPlatform);
-        console.log('🔵 [UNIFIED FORM] Success:', success);
-        console.log('🔵 [UNIFIED FORM] Setting connection status for:', connectedPlatform);
-        console.log('🔵 [UNIFIED FORM] ===========================================');
-        
-        // Find the index of the connected platform
-        const platformIndex = platforms.findIndex(p => p.id === connectedPlatform);
-        if (platformIndex !== -1) {
-          // Set the current platform index to the connected platform
-          setCurrentPlatformIndex(platformIndex);
+        if (connectedPlatform && success === 'true') {
+          console.log('🔵 [UNIFIED FORM] ===========================================');
+          console.log('🔵 [UNIFIED FORM] OAUTH CALLBACK DETECTED');
+          console.log('🔵 [UNIFIED FORM] Connected Platform:', connectedPlatform);
+          console.log('🔵 [UNIFIED FORM] Success:', success);
+          console.log('🔵 [UNIFIED FORM] Setting connection status for:', connectedPlatform);
+          console.log('🔵 [UNIFIED FORM] ===========================================');
+          
+          // Find the index of the connected platform
+          const platformIndex = requestedPlatforms.findIndex((p: any) => p.id === connectedPlatform);
+          if (platformIndex !== -1) {
+            // Set the current platform index to the connected platform
+            setCurrentPlatformIndex(platformIndex);
+          }
+          
+          // Mark platform as connected
+          setConnectionStatus(prev => ({
+            ...prev,
+            [connectedPlatform]: { connected: true }
+          }));
+          
+          // Show asset selection for this platform
+          setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: true }));
+          
+          console.log('🔵 [UNIFIED FORM] Initiating asset fetch for:', connectedPlatform);
+          
+          // Fetch assets for this platform
+          await fetchPlatformAssets(connectedPlatform);
+          
+          // Ensure we're on the platforms step
+          setCurrentStep('platforms');
+          
+          console.log('🔵 [UNIFIED FORM] OAuth callback processing complete');
         }
-        
-        // Mark platform as connected
-        setConnectionStatus(prev => ({
-          ...prev,
-          [connectedPlatform]: { connected: true }
-        }));
-        
-        // Show asset selection for this platform
-        setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: true }));
-        
-        console.log('🔵 [UNIFIED FORM] Initiating asset fetch for:', connectedPlatform);
-        
-        // Fetch assets for this platform
-        await fetchPlatformAssets(connectedPlatform);
-        
-        // Ensure we're on the platforms step
-        setCurrentStep('platforms');
-        
-        console.log('🔵 [UNIFIED FORM] OAuth callback processing complete');
-      }
         
       } catch (error) {
         console.error('Error loading link data:', error);
