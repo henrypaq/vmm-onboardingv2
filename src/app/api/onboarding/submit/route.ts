@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createOnboardingRequest, updateOnboardingRequest, updateOnboardingLink, getOnboardingLinkByToken, getClientByEmail, createClient as createClientRecord, updateClient, upsertClientPlatformConnection, getOnboardingRequestByLinkId, ensureUserExists, getClientPlatformConnection, updateClientPlatformConnection } from '@/lib/db/database';
 import { discoverGoogleAssets } from '@/lib/oauth/oauth-utils';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     // Accept both payload shapes:
@@ -259,12 +262,29 @@ export async function POST(request: NextRequest) {
     }
 
     // NOW create/update client since onboarding request was successful
+    // CRITICAL: Client must be created before we can persist platform connections
     if (data?.email) {
-      console.log(`[Onboarding] Creating/updating client with email ${data.email} after successful onboarding`);
+      console.log(`[Onboarding] ===========================================`);
+      console.log(`[Onboarding] CREATING/UPDATING CLIENT`);
+      console.log(`[Onboarding] ===========================================`);
+      console.log(`[Onboarding] Email: ${data.email}`);
+      console.log(`[Onboarding] Name: ${data.name}`);
+      console.log(`[Onboarding] Company: ${data.company}`);
       
       // Use admin_id if available, otherwise use a default for the flow
       const adminId = link.admin_id || '00000000-0000-0000-0000-000000000000';
       console.log(`[Onboarding] Using admin_id:`, adminId);
+      
+      if (!adminId || adminId === '00000000-0000-0000-0000-000000000000') {
+        console.error(`[Onboarding] ===========================================`);
+        console.error(`[Onboarding] ERROR: Invalid admin_id!`);
+        console.error(`[Onboarding] Link admin_id: ${link.admin_id}`);
+        console.error(`[Onboarding] ===========================================`);
+        return NextResponse.json(
+          { error: 'Invalid admin ID. Cannot create client without valid admin.' },
+          { status: 400 }
+        );
+      }
       
       try {
         // Check if client already exists for this admin
@@ -280,7 +300,7 @@ export async function POST(request: NextRequest) {
             status: 'active'
           });
           clientId = updatedClient.id;
-          console.log(`[Onboarding] Updated existing client: ${updatedClient.id}`, updatedClient);
+          console.log(`[Onboarding] ✅ Updated existing client: ${updatedClient.id}`, updatedClient);
         } else {
           // Create new client
           console.log(`[Onboarding] Creating new client for admin ${adminId}`);
@@ -295,20 +315,41 @@ export async function POST(request: NextRequest) {
           console.log(`[Onboarding] Client data to insert:`, clientData);
           const newClient = await createClientRecord(clientData);
           clientId = newClient.id;
-          console.log(`[Onboarding] Created new client: ${newClient.id} for admin ${adminId}`, newClient);
+          console.log(`[Onboarding] ✅ Created new client: ${newClient.id} for admin ${adminId}`, newClient);
         }
+        
+        console.log(`[Onboarding] ===========================================`);
+        console.log(`[Onboarding] CLIENT CREATION SUCCESSFUL`);
+        console.log(`[Onboarding] Client ID: ${clientId}`);
+        console.log(`[Onboarding] ===========================================`);
       } catch (clientError) {
-        console.error(`[Onboarding] Failed to create/update client:`, clientError);
-        console.error(`[Onboarding] Client error details:`, {
-          message: clientError instanceof Error ? clientError.message : 'Unknown error',
-          stack: clientError instanceof Error ? clientError.stack : undefined,
-          adminId: adminId,
-          email: data.email,
-          name: data.name,
-          company: data.company
-        });
-        // Continue anyway - the main submission is more important
+        console.error(`[Onboarding] ===========================================`);
+        console.error(`[Onboarding] ❌ FAILED TO CREATE/UPDATE CLIENT`);
+        console.error(`[Onboarding] ===========================================`);
+        console.error(`[Onboarding] Error:`, clientError);
+        console.error(`[Onboarding] Error message:`, clientError instanceof Error ? clientError.message : 'Unknown error');
+        console.error(`[Onboarding] Error stack:`, clientError instanceof Error ? clientError.stack : undefined);
+        console.error(`[Onboarding] Admin ID:`, adminId);
+        console.error(`[Onboarding] Email:`, data.email);
+        console.error(`[Onboarding] Name:`, data.name);
+        console.error(`[Onboarding] Company:`, data.company);
+        console.error(`[Onboarding] ===========================================`);
+        
+        // CRITICAL: Don't continue if client creation fails - return error
+        return NextResponse.json(
+          { 
+            error: 'Failed to create/update client',
+            details: clientError instanceof Error ? clientError.message : 'Unknown error'
+          },
+          { status: 500 }
+        );
       }
+    } else {
+      console.warn(`[Onboarding] No email provided, skipping client creation`);
+      return NextResponse.json(
+        { error: 'Email is required to create client' },
+        { status: 400 }
+      );
     }
 
     // After we have clientId, persist permanent platform connections
@@ -365,6 +406,30 @@ export async function POST(request: NextRequest) {
               }
             } else {
               console.log(`[Onboarding Submit] Skipping fresh asset discovery for ${platform} (not Google or no access token)`);
+            }
+            
+            // FILTER ASSETS: If user selected specific assets, only use those
+            // Check for selected_assets in the connection data (stored from asset selection UI)
+            const selectedAssets = connectionData.selected_assets;
+            if (selectedAssets && Array.isArray(selectedAssets) && selectedAssets.length > 0) {
+              console.log(`[Onboarding Submit] ===========================================`);
+              console.log(`[Onboarding Submit] 🎯 FILTERING ASSETS BY USER SELECTION`);
+              console.log(`[Onboarding Submit] Selected assets (IDs):`, selectedAssets);
+              console.log(`[Onboarding Submit] Total discovered assets before filtering:`, finalAssets.length);
+              
+              // Filter finalAssets to only include selected ones
+              // selectedAssets is an array of asset IDs
+              const filteredAssets = finalAssets.filter(asset => 
+                selectedAssets.includes(asset.id) || selectedAssets.includes(asset.id?.toString())
+              );
+              
+              console.log(`[Onboarding Submit] Assets after filtering:`, filteredAssets.length);
+              console.log(`[Onboarding Submit] Filtered asset IDs:`, filteredAssets.map(a => a.id));
+              console.log(`[Onboarding Submit] ===========================================`);
+              
+              finalAssets = filteredAssets;
+            } else {
+              console.log(`[Onboarding Submit] No asset selection found, using all discovered assets (${finalAssets.length} total)`);
             }
             
             // Check if connection already exists in client_platform_connections
