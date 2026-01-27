@@ -828,15 +828,23 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
       console.log('✅ [UNIFIED FORM] Request ID:', data.requestId);
       console.log('✅ [UNIFIED FORM] Client ID:', data.clientId);
       console.log('✅ [UNIFIED FORM] Client Created:', data.clientCreated);
+      console.log('✅ [UNIFIED FORM] Warning:', data.warning);
       console.log('✅ [UNIFIED FORM] ===========================================');
       
       if (!data.clientCreated) {
-        console.warn('⚠️ [UNIFIED FORM] WARNING: Client was not created!');
-        console.warn('⚠️ [UNIFIED FORM] This may indicate an issue with client creation');
+        console.error('❌ [UNIFIED FORM] ===========================================');
+        console.error('❌ [UNIFIED FORM] CLIENT WAS NOT CREATED!');
+        console.error('❌ [UNIFIED FORM] ===========================================');
+        console.error('❌ [UNIFIED FORM] This means the client will not appear in the admin dashboard');
+        console.error('❌ [UNIFIED FORM] Warning message:', data.warning);
+        console.error('❌ [UNIFIED FORM] ===========================================');
+        
+        // Show error toast instead of success
+        toast.error(data.warning || 'Onboarding completed but client was not created. Please check the logs.');
+      } else {
+        setCurrentStep('complete');
+        toast.success('Onboarding completed successfully!');
       }
-      
-      setCurrentStep('complete');
-      toast.success('Onboarding completed successfully!');
       
       // Call completion callback
       setTimeout(() => {
