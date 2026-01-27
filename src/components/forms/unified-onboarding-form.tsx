@@ -674,8 +674,11 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         setCurrentPlatformIndex(currentPlatformIndex + 1);
       } else {
         // All platforms completed
-        console.log('🟣 [UNIFIED FORM] All platforms completed! Setting current step to complete');
-        setCurrentStep('complete');
+        console.log('🟣 [UNIFIED FORM] All platforms completed! Auto-submitting...');
+        // Auto-submit when all platforms are completed
+        setTimeout(() => {
+          handleFinalSubmit();
+        }, 500);
       }
       
       toast.success('Assets selected successfully!');
@@ -1529,19 +1532,28 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
             <p className="text-gray-600 text-sm mb-6">
               Thank you for connecting your platforms. You'll be redirected to your dashboard shortly.
             </p>
-            <div className="flex justify-center">
-              <Button
-                onClick={() => {
-                  // Redirect to admin dashboard
-                  // Redirect to client dashboard after successful onboarding
-                  // Note: Client may not be authenticated yet, so redirect to a success page
-                  window.location.href = '/client?onboarding=complete';
-                }}
-                className="gradient-primary"
-                size="lg"
-              >
-                Go to Dashboard
-              </Button>
+            <div className="flex justify-center space-x-4">
+              {!isSubmitting ? (
+                <>
+                  <Button
+                    onClick={async () => {
+                      // If submission hasn't happened yet, submit now
+                      console.log('🟣 [UNIFIED FORM] Complete button clicked, submitting...');
+                      await handleFinalSubmit();
+                    }}
+                    className="gradient-primary"
+                    size="lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Complete Onboarding'}
+                  </Button>
+                </>
+              ) : (
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">Submitting onboarding...</p>
+                </div>
+              )}
             </div>
           </div>
         )}
