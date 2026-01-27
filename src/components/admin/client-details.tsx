@@ -198,6 +198,100 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
     }
   };
 
+  // Generate correct URL for platform assets based on type
+  const getAssetUrl = (platform: string, asset: Asset, connection?: PlatformConnection): string | null => {
+    if (!asset || !asset.id || !asset.type) {
+      return null;
+    }
+
+    switch (platform.toLowerCase()) {
+      case 'google':
+        switch (asset.type) {
+          case 'analytics_property':
+            // GA4 property URL format: https://analytics.google.com/analytics/web/#/p{propertyId}/
+            return `https://analytics.google.com/analytics/web/#/p${asset.id}/`;
+          
+          case 'tagmanager_account':
+            // Tag Manager account URL format: https://tagmanager.google.com/#/container/accounts/{accountId}
+            return `https://tagmanager.google.com/#/container/accounts/${asset.id}`;
+          
+          case 'searchconsole_site':
+            // Search Console site URL format: https://search.google.com/search-console?resource_id={siteUrl}
+            // asset.id is already the full URL for Search Console
+            const siteUrl = asset.id.startsWith('http') ? asset.id : `https://${asset.id}`;
+            return `https://search.google.com/search-console?resource_id=${encodeURIComponent(siteUrl)}`;
+          
+          case 'ads_account':
+            // Google Ads account URL format: https://ads.google.com/aw/overview?accountId={accountId}
+            return `https://ads.google.com/aw/overview?accountId=${asset.id}`;
+          
+          case 'business_account':
+          case 'business_profile':
+            // Business Profile URL format: https://business.google.com/manage/{accountId}
+            return `https://business.google.com/manage/${asset.id}`;
+          
+          case 'merchant_account':
+          case 'merchant_center':
+            // Merchant Center URL format: https://merchants.google.com/mc/overview?accountId={accountId}
+            return `https://merchants.google.com/mc/overview?accountId=${asset.id}`;
+          
+          default:
+            // Fallback to Analytics if type is unknown
+            console.warn(`[Client Details] Unknown Google asset type: ${asset.type}, using Analytics fallback`);
+            return `https://analytics.google.com/analytics/web/#/p${asset.id}/`;
+        }
+      
+      case 'meta':
+      case 'facebook':
+        switch (asset.type) {
+          case 'page':
+            // Facebook Page URL format: https://www.facebook.com/{pageId}
+            return `https://www.facebook.com/${asset.id}`;
+          
+          case 'ad_account':
+            // Facebook Ad Account URL format: https://business.facebook.com/adsmanager/manage/campaigns?act={accountId}
+            return `https://business.facebook.com/adsmanager/manage/campaigns?act=${asset.id}`;
+          
+          case 'instagram':
+          case 'instagram_account':
+            // Instagram Business Account URL format: https://www.instagram.com/{username}/
+            return asset.id.startsWith('http') ? asset.id : `https://www.instagram.com/${asset.id}/`;
+          
+          case 'catalog':
+            // Facebook Catalog URL format: https://business.facebook.com/commerce/catalogs/{catalogId}
+            return `https://business.facebook.com/commerce/catalogs/${asset.id}`;
+          
+          default:
+            // Fallback to Business Manager
+            return `https://business.facebook.com/`;
+        }
+      
+      case 'tiktok':
+        switch (asset.type) {
+          case 'ad_account':
+            // TikTok Ad Account URL format: https://ads.tiktok.com/marketing_api/accounts/{accountId}
+            return `https://ads.tiktok.com/marketing_api/accounts/${asset.id}`;
+          
+          case 'business_account':
+            // TikTok Business Account URL format: https://ads.tiktok.com/business/
+            return `https://ads.tiktok.com/business/`;
+          
+          default:
+            // Fallback to TikTok Ads Manager
+            return `https://ads.tiktok.com/`;
+        }
+      
+      case 'shopify':
+        // Shopify store URL format: https://{storeName}.myshopify.com/admin
+        const storeName = connection?.platform_username || asset.id;
+        return `https://${storeName}.myshopify.com/admin`;
+      
+      default:
+        console.warn(`[Client Details] Unknown platform: ${platform}`);
+        return null;
+    }
+  };
+
   const getPlatformLogo = (platformId: string) => {
     const logoMap: { [key: string]: string } = {
       'meta': '/logos/meta.png',
@@ -513,7 +607,7 @@ export function ClientDetailsPanel({ clientId, onClose }: ClientDetailsPanelProp
                                       <Button
                                         size="sm"
                                         onClick={() => {
-                                          const url = getAssetUrl(connection.platform, asset);
+                                          const url = getAssetUrl(connection.platform, asset, connection);
                                           if (url) {
                                             window.open(url, '_blank');
                                           } else {
