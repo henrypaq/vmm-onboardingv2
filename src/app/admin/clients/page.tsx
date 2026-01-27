@@ -171,31 +171,18 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
     }
   };
 
-  const handleMenuButtonClick = (e: React.MouseEvent) => {
-    console.log('[ClientGridItem] Menu button clicked', { clientId: client.id });
-    e.stopPropagation();
-    e.preventDefault();
-  };
-
-  const handleMenuOpenChange = (open: boolean) => {
-    console.log('[ClientGridItem] Menu open state changed', { open, clientId: client.id });
-  };
-
   const handleCardClick = (e: React.MouseEvent) => {
-    console.log('[ClientGridItem] Card clicked', { target: e.target, currentTarget: e.currentTarget, clientId: client.id });
-    // Only trigger onView if the click wasn't on the menu button or menu content
+    // Don't trigger onView if clicking on the menu button or menu content
     const target = e.target as HTMLElement;
-    const isMenuClick = target.closest('[data-slot="dropdown-menu"]') || 
-                        target.closest('[data-slot="dropdown-menu-trigger"]') ||
-                        target.closest('.dropdown-menu-trigger') ||
+    const isMenuClick = target.closest('button[type="button"]')?.querySelector('svg') ||
+                        target.closest('[data-slot="dropdown-menu"]') ||
+                        target.closest('[data-slot="dropdown-menu-content"]') ||
+                        target.closest('[data-slot="dropdown-menu-item"]') ||
                         target.closest('[role="menuitem"]');
     
     if (!isMenuClick) {
-      console.log('[ClientGridItem] Card click not on menu, calling onView');
-      e.stopPropagation();
+      console.log('[ClientGridItem] Card clicked, opening details', { clientId: client.id });
       onView();
-    } else {
-      console.log('[ClientGridItem] Card click on menu, ignoring');
     }
   };
 
@@ -235,66 +222,44 @@ function ClientGridItem({ client, onView, onDelete }: ClientGridItemProps) {
                 </Badge>
                 
                 {/* 3-dots Menu */}
-                <div 
-                  onClick={(e) => {
-                    console.log('[ClientGridItem] Wrapper div clicked');
-                    e.stopPropagation();
-                  }}
-                  onMouseDown={(e) => {
-                    console.log('[ClientGridItem] Wrapper div mousedown');
-                    e.stopPropagation();
-                  }}
-                >
-                  <DropdownMenu onOpenChange={handleMenuOpenChange}>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 hover:bg-gray-100 relative z-10"
-                        onClick={handleMenuButtonClick}
-                        onMouseDown={(e) => {
-                          console.log('[ClientGridItem] Button mousedown');
-                          e.stopPropagation();
-                          e.preventDefault();
-                        }}
-                        type="button"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      align="end" 
-                      className="w-48 z-50" 
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 hover:bg-gray-100 relative z-50"
                       onClick={(e) => {
-                        console.log('[ClientGridItem] Menu content clicked');
                         e.stopPropagation();
+                        console.log('[ClientGridItem] Menu button clicked', { clientId: client.id });
                       }}
-                      onMouseDown={(e) => {
-                        console.log('[ClientGridItem] Menu content mousedown');
-                        e.stopPropagation();
-                      }}
+                      type="button"
                     >
-                      <DropdownMenuLabel>Client Actions</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          console.log('[ClientGridItem] Delete menu item clicked');
-                          e.stopPropagation();
-                          e.preventDefault();
-                          handleDelete(e);
-                        }}
-                        onMouseDown={(e) => {
-                          console.log('[ClientGridItem] Delete menu item mousedown');
-                          e.stopPropagation();
-                        }}
-                        className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Client
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="w-48 z-[100]" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <DropdownMenuLabel>Client Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('[ClientGridItem] Delete menu item clicked', { clientId: client.id });
+                        handleDelete(e);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Client
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
