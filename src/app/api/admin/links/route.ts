@@ -28,6 +28,40 @@ export async function GET(_request: NextRequest) {
     
     // Fetch onboarding links for this specific admin
     const links = await getOnboardingLinks(adminId);
+    
+    console.log('[Admin Links API] ===========================================');
+    console.log('[Admin Links API] Found links:', links?.length || 0);
+    if (links && links.length > 0) {
+      console.log('[Admin Links API] Link details:', links.map(l => ({
+        id: l.id,
+        link_name: l.link_name,
+        token: l.token,
+        admin_id: l.admin_id,
+        created_at: l.created_at
+      })));
+    } else {
+      console.log('[Admin Links API] ⚠️ No links found for admin:', adminId);
+      
+      // Debug: Check all links in database to see if there's a mismatch
+      const { getSupabaseAdmin } = await import('@/lib/supabase/server');
+      const supabaseAdmin = getSupabaseAdmin();
+      const { data: allLinks } = await supabaseAdmin
+        .from('onboarding_links')
+        .select('id, link_name, token, admin_id, created_at')
+        .limit(10);
+      console.log('[Admin Links API] All links in database (sample):', allLinks);
+      if (allLinks && allLinks.length > 0) {
+        console.log('[Admin Links API] Admin IDs in links:', allLinks.map(l => ({
+          link_id: l.id,
+          link_admin_id: l.admin_id,
+          link_admin_id_type: typeof l.admin_id,
+          current_admin_id: adminId,
+          current_admin_id_type: typeof adminId,
+          match: String(l.admin_id) === String(adminId)
+        })));
+      }
+    }
+    console.log('[Admin Links API] ===========================================');
 
     return NextResponse.json({
       links: links,
