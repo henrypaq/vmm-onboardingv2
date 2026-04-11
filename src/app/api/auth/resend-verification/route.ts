@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPublicAppUrl } from '@/lib/app-public-url';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
@@ -17,7 +18,10 @@ export async function POST(request: NextRequest) {
     // Resend verification code
     const { error } = await supabase.auth.resend({
       type: 'signup',
-      email: email
+      email: email,
+      options: {
+        emailRedirectTo: `${getPublicAppUrl()}/auth/callback`,
+      },
     });
 
     if (error) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPublicAppUrl } from '@/lib/app-public-url';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
           company_name: companyName,
           role: 'admin'
         },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app'}/auth/callback`
+        emailRedirectTo: `${getPublicAppUrl()}/auth/callback`
       }
     });
 

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Mail, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { getPublicAppUrl } from '@/lib/app-public-url';
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +36,7 @@ export default function ForgotPasswordPage() {
     try {
       // Use the imported supabase client
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${getPublicAppUrl()}/auth/callback`,
       });
 
       if (error) {

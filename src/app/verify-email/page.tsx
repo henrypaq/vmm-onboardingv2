@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { CheckCircle, ArrowLeft, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { getPublicAppUrl } from '@/lib/app-public-url';
 
 function EmailVerificationForm() {
   const router = useRouter();
@@ -103,7 +104,10 @@ function EmailVerificationForm() {
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: email
+        email: email,
+        options: {
+          emailRedirectTo: `${getPublicAppUrl()}/auth/callback`,
+        },
       });
 
       if (error) {

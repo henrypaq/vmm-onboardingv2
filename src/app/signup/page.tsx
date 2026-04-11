@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { getPublicAppUrl } from '@/lib/app-public-url';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -109,10 +110,7 @@ export default function SignUpPage() {
         console.log('API signup failed, trying direct Supabase:', apiError);
         
         // Fallback to direct Supabase client-side signup
-        // Get the app URL - use window.location.origin for client-side, fallback to env var
-        const appUrl = typeof window !== 'undefined' 
-          ? window.location.origin 
-          : (process.env.NEXT_PUBLIC_APP_URL || 'https://vast-onboarding.netlify.app');
+        const appUrl = getPublicAppUrl();
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
