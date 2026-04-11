@@ -9,8 +9,10 @@ require('dotenv').config({ path: '.env.local' });
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabasePublishableKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseSecretKey =
+  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 async function verifySetup() {
   console.log('\n🔍 Verifying New Supabase Setup\n');
@@ -22,12 +24,12 @@ async function verifySetup() {
     console.log('❌ NEXT_PUBLIC_SUPABASE_URL is missing');
     process.exit(1);
   }
-  if (!supabaseAnonKey) {
-    console.log('❌ NEXT_PUBLIC_SUPABASE_ANON_KEY is missing');
+  if (!supabasePublishableKey) {
+    console.log('❌ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY) is missing');
     process.exit(1);
   }
-  if (!supabaseServiceKey) {
-    console.log('❌ SUPABASE_SERVICE_ROLE_KEY is missing');
+  if (!supabaseSecretKey) {
+    console.log('❌ SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY) is missing');
     process.exit(1);
   }
   console.log('✅ All environment variables present');
@@ -35,7 +37,7 @@ async function verifySetup() {
 
   // Test connection with anon key
   console.log('\n2️⃣ Testing Connection...');
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = createClient(supabaseUrl, supabasePublishableKey);
   
   try {
     // Simple query to test connection
@@ -52,7 +54,7 @@ async function verifySetup() {
 
   // Test connection with service role key
   console.log('\n3️⃣ Testing Service Role Connection...');
-  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+  const supabaseAdmin = createClient(supabaseUrl, supabaseSecretKey);
   
   try {
     const { data, error } = await supabaseAdmin.from('users').select('count').limit(0);
@@ -73,7 +75,8 @@ async function verifySetup() {
     'clients',
     'onboarding_links',
     'onboarding_requests',
-    'client_platform_connections'
+    'client_platform_connections',
+    'admin_accounts'
   ];
 
   const missingTables = [];
@@ -93,7 +96,7 @@ async function verifySetup() {
   if (missingTables.length > 0) {
     console.log('❌ Missing tables:', missingTables.join(', '));
     console.log('\n📝 Action required:');
-    console.log('   Run the complete-database-definitive-updated.sql script in Supabase SQL Editor');
+    console.log('   Run supabase-schema-full.sql in Supabase SQL Editor');
     process.exit(1);
   }
   console.log('✅ All required tables exist');

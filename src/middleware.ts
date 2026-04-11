@@ -1,28 +1,50 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { trimEnv } from '@/lib/supabase/supabase-env';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  let supabaseResponse = NextResponse.next({ request });
 
-  // Create Supabase client for middleware
+  const supabaseUrl = trimEnv(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const publishableKey = trimEnv(
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.NEXT_SUPABASE_PUBLISHABLE_KEY
+  );
+
+  if (!supabaseUrl || !publishableKey) {
+    console.error(
+      '[middleware] Missing Supabase URL or publishable key; skipping session refresh.'
+    );
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    publishableKey,
     {
       cookies: {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
+        setAll(cookiesToSet, responseHeaders) {
+          cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
           });
+
+          supabaseResponse = NextResponse.next({ request });
+
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options);
+          });
+
+          if (responseHeaders && typeof responseHeaders === 'object') {
+            for (const [key, value] of Object.entries(responseHeaders)) {
+              if (typeof value === 'string') {
+                supabaseResponse.headers.set(key, value);
+              }
+            }
+          }
         },
       },
     }
@@ -31,7 +53,7 @@ export async function middleware(request: NextRequest) {
   // Refresh session if expired - this ensures cookies are up to date
   await supabase.auth.getSession();
 
-  return response;
+  return supabaseResponse;
 }
 
 export const config = {

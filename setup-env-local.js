@@ -19,8 +19,8 @@ const envContent = `# Environment Variables for VMM Onboarding Platform
 
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+SUPABASE_SECRET_KEY=sb_secret_...
 
 # Meta (Facebook) OAuth Configuration
 NEXT_PUBLIC_META_APP_ID=your_meta_app_id_here
@@ -44,8 +44,8 @@ console.log('2. Replace the placeholder values with your actual credentials:');
 console.log('');
 console.log('   For Supabase (get from https://supabase.com/dashboard):');
 console.log('   - NEXT_PUBLIC_SUPABASE_URL');
-console.log('   - NEXT_PUBLIC_SUPABASE_ANON_KEY');
-console.log('   - SUPABASE_SERVICE_ROLE_KEY');
+console.log('   - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or ANON_KEY)');
+console.log('   - SUPABASE_SECRET_KEY (or SERVICE_ROLE_KEY)');
 console.log('');
 console.log('   For Meta OAuth (get from https://developers.facebook.com):');
 console.log('   - NEXT_PUBLIC_META_APP_ID (this is your App ID)');

@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
+import { logAuthClientError, userFacingAuthError } from '@/lib/supabase/auth-error';
 import { AuthLayout } from '@/components/layout/auth-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,12 +74,13 @@ function LoginForm() {
         toast.success('Welcome back!');
         router.push('/admin');
       }
-    } catch (error: any) {
-      console.error('Login error:', error);
+    } catch (error: unknown) {
+      logAuthClientError('signInWithPassword', error);
+      const message = userFacingAuthError(error);
       setErrors({
-        general: error.message || 'An error occurred during login. Please try again.'
+        general: message || 'An error occurred during login. Please try again.'
       });
-      toast.error(error.message || 'Invalid email or password. Please try again.');
+      toast.error(message || 'Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }

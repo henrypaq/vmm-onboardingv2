@@ -37,8 +37,8 @@ if (hasPlaceholders) {
   console.log('');
   console.log('Please update the following in .env.local:');
   console.log('1. NEXT_PUBLIC_SUPABASE_URL - Your Supabase project URL');
-  console.log('2. NEXT_PUBLIC_SUPABASE_ANON_KEY - Your Supabase anon key');
-  console.log('3. SUPABASE_SERVICE_ROLE_KEY - Your Supabase service role key');
+  console.log('2. NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or legacy ANON_KEY)');
+  console.log('3. SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY)');
   console.log('');
   console.log('You can find these in your Supabase dashboard:');
   console.log('https://supabase.com/dashboard/project/[your-project]/settings/api');

@@ -74,8 +74,9 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # Database (Supabase - to be configured)
 DATABASE_URL=your_supabase_database_url
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+SUPABASE_SECRET_KEY=sb_secret_...
 
 # Authentication (to be configured)
 NEXTAUTH_SECRET=your_nextauth_secret

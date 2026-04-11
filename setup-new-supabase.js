@@ -56,13 +56,13 @@ async function main() {
     process.exit(1);
   }
 
-  const anonKey = await question('NEXT_PUBLIC_SUPABASE_ANON_KEY: ');
+  const anonKey = await question('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or anon JWT): ');
   if (!anonKey || anonKey.length < 50) {
     console.log('❌ Invalid anon key. Please check you copied the full key.');
     process.exit(1);
   }
 
-  const serviceRoleKey = await question('SUPABASE_SERVICE_ROLE_KEY: ');
+  const serviceRoleKey = await question('SUPABASE_SECRET_KEY (or service_role JWT): ');
   if (!serviceRoleKey || serviceRoleKey.length < 50) {
     console.log('❌ Invalid service role key. Please check you copied the full key.');
     process.exit(1);
@@ -71,8 +71,8 @@ async function main() {
   // Build new .env.local content
   const envLines = [
     `NEXT_PUBLIC_SUPABASE_URL=${supabaseUrl}`,
-    `NEXT_PUBLIC_SUPABASE_ANON_KEY=${anonKey}`,
-    `SUPABASE_SERVICE_ROLE_KEY=${serviceRoleKey}`,
+    `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${anonKey}`,
+    `SUPABASE_SECRET_KEY=${serviceRoleKey}`,
     ''
   ];
 

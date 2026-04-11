@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
     // Test 2: Check environment variables
     console.log('[Debug Clients] Environment check:');
     console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT SET');
-    console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET');
+    console.log(
+      'SUPABASE_SECRET_KEY / SERVICE_ROLE:',
+      process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET'
+    );
     
     // Test 3: Try to connect to Supabase
     console.log('[Debug Clients] Testing Supabase connection...');

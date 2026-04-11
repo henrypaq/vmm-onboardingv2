@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
+import { logAuthClientError, userFacingAuthError } from '@/lib/supabase/auth-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,10 +27,16 @@ export default function Home() {
   useEffect(() => {
     // Check if user is already authenticated
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        router.push('/admin');
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session) {
+          router.push('/admin');
+        }
+      } catch (error: unknown) {
+        logAuthClientError('getSession(home)', error);
       }
     };
 
@@ -77,12 +84,13 @@ export default function Home() {
         toast.success('Welcome back!');
         router.push('/admin');
       }
-    } catch (error: any) {
-      console.error('Login error:', error);
+    } catch (error: unknown) {
+      logAuthClientError('signInWithPassword(home)', error);
+      const message = userFacingAuthError(error);
       setErrors({
-        general: error.message || 'An error occurred during login. Please try again.'
+        general: message || 'An error occurred during login. Please try again.'
       });
-      toast.error(error.message || 'Invalid email or password. Please try again.');
+      toast.error(message || 'Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
