@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
-import { fetchPlatformAssets } from '@/lib/oauth/oauth-utils';
+import { fetchPlatformAssets, discoverGoogleAssets } from '@/lib/oauth/oauth-utils';
+import { getOnboardingLinkByToken } from '@/lib/db/database';
 
 // Force dynamic rendering - this route uses request.url
 export const dynamic = 'force-dynamic';
@@ -8,243 +9,217 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   console.log('=== PLATFORM ASSETS API START ===');
-  
+
   try {
     const { searchParams } = new URL(request.url);
     const platform = searchParams.get('platform');
-    const clientId = searchParams.get('clientId');
+    const token = searchParams.get('token');
+    const clientId = searchParams.get('clientId'); // Legacy fallback
 
-    console.log('Assets API request:', { platform, clientId });
+    console.log('Assets API request:', { platform, token: token ? '[present]' : null, clientId });
 
-    if (!platform || !clientId) {
+    if (!platform || (!token && !clientId)) {
       console.log('Missing required parameters');
       return NextResponse.json(
-        { error: 'Missing required parameters: platform, clientId' },
+        { error: 'Missing required parameters: platform and token (or clientId)' },
         { status: 400 }
       );
     }
 
     const supabase = getSupabaseAdmin();
-    console.log('Supabase admin client created');
-
-    // Get the platform connection for this client
-    console.log('Looking for platform connection:', { clientId, platform });
-    
-    // First try to find it as an onboarding request
-    const { data: onboardingRequest, error: onboardingError } = await supabase
-      .from('onboarding_requests')
-      .select('id, client_id, client_email, client_name, status')
-      .eq('id', clientId)
-      .single();
-
-    console.log('Onboarding request lookup:', { 
-      onboardingRequest, 
-      onboardingError,
-      errorCode: onboardingError?.code,
-      errorMessage: onboardingError?.message
-    });
-
-    let requestId = null;
-    if (onboardingRequest && !onboardingError) {
-      requestId = onboardingRequest.id;
-      console.log('Found onboarding request:', requestId);
-    } else {
-      // If not found in onboarding_requests, try clients table
-      const { data: client, error: clientError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('id', clientId)
-        .single();
-
-      console.log('Client lookup:', { client, clientError });
-
-      if (clientError || !client) {
-        console.log('Neither onboarding request nor client found');
-        return NextResponse.json(
-          { error: 'Client or onboarding request not found' },
-          { status: 404 }
-        );
-      }
-      requestId = client.id;
-      console.log('Found client:', requestId);
-    }
-
-    // Now look for platform connection
-    console.log('Looking for platform connection with requestId:', { requestId, platform });
-    
     let connection: any = null;
-    let connectionError: any = null;
-    
-    // If this is an onboarding request, first check the platform_connections field in the request
-    if (onboardingRequest) {
-      console.log('🔍 [ASSETS API] This is an onboarding request, checking platform_connections field...');
-      
-      // Get the full onboarding request with platform_connections
-      const { data: fullRequest, error: fullRequestError } = await supabase
-        .from('onboarding_requests')
-        .select('platform_connections')
-        .eq('id', requestId)
-        .single();
-      
-      if (!fullRequestError && fullRequest?.platform_connections) {
-        const platformConnections = fullRequest.platform_connections as Record<string, any>;
-        const platformData = platformConnections[platform];
-        
-        if (platformData && platformData.access_token) {
-          console.log('🔍 [ASSETS API] Found OAuth data in onboarding request platform_connections!');
-          // Convert the platform_connections data to the format expected by the rest of the code
-          connection = {
-            id: requestId, // Use request ID as connection ID
-            client_id: requestId,
-            platform: platform,
-            platform_user_id: platformData.platform_user_id || '',
-            platform_username: platformData.platform_username || '',
-            access_token: platformData.access_token,
-            refresh_token: platformData.refresh_token || null,
-            token_expires_at: platformData.token_expires_at || null,
-            scopes: platformData.scopes || [],
-            assets: platformData.assets || [],
-            is_active: true
-          };
-          console.log('🔍 [ASSETS API] Using OAuth data from onboarding request');
-        } else {
-          console.log('🔍 [ASSETS API] No OAuth data found in onboarding request for platform:', platform);
-        }
+
+    // ── PRIMARY PATH: token-based lookup ──────────────────────────────────────
+    // Searches ALL in-progress requests for the link, finds the one with OAuth
+    // data for this platform. This is robust against store-oauth writing to a
+    // different request than the one the GET /onboarding/request returns.
+    if (token) {
+      console.log('[Assets API] Using token-based lookup for platform:', platform);
+
+      const link = await getOnboardingLinkByToken(token);
+      if (!link) {
+        console.log('[Assets API] Link not found for token');
+        return NextResponse.json({ error: 'Invalid onboarding token' }, { status: 404 });
       }
-    }
-    
-    // If not found in onboarding request, try client_platform_connections table
-    if (!connection) {
-      console.log('🔍 [ASSETS API] Trying client_platform_connections table...');
-      
-      // First try to find connection using the onboarding request ID
-      let { data: clientConnection, error: clientConnectionError } = await supabase
-        .from('client_platform_connections')
-        .select('*')
-        .eq('client_id', requestId)
-        .eq('platform', platform)
-        .eq('is_active', true)
-        .single();
 
-      console.log('First attempt - connection lookup:', { clientConnection, clientConnectionError });
+      // Get all in-progress requests for this link (no time window — we need
+      // whatever store-oauth wrote, even if it was > 5 minutes ago)
+      const { data: allRequests, error: requestsError } = await supabase
+        .from('onboarding_requests')
+        .select('id, platform_connections, client_id')
+        .eq('link_id', link.id)
+        .eq('status', 'in_progress')
+        .order('created_at', { ascending: false });
 
-      // If not found and this is an onboarding request, try to find the actual client ID
-      if (clientConnectionError && onboardingRequest) {
-        console.log('🔍 [ASSETS API] Connection not found with onboarding request ID, trying to find actual client...');
-        console.log('🔍 [ASSETS API] Onboarding request client_id:', onboardingRequest.client_id);
-        
-        // Get the actual client ID from the onboarding request
-        const actualClientId = onboardingRequest.client_id;
-        console.log('🔍 [ASSETS API] Actual client ID from onboarding request:', actualClientId);
-        
-        if (actualClientId) {
-          // Try to find connection using the actual client ID
-          const { data: actualConnection, error: actualError } = await supabase
-            .from('client_platform_connections')
-            .select('*')
-            .eq('client_id', actualClientId)
-            .eq('platform', platform)
-            .eq('is_active', true)
-            .single();
+      console.log('[Assets API] Found', allRequests?.length ?? 0, 'in-progress requests for link');
 
-          console.log('🔍 [ASSETS API] Second attempt - actual client connection lookup:', { actualConnection, actualError });
-          
-          if (actualConnection && !actualError) {
-            clientConnection = actualConnection;
-            clientConnectionError = null;
-            console.log('🔍 [ASSETS API] Found connection using actual client ID!');
+      if (allRequests && allRequests.length > 0) {
+        // Find the request that actually has the OAuth token for this platform
+        for (const req of allRequests) {
+          const platformData = req.platform_connections?.[platform];
+          if (platformData?.access_token) {
+            console.log('[Assets API] Found OAuth data in request:', req.id);
+            connection = {
+              id: req.id,
+              client_id: req.client_id,
+              platform,
+              access_token: platformData.access_token,
+              refresh_token: platformData.refresh_token ?? null,
+              token_expires_at: platformData.token_expires_at ?? null,
+              scopes: platformData.scopes ?? [],
+              assets: platformData.assets ?? [],
+              platform_user_id: platformData.platform_user_id ?? '',
+              platform_username: platformData.platform_username ?? '',
+              is_active: true,
+            };
+            break;
           }
         }
       }
-      
-      if (clientConnection && !clientConnectionError) {
-        connection = clientConnection;
-        connectionError = null;
-      } else {
-        connectionError = clientConnectionError;
+
+      // If not found in onboarding_requests, check client_platform_connections
+      // (e.g. if the client already completed onboarding before)
+      if (!connection) {
+        console.log('[Assets API] No OAuth data in onboarding requests, checking client_platform_connections...');
+        // Find client_id from any request that has one
+        const requestWithClientId = allRequests?.find(r => r.client_id);
+        if (requestWithClientId?.client_id) {
+          const { data: clientConn } = await supabase
+            .from('client_platform_connections')
+            .select('*')
+            .eq('client_id', requestWithClientId.client_id)
+            .eq('platform', platform)
+            .eq('is_active', true)
+            .single();
+          if (clientConn) {
+            connection = clientConn;
+            console.log('[Assets API] Found connection in client_platform_connections');
+          }
+        }
       }
     }
 
-    console.log('Connection query result:', { connection, connectionError });
+    // ── LEGACY FALLBACK: clientId-based lookup ────────────────────────────────
+    if (!connection && clientId) {
+      console.log('[Assets API] Falling back to clientId-based lookup:', clientId);
 
-    if (connectionError || !connection) {
-      console.log('Platform connection not found:', connectionError);
+      // First try as an onboarding request ID
+      const { data: onboardingRequest } = await supabase
+        .from('onboarding_requests')
+        .select('id, client_id, platform_connections')
+        .eq('id', clientId)
+        .single();
+
+      if (onboardingRequest) {
+        const platformData = onboardingRequest.platform_connections?.[platform];
+        if (platformData?.access_token) {
+          connection = {
+            id: onboardingRequest.id,
+            client_id: onboardingRequest.client_id,
+            platform,
+            access_token: platformData.access_token,
+            refresh_token: platformData.refresh_token ?? null,
+            token_expires_at: platformData.token_expires_at ?? null,
+            scopes: platformData.scopes ?? [],
+            assets: platformData.assets ?? [],
+            platform_user_id: platformData.platform_user_id ?? '',
+            platform_username: platformData.platform_username ?? '',
+            is_active: true,
+          };
+          console.log('[Assets API] Found OAuth data via clientId in onboarding request');
+        } else if (onboardingRequest.client_id) {
+          // Try client_platform_connections with the actual client_id
+          const { data: clientConn } = await supabase
+            .from('client_platform_connections')
+            .select('*')
+            .eq('client_id', onboardingRequest.client_id)
+            .eq('platform', platform)
+            .eq('is_active', true)
+            .single();
+          if (clientConn) {
+            connection = clientConn;
+            console.log('[Assets API] Found connection via client_id in client_platform_connections');
+          }
+        }
+      }
+
+      // Last resort: clientId might be an actual client UUID
+      if (!connection) {
+        const { data: clientConn } = await supabase
+          .from('client_platform_connections')
+          .select('*')
+          .eq('client_id', clientId)
+          .eq('platform', platform)
+          .eq('is_active', true)
+          .single();
+        if (clientConn) {
+          connection = clientConn;
+          console.log('[Assets API] Found connection directly via clientId');
+        }
+      }
+    }
+
+    if (!connection) {
+      console.log('[Assets API] Platform connection not found for platform:', platform);
       return NextResponse.json(
         { error: 'Platform connection not found' },
         { status: 404 }
       );
     }
 
-    console.log('Found platform connection:', {
+    console.log('[Assets API] Using connection:', {
       id: connection.id,
       platform: connection.platform,
-      platform_user_id: connection.platform_user_id,
-      has_access_token: !!connection.access_token
+      has_access_token: !!connection.access_token,
+      stored_assets_count: connection.assets?.length ?? 0,
     });
 
-    // Fetch assets based on platform
-    let assets = [];
-    
+    // ── FETCH / RETURN ASSETS ─────────────────────────────────────────────────
+    let assets: any[] = [];
+
     switch (platform) {
       case 'meta':
-        console.log('🔍 [PLATFORM ASSETS] Fetching Meta assets using oauth-utils...');
+        console.log('[Assets API] Fetching Meta assets...');
         try {
-          // Get the scopes from the platform connection
-          const scopes = connection.scopes || [];
-          console.log('🔍 [PLATFORM ASSETS] Meta scopes:', scopes);
-          
-          // Use the working fetchPlatformAssets function from oauth-utils
-          assets = await fetchPlatformAssets('meta', connection.access_token, scopes);
-          console.log('🔍 [PLATFORM ASSETS] Meta assets from oauth-utils:', assets);
+          assets = await fetchPlatformAssets('meta', connection.access_token, connection.scopes ?? []);
+          console.log('[Assets API] Meta assets count:', assets.length);
         } catch (error) {
-          console.error('🔍 [PLATFORM ASSETS] Error fetching Meta assets:', error);
-          assets = [];
+          console.error('[Assets API] Error fetching Meta assets:', error);
+          assets = connection.assets ?? [];
         }
         break;
+
       case 'google':
-        console.log('🔍 [PLATFORM ASSETS] Using stored Google assets from platform connection...');
-        
-        // Check if we have stored assets in the platform connection
+        console.log('[Assets API] Resolving Google assets...');
+        // Prefer stored assets (already fetched during OAuth callback)
         if (connection.assets && connection.assets.length > 0) {
-          console.log('🔍 [PLATFORM ASSETS] Found stored Google assets:', connection.assets.length);
           assets = connection.assets;
-          console.log('🔍 [PLATFORM ASSETS] Using stored assets:', assets);
+          console.log('[Assets API] Using', assets.length, 'stored Google assets');
         } else {
-          console.log('🔍 [PLATFORM ASSETS] No stored assets found, fetching fresh from Google APIs...');
+          console.log('[Assets API] No stored assets — fetching fresh from Google APIs...');
           try {
-            // Get the scopes from the platform connection
-            const scopes = connection.scopes || [];
-            console.log('🔍 [PLATFORM ASSETS] Google scopes:', scopes);
-            
-            // Use the working fetchPlatformAssets function from oauth-utils
-            assets = await fetchPlatformAssets('google', connection.access_token, scopes);
-            console.log('🔍 [PLATFORM ASSETS] Google assets from oauth-utils:', assets);
+            assets = await discoverGoogleAssets(connection.access_token, connection.client_id ?? 'unknown');
+            console.log('[Assets API] Discovered', assets.length, 'Google assets');
           } catch (error) {
-            console.error('🔍 [PLATFORM ASSETS] Error fetching Google assets:', error);
+            console.error('[Assets API] Error discovering Google assets:', error);
             assets = [];
           }
         }
         break;
+
       default:
-        console.log('Unsupported platform:', platform);
-        return NextResponse.json(
-          { error: 'Unsupported platform' },
-          { status: 400 }
-        );
+        console.log('[Assets API] Unsupported platform:', platform);
+        return NextResponse.json({ error: 'Unsupported platform' }, { status: 400 });
     }
 
-    console.log('=== PLATFORM ASSETS API SUCCESS ===');
-    console.log('Returning assets:', assets);
-
+    console.log('=== PLATFORM ASSETS API SUCCESS — returning', assets.length, 'assets ===');
     return NextResponse.json({ assets });
 
-  } catch (error) {
-    console.error('=== PLATFORM ASSETS API ERROR ===');
-    console.error('Error fetching platform assets:', error);
+  } catch (error: any) {
+    console.error('=== PLATFORM ASSETS API ERROR ===', error);
     return NextResponse.json(
       { error: 'Failed to fetch assets', details: error.message },
       { status: 500 }
     );
   }
 }
-

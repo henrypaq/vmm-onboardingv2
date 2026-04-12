@@ -367,138 +367,38 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
   
 
   // Fetch assets for a platform
+  // Uses token-based lookup so it finds the OAuth data regardless of which
+  // specific onboarding_request row store-oauth wrote to.
   const fetchPlatformAssets = async (platformId: string) => {
-    console.log('🟢 [UNIFIED FORM] ===========================================');
-    console.log('🟢 [UNIFIED FORM] FETCHING PLATFORM ASSETS');
-    console.log('🟢 [UNIFIED FORM] Platform ID:', platformId);
-    console.log('🟢 [UNIFIED FORM] Token:', token);
-    console.log('🟢 [UNIFIED FORM] ===========================================');
-    
+    console.log('🟢 [UNIFIED FORM] FETCHING PLATFORM ASSETS — platform:', platformId, 'token:', token);
+
     try {
       setIsLoadingAssets(prev => ({ ...prev, [platformId]: true }));
-      
-      // Get client ID from onboarding request
-      console.log('🟢 [UNIFIED FORM] Step 1: Getting client ID from onboarding request...');
-      const requestResponse = await fetch(`/api/onboarding/request?token=${token}`);
-      console.log('🟢 [UNIFIED FORM] Request response status:', requestResponse.status);
-      
-      if (!requestResponse.ok) {
-        const errorText = await requestResponse.text();
-        console.error('🔴 [UNIFIED FORM] Failed to get client information:', errorText);
-        throw new Error('Failed to get client information');
-      }
-      
-      const requestData = await requestResponse.json();
-      console.log('🟢 [UNIFIED FORM] Request data received:', requestData);
-      console.log('🟢 [UNIFIED FORM] Request data.requests:', requestData.requests);
-      console.log('🟢 [UNIFIED FORM] Request data.requests length:', requestData.requests?.length);
-      
-      // Use the current request ID from state if available (created during this flow)
-      // Otherwise, try to get from API response, or create a new one
-      let requestId = currentRequestId;
-      
-      if (!requestId) {
-        // Try to get from API response (should be empty for fresh flows, but check anyway)
-        const latestRequest = requestData.requests && requestData.requests.length > 0 
-          ? requestData.requests[0] 
-          : null;
-        
-        if (latestRequest?.id) {
-          requestId = latestRequest.id;
-          setCurrentRequestId(requestId);
-          console.log('🟢 [UNIFIED FORM] Using request ID from API response:', requestId);
-        } else {
-          // Create a new request for this flow (happens when OAuth callback occurs before client info is submitted)
-          console.log('🟢 [UNIFIED FORM] No request found, creating one for asset fetching...');
-          try {
-            const createResponse = await fetch('/api/onboarding/request', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                token,
-                client_email: '',
-                client_name: '',
-                company_name: '',
-              }),
-            });
-            
-            if (createResponse.ok) {
-              const createData = await createResponse.json();
-              if (createData.requestId) {
-                requestId = createData.requestId;
-                setCurrentRequestId(requestId);
-                console.log('🟢 [UNIFIED FORM] Created new request for asset fetching:', requestId);
-              }
-            }
-          } catch (createError) {
-            console.error('🔴 [UNIFIED FORM] Error creating request for asset fetch:', createError);
-          }
-        }
-      } else {
-        console.log('🟢 [UNIFIED FORM] Using stored request ID:', requestId);
-      }
-      
-      if (!requestId) {
-        console.error('🔴 [UNIFIED FORM] Request ID not found');
-        throw new Error('Request ID not found - please submit your information first');
-      }
 
-      console.log('🟢 [UNIFIED FORM] Step 2: Making assets API call with request ID:', requestId);
-      const assetsUrl = `/api/platforms/assets?platform=${platformId}&clientId=${requestId}`;
+      const assetsUrl = `/api/platforms/assets?platform=${encodeURIComponent(platformId)}&token=${encodeURIComponent(token)}`;
       console.log('🟢 [UNIFIED FORM] Assets URL:', assetsUrl);
 
-      // Fetch assets from platform API
       const assetsResponse = await fetch(assetsUrl);
-      
+
       console.log('🟢 [UNIFIED FORM] Assets response status:', assetsResponse.status);
-      console.log('🟢 [UNIFIED FORM] Assets response ok:', assetsResponse.ok);
-      
+
       if (!assetsResponse.ok) {
         const errorText = await assetsResponse.text();
         console.error('🔴 [UNIFIED FORM] Assets API error:', assetsResponse.status, errorText);
         throw new Error(`Failed to fetch platform assets: ${assetsResponse.status}`);
       }
-      
+
       const assetsData = await assetsResponse.json();
-      console.log('🟢 [UNIFIED FORM] Assets data received:', assetsData);
-      console.log('🟢 [UNIFIED FORM] Assets array:', assetsData.assets);
-      console.log('🟢 [UNIFIED FORM] Assets count:', assetsData.assets?.length || 0);
-      
-      // Debug: Log each asset type found
-      if (assetsData.assets && assetsData.assets.length > 0) {
-        const assetTypes = [...new Set(assetsData.assets.map((asset: any) => asset.type))];
-        console.log('🔍 [ASSET DEBUG] Asset types found:', assetTypes);
-        assetsData.assets.forEach((asset: any, index: number) => {
-          console.log(`🔍 [ASSET DEBUG] Asset ${index + 1}:`, {
-            id: asset.id,
-            name: asset.name,
-            type: asset.type,
-            description: asset.description
-          });
-        });
-      }
-      
-      setPlatformAssets(prev => {
-        const newState = { ...prev, [platformId]: assetsData.assets || [] };
-        console.log('🟢 [UNIFIED FORM] State updated for platformAssets:', platformId, newState[platformId]);
-        console.log('🟢 [UNIFIED FORM] Full platformAssets state after update:', newState);
-        return newState;
-      });
-      console.log('🟢 [UNIFIED FORM] Assets set in state for', platformId, ':', assetsData.assets || []);
-      
+      console.log('🟢 [UNIFIED FORM] Assets received:', assetsData.assets?.length ?? 0);
+
+      setPlatformAssets(prev => ({ ...prev, [platformId]: assetsData.assets || [] }));
+
     } catch (error: any) {
-      console.error('🔴 [UNIFIED FORM] ===========================================');
-      console.error('🔴 [UNIFIED FORM] ERROR FETCHING PLATFORM ASSETS');
-      console.error('🔴 [UNIFIED FORM] Platform:', platformId);
-      console.error('🔴 [UNIFIED FORM] Error:', error);
-      console.error('🔴 [UNIFIED FORM] Error message:', error.message);
-      console.error('🔴 [UNIFIED FORM] Error stack:', error.stack);
-      console.error('🔴 [UNIFIED FORM] ===========================================');
+      console.error('🔴 [UNIFIED FORM] ERROR FETCHING PLATFORM ASSETS — platform:', platformId, error.message);
       toast.error(error.message || 'Failed to fetch platform assets');
       setPlatformAssets(prev => ({ ...prev, [platformId]: [] }));
     } finally {
       setIsLoadingAssets(prev => ({ ...prev, [platformId]: false }));
-      console.log('🟢 [UNIFIED FORM] Loading state cleared for platform:', platformId);
     }
   };
 
