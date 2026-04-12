@@ -14,7 +14,7 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="flex h-screen flex-col overflow-hidden bg-gray-50">
       <Header user={user} userRole="admin" />
       <main className="flex-1 overflow-y-auto">
         {children}

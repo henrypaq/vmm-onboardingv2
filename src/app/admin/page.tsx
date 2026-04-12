@@ -4,24 +4,19 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Users, 
-  Link as LinkIcon, 
-  TrendingUp, 
-  Clock, 
-  CheckCircle, 
+import {
+  Users,
+  Link as LinkIcon,
+  Clock,
+  CheckCircle,
   AlertCircle,
-  Plus,
   RefreshCw,
   Globe,
   Store,
   BarChart3,
   Settings,
-  MoreHorizontal,
-  DollarSign,
-  FileText,
-  Briefcase,
-  ArrowRight
+  TrendingUp,
+  ArrowRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
@@ -62,13 +57,52 @@ interface PlatformConnection {
   assets: PlatformAsset[];
 }
 
+const statCards = [
+  {
+    key: 'totalClients',
+    label: 'Total Clients',
+    sublabel: 'Active accounts',
+    icon: Users,
+    iconBg: 'bg-blue-50',
+    iconColor: 'text-blue-600',
+    delay: 0.05,
+  },
+  {
+    key: 'activeLinks',
+    label: 'Active Links',
+    sublabel: 'Onboarding links',
+    icon: LinkIcon,
+    iconBg: 'bg-emerald-50',
+    iconColor: 'text-emerald-600',
+    delay: 0.1,
+  },
+  {
+    key: 'completedOnboardings',
+    label: 'Completed',
+    sublabel: 'Finished onboardings',
+    icon: CheckCircle,
+    iconBg: 'bg-violet-50',
+    iconColor: 'text-violet-600',
+    delay: 0.15,
+  },
+  {
+    key: 'pendingRequests',
+    label: 'Pending',
+    sublabel: 'Awaiting action',
+    icon: Clock,
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+    delay: 0.2,
+  },
+] as const;
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,
     activeLinks: 0,
     completedOnboardings: 0,
-    pendingRequests: 0
+    pendingRequests: 0,
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [platformConnections, setPlatformConnections] = useState<PlatformConnection[]>([]);
@@ -77,47 +111,34 @@ export default function AdminDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      
-      // Fetch actual client data
-      const clientsResponse = await fetch('/api/clients/detailed');
-      const clientsData = await clientsResponse.json();
+
+      const [clientsRes, linksRes, connectionsRes, activityRes] = await Promise.all([
+        fetch('/api/clients/detailed'),
+        fetch('/api/admin/links'),
+        fetch('/api/admin/platform-connections/assets'),
+        fetch('/api/admin/recent-activity'),
+      ]);
+
+      const clientsData = await clientsRes.json();
+      const linksData = await linksRes.json();
+      const connectionsData = await connectionsRes.json();
+
       const totalClients = clientsData.clients?.length || 0;
-
-      // Fetch links
-      const linksResponse = await fetch('/api/admin/links');
-      const linksData = await linksResponse.json();
       const activeLinks = linksData.links?.length || 0;
-
-      // Calculate completed and pending onboardings from actual data
-      const completedOnboardings = clientsData.clients?.filter((client: any) => 
-        client.status === 'active' || client.last_onboarding_at
+      const completedOnboardings = clientsData.clients?.filter(
+        (c: any) => c.status === 'active' || c.last_onboarding_at
       ).length || 0;
-      
-      const pendingRequests = clientsData.clients?.filter((client: any) => 
-        client.status === 'pending' || !client.last_onboarding_at
+      const pendingRequests = clientsData.clients?.filter(
+        (c: any) => c.status === 'pending' || !c.last_onboarding_at
       ).length || 0;
 
-      // Fetch platform connections with assets
-      const connectionsResponse = await fetch('/api/admin/platform-connections/assets');
-      const connectionsData = await connectionsResponse.json();
-      const connections = connectionsData.connections || [];
+      setStats({ totalClients, activeLinks, completedOnboardings, pendingRequests });
+      setPlatformConnections(connectionsData.connections || []);
 
-      setStats({
-        totalClients,
-        activeLinks,
-        completedOnboardings,
-        pendingRequests
-      });
-
-      setPlatformConnections(connections);
-
-      // Fetch real recent activity
-      const activityResponse = await fetch('/api/admin/recent-activity');
-      if (activityResponse.ok) {
-        const activityData = await activityResponse.json();
+      if (activityRes.ok) {
+        const activityData = await activityRes.json();
         setRecentActivity(activityData.activities || []);
       }
-
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -125,322 +146,239 @@ export default function AdminDashboardPage() {
     }
   };
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  useEffect(() => { fetchDashboardData(); }, []);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'onboarding_completed': return <CheckCircle className="h-4 w-4" />;
-      case 'platform_connected': return <LinkIcon className="h-4 w-4" />;
-      case 'link_generated': return <LinkIcon className="h-4 w-4" />;
-      case 'client_created': return <Users className="h-4 w-4" />;
-      case 'connection_established': return <TrendingUp className="h-4 w-4" />;
-      default: return <AlertCircle className="h-4 w-4" />;
-    }
-  };
-
-  const getActivityColor = (status: string) => {
-    switch (status) {
-      case 'success': return 'text-green-600';
-      case 'warning': return 'text-yellow-600';
-      case 'info': return 'text-blue-600';
-      default: return 'text-gray-600';
+      case 'onboarding_completed':  return <CheckCircle className="h-3.5 w-3.5" />;
+      case 'platform_connected':    return <LinkIcon className="h-3.5 w-3.5" />;
+      case 'link_generated':        return <LinkIcon className="h-3.5 w-3.5" />;
+      case 'client_created':        return <Users className="h-3.5 w-3.5" />;
+      case 'connection_established': return <TrendingUp className="h-3.5 w-3.5" />;
+      default:                      return <AlertCircle className="h-3.5 w-3.5" />;
     }
   };
 
   const getPlatformLogo = (platformId: string) => {
-    const logoMap: { [key: string]: string } = {
-      'meta': '/logos/meta.png',
-      'facebook': '/logos/meta.png',
-      'google': '/logos/google.png',
-      'tiktok': '/logos/tiktok.webp',
-      'shopify': '/logos/shopify.webp',
+    const logoMap: Record<string, string> = {
+      meta: '/logos/meta.png',
+      facebook: '/logos/meta.png',
+      google: '/logos/google.png',
+      tiktok: '/logos/tiktok.webp',
+      shopify: '/logos/shopify.webp',
     };
-
     const logoPath = logoMap[platformId.toLowerCase()];
-    
-    if (logoPath) {
-      return (
-        <Image 
-          src={logoPath} 
-          alt={platformId} 
-          width={24} 
-          height={24}
-          className="object-contain"
-        />
-      );
-    }
-    
-    return <Globe className="h-6 w-6" />;
+    return logoPath ? (
+      <Image src={logoPath} alt={platformId} width={20} height={20} className="object-contain" />
+    ) : (
+      <Globe className="h-5 w-5 text-gray-400" />
+    );
   };
 
   const getAssetIcon = (assetType: string) => {
     switch (assetType) {
-      case 'page':
-      case 'business_account':
-      case 'analytics_property':
-        return <Globe className="h-4 w-4" />;
       case 'ad_account':
-      case 'ads_account':
-        return <BarChart3 className="h-4 w-4" />;
-      case 'store':
-        return <Store className="h-4 w-4" />;
-      case 'instagram':
-        return <Globe className="h-4 w-4" />;
-      default:
-        return <Settings className="h-4 w-4" />;
+      case 'ads_account':    return <BarChart3 className="h-3.5 w-3.5" />;
+      case 'store':          return <Store className="h-3.5 w-3.5" />;
+      default:               return <Globe className="h-3.5 w-3.5" />;
     }
   };
 
+  const statsValues: Record<string, number> = {
+    totalClients: stats.totalClients,
+    activeLinks: stats.activeLinks,
+    completedOnboardings: stats.completedOnboardings,
+    pendingRequests: stats.pendingRequests,
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="flex flex-1 flex-col gap-6 p-6 md:gap-8 md:p-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-screen-xl mx-auto flex flex-col gap-8 p-6 md:p-8">
+
+        {/* Page header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-              Dashboard
-            </h1>
-            <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your platform.</p>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Welcome back — here's what's happening with your platform.
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={fetchDashboardData} size="sm" className="ultra-minimal-icon-button" disabled={isLoading}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button
+            onClick={fetchDashboardData}
+            variant="outline"
+            size="icon"
+            disabled={isLoading}
+            className="h-9 w-9"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="border border-gray-200 bg-white hover:shadow-md transition-shadow duration-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between h-full">
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Total Clients</p>
-                    <p className="text-4xl font-bold text-gray-900 mb-1">{stats.totalClients}</p>
-                    <p className="text-xs text-gray-500">Active accounts</p>
+        {/* Stats grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {statCards.map(({ key, label, sublabel, icon: Icon, iconBg, iconColor, delay }) => (
+            <motion.div
+              key={key}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay, duration: 0.3 }}
+            >
+              <Card className="hover:shadow-card-hover transition-shadow duration-200">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
+                        {label}
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900 tabular-nums">
+                        {statsValues[key]}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1.5">{sublabel}</p>
+                    </div>
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconBg} ml-4`}>
+                      <Icon className={`h-5 w-5 ${iconColor}`} />
+                    </div>
                   </div>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 ml-4">
-                    <Users className="h-7 w-7 text-blue-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="border border-gray-200 bg-white hover:shadow-md transition-shadow duration-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between h-full">
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Active Links</p>
-                    <p className="text-4xl font-bold text-gray-900 mb-1">{stats.activeLinks}</p>
-                    <p className="text-xs text-gray-500">Onboarding links</p>
-                  </div>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-50 ml-4">
-                    <LinkIcon className="h-7 w-7 text-emerald-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="border border-gray-200 bg-white hover:shadow-md transition-shadow duration-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between h-full">
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Completed</p>
-                    <p className="text-4xl font-bold text-gray-900 mb-1">{stats.completedOnboardings}</p>
-                    <p className="text-xs text-gray-500">Finished onboardings</p>
-                  </div>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-purple-50 ml-4">
-                    <CheckCircle className="h-7 w-7 text-purple-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="border border-gray-200 bg-white hover:shadow-md transition-shadow duration-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between h-full">
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Pending</p>
-                    <p className="text-4xl font-bold text-gray-900 mb-1">{stats.pendingRequests}</p>
-                    <p className="text-xs text-gray-500">Awaiting action</p>
-                  </div>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-amber-50 ml-4">
-                    <Clock className="h-7 w-7 text-amber-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </div>
 
-      {/* Recent Activity and Quick Actions - Side by Side */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Recent Activity */}
-        <Card className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[280px] overflow-hidden">
-            <div className="relative h-full">
-              {/* Timeline line */}
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-purple-200"></div>
-              
-              <div className="h-full overflow-y-auto pr-2 space-y-6">
-                {recentActivity.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-500 text-sm">No recent activity</p>
+        {/* Recent Activity + Quick Actions */}
+        <div className="grid gap-4 lg:grid-cols-2">
+
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Latest events across your platform</CardDescription>
+            </CardHeader>
+            <CardContent className="pb-2">
+              {recentActivity.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-40 text-center">
+                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                    <Clock className="h-5 w-5 text-gray-400" />
                   </div>
-                ) : (
-                  recentActivity.map((activity, index) => (
-                    <div key={activity.id} className="relative flex items-start space-x-4">
-                      {/* Timeline dot */}
-                      <div className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full ${
-                        index === 0 
-                          ? 'bg-purple-500' 
-                          : 'bg-white border-2 border-purple-200'
+                  <p className="text-sm text-gray-500">No recent activity</p>
+                  <p className="text-xs text-gray-400 mt-1">Events will appear here as they happen</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {recentActivity.map((activity, index) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0"
+                    >
+                      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                        index === 0 ? 'bg-violet-100 text-violet-600' : 'bg-gray-100 text-gray-500'
                       }`}>
-                        <div className={`${
-                          index === 0 ? 'text-white' : 'text-purple-500'
-                        }`}>
-                          {getActivityIcon(activity.type)}
-                        </div>
+                        {getActivityIcon(activity.type)}
                       </div>
-                      
-                      {/* Activity content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">
-                            {activity.title}
-                          </p>
-                          <p className="text-xs text-gray-500 ml-4">
-                            {new Date(activity.timestamp).toLocaleString()}
-                          </p>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {activity.description}
-                        </p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{activity.description}</p>
                       </div>
+                      <p className="text-xs text-gray-400 shrink-0">
+                        {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
-                  ))
-                )}
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Common tasks to get started</CardDescription>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <div className="space-y-2">
+                {[
+                  {
+                    label: 'Generate Link',
+                    description: 'Create a new onboarding link',
+                    icon: LinkIcon,
+                    iconBg: 'bg-emerald-50',
+                    iconColor: 'text-emerald-600',
+                    onClick: () => router.push('/admin/links?openDialog=true'),
+                  },
+                  {
+                    label: 'View Clients',
+                    description: 'Browse your client roster',
+                    icon: Users,
+                    iconBg: 'bg-blue-50',
+                    iconColor: 'text-blue-600',
+                    onClick: () => router.push('/admin/clients'),
+                  },
+                  {
+                    label: 'Connections',
+                    description: 'Manage platform integrations',
+                    icon: Globe,
+                    iconBg: 'bg-violet-50',
+                    iconColor: 'text-violet-600',
+                    onClick: () => router.push('/admin/settings'),
+                  },
+                ].map(({ label, description, icon: Icon, iconBg, iconColor, onClick }) => (
+                  <button
+                    key={label}
+                    onClick={onClick}
+                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border border-gray-200 bg-white
+                               hover:border-gray-300 hover:shadow-card-hover transition-all duration-150 text-left group"
+                  >
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
+                      <Icon className={`h-4 w-4 ${iconColor}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900">{label}</p>
+                      <p className="text-xs text-gray-400">{description}</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all duration-150" />
+                  </button>
+                ))}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Quick Actions */}
-        <Card className="modern-card">
+        {/* Platform Connections */}
+        <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Quick Actions</CardTitle>
-            <CardDescription>Common tasks to get started</CardDescription>
+            <CardTitle>Platform Connections</CardTitle>
+            <CardDescription>Your connected advertising and analytics platforms</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4">
-              <Button 
-                className="h-16 justify-center flex-col bg-white/60 border border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-md transition-all duration-300" 
-                onClick={() => {
-                  router.push('/admin/links?openDialog=true');
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">Generate Link</span>
-                </div>
-              </Button>
-              <Button 
-                className="h-16 justify-center flex-col bg-white/60 border border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-300" 
-                onClick={() => router.push('/admin/clients')}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">View Clients</span>
-                </div>
-              </Button>
-              <Button 
-                className="h-16 justify-center flex-col bg-white/60 border border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300" 
-                onClick={() => router.push('/admin/settings')}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">Connections</span>
-                </div>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Platform Connections Breakdown */}
-      <Card className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader>
-          <CardTitle>Platform Connections</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
+          <CardContent className="pb-6">
             {platformConnections.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {platformConnections.map((connection) => (
-                  <div key={connection.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 rounded-lg">
-                          {getPlatformLogo(connection.platform)}
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{connection.name}</h3>
-                          <p className="text-sm text-gray-500">
-                            Connected as {connection.username}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge variant="default" className="bg-green-100 text-green-800">
-                        Connected
-                      </Badge>
+                  <div
+                    key={connection.id}
+                    className="flex items-start gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white border border-gray-200 shadow-sm">
+                      {getPlatformLogo(connection.platform)}
                     </div>
-                    
-                    {/* Scopes */}
-                    <div className="text-sm text-gray-600">
-                      <p className="mb-2">Available permissions:</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{connection.name}</p>
+                        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs shrink-0 ml-2">
+                          Connected
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-gray-400 mb-2 truncate">@{connection.username}</p>
                       <div className="flex flex-wrap gap-1">
-                        {connection.scopes && connection.scopes.length > 0 ? (
-                          <>
-                            {connection.scopes.slice(0, 3).map((scope, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {scope.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                              </Badge>
-                            ))}
-                            {connection.scopes.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{connection.scopes.length - 3} more
-                              </Badge>
-                            )}
-                          </>
-                        ) : (
-                          <Badge variant="secondary" className="text-xs">
-                            No permissions granted
-                          </Badge>
+                        {connection.scopes?.slice(0, 3).map((scope, i) => (
+                          <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[11px] font-medium">
+                            {scope.replace(/_/g, ' ')}
+                          </span>
+                        ))}
+                        {(connection.scopes?.length || 0) > 3 && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-[11px]">
+                            +{connection.scopes.length - 3} more
+                          </span>
                         )}
                       </div>
                     </div>
@@ -448,17 +386,20 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Globe className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                <p className="text-gray-500">No platform connections found</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Connect to platforms to see available assets
-                </p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                  <Globe className="h-6 w-6 text-gray-400" />
+                </div>
+                <p className="text-sm font-medium text-gray-600">No platform connections</p>
+                <p className="text-xs text-gray-400 mt-1 mb-4">Connect to platforms in Settings to see them here</p>
+                <Button variant="outline" size="sm" onClick={() => router.push('/admin/settings')}>
+                  Go to Settings
+                </Button>
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );

@@ -149,7 +149,7 @@ export function Header({ user, userRole }: HeaderProps) {
   const navItems = role === 'admin' ? adminNavItems : clientNavItems;
 
   return (
-        <header className="sticky top-0 z-40 flex h-20 items-center gap-4 border-b bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80 px-6 shadow-sm">
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-gray-200 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80 px-6">
       <div className="flex w-full items-center justify-between">
         {/* Logo */}
         <div className="flex items-center w-48">

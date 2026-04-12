@@ -269,12 +269,12 @@ function LinksPageContent() {
   ));
 
   return (
-    <div className="flex flex-1 flex-col min-h-screen bg-white">
+    <div className="flex flex-1 flex-col min-h-screen bg-gray-50">
       {/* Fixed Header Section */}
       <div className="flex-none p-4 md:p-6 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl page-title tracking-tight">Links</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Links</h1>
         </div>
       </div>
       

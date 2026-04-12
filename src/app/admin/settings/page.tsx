@@ -169,7 +169,7 @@ function AdminSettingsPageContent() {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-3xl page-title text-gray-900">Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Settings</h1>
         <p className="text-gray-600 mt-2">Manage your platform configuration and preferences</p>
       </div>
 
@@ -449,7 +449,7 @@ export default function AdminSettingsPage() {
     <Suspense fallback={
       <div className="p-6">
         <div className="mb-8">
-          <h1 className="text-3xl page-title text-gray-900">Settings</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Settings</h1>
           <p className="text-gray-600 mt-2">Loading...</p>
         </div>
       </div>

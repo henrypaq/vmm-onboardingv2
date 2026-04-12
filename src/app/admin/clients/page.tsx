@@ -662,7 +662,7 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-gray-50">
       {/* Fixed Header Section */}
       <div className="flex-none p-4 md:p-6 space-y-4">
         {/* Header */}
@@ -672,7 +672,7 @@ export default function ClientsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="text-3xl page-title tracking-tight">Clients</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Clients</h1>
         </motion.div>
 
         {/* Search and Filter Bar */}
