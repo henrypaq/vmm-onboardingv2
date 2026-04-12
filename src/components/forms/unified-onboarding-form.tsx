@@ -203,17 +203,11 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
             [connectedPlatform]: { connected: true }
           }));
 
-          // Determine which platform to show: the first still-unconnected one,
-          // or the newly connected one if all are done.
-          const firstUnconnected = requestedPlatforms.findIndex(
-            (p: any) => p.id !== connectedPlatform && !initialStatus[p.id]?.connected
-          );
-          const targetIndex = firstUnconnected !== -1
-            ? firstUnconnected
-            : requestedPlatforms.findIndex((p: any) => p.id === connectedPlatform);
-
-          if (targetIndex !== -1) {
-            setCurrentPlatformIndex(targetIndex);
+          // Always show the platform that just connected so the user can
+          // complete asset selection before advancing to the next platform.
+          const connectedIndex = requestedPlatforms.findIndex((p: any) => p.id === connectedPlatform);
+          if (connectedIndex !== -1) {
+            setCurrentPlatformIndex(connectedIndex);
           }
 
           // Show asset selection for the newly connected platform

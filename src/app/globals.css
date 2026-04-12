@@ -97,11 +97,11 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* ── Primary gradient button ─────────────────────────────────────────── */
+  /* ── Primary button ─────────────────────────────────────────────────── */
   .gradient-primary {
-    @apply bg-gradient-to-r from-violet-600 to-purple-600 text-white border-0
-           hover:from-violet-700 hover:to-purple-700 hover:shadow-md
-           active:scale-[0.98] transition-all duration-200 rounded-lg font-medium;
+    @apply bg-violet-600 text-white border-0
+           hover:bg-violet-700 hover:shadow-md
+           active:scale-[0.98] active:bg-violet-800 transition-all duration-150 rounded-lg font-medium;
   }
 
   /* ── Secondary button ────────────────────────────────────────────────── */
@@ -167,23 +167,23 @@
     @apply absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-all duration-150 ease-in-out;
   }
 
-  /* ── Quick-action gradient buttons ──────────────────────────────────── */
+  /* ── Quick-action solid buttons ──────────────────────────────────────── */
   .gradient-generate {
-    @apply bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0
-           hover:from-emerald-600 hover:to-teal-600 hover:shadow-md
-           active:scale-[0.98] transition-all duration-200 rounded-lg font-medium;
+    @apply bg-emerald-600 text-white border-0
+           hover:bg-emerald-700 hover:shadow-md
+           active:scale-[0.98] active:bg-emerald-800 transition-all duration-150 rounded-lg font-medium;
   }
 
   .gradient-clients {
-    @apply bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0
-           hover:from-blue-600 hover:to-indigo-600 hover:shadow-md
-           active:scale-[0.98] transition-all duration-200 rounded-lg font-medium;
+    @apply bg-blue-600 text-white border-0
+           hover:bg-blue-700 hover:shadow-md
+           active:scale-[0.98] active:bg-blue-800 transition-all duration-150 rounded-lg font-medium;
   }
 
   .gradient-connections {
-    @apply bg-gradient-to-r from-indigo-500 to-violet-500 text-white border-0
-           hover:from-indigo-600 hover:to-violet-600 hover:shadow-md
-           active:scale-[0.98] transition-all duration-200 rounded-lg font-medium;
+    @apply bg-indigo-600 text-white border-0
+           hover:bg-indigo-700 hover:shadow-md
+           active:scale-[0.98] active:bg-indigo-800 transition-all duration-150 rounded-lg font-medium;
   }
 
   /* ── Animations ──────────────────────────────────────────────────────── */
