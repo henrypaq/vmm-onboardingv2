@@ -150,21 +150,37 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
           .filter(Boolean);
         setPlatforms(requestedPlatforms);
         
-        // Initialize connection status - always start fresh for new flows
+        // Initialize connection status to all-false first
         const initialStatus: ConnectionStatus = {};
         requestedPlatforms.forEach((platform: any) => {
           initialStatus[platform.id] = { connected: false };
         });
+
+        // Restore any platforms already connected in this session by reading
+        // platform_connections from the DB. This is essential when the page
+        // reloads mid-flow (e.g. after each OAuth redirect) — without this,
+        // previously connected platforms lose their state.
+        const existingRequests = data.requests || [];
+        if (existingRequests.length > 0) {
+          const platformConnections = existingRequests[0].platform_connections || {};
+          requestedPlatforms.forEach((platform: any) => {
+            if (platformConnections[platform.id]?.access_token) {
+              initialStatus[platform.id] = { connected: true };
+              console.log('🔵 [UNIFIED FORM] Restored connection status from DB for:', platform.id);
+            }
+          });
+        }
+
         setConnectionStatus(initialStatus);
-        
+
         // Reset client info to ensure fresh start for each new flow
         setClientInfo({
           name: '',
           email: '',
           company: ''
         });
-        
-        // Reset all other state for fresh flow
+
+        // Reset other UI state
         setCurrentStep('info');
         setCurrentPlatformIndex(0);
         setPlatformAssets({});
@@ -172,48 +188,50 @@ export function UnifiedOnboardingForm({ token, onSubmissionComplete }: Onboardin
         setShowAssetSelection({});
         setShopifyStep(1);
         setShopifyData({ storeId: '', collaboratorCode: '' });
-        setCurrentRequestId(null); // Reset request ID for fresh flow
-        
-        // Don't create a request automatically - wait for user to submit client info
-        // This ensures each flow starts completely fresh
-        
+        setCurrentRequestId(null);
+
         // Check for OAuth callback
         const connectedPlatform = searchParams.get('connected');
         const success = searchParams.get('success');
-        
+
         if (connectedPlatform && success === 'true') {
-          console.log('🔵 [UNIFIED FORM] ===========================================');
-          console.log('🔵 [UNIFIED FORM] OAUTH CALLBACK DETECTED');
-          console.log('🔵 [UNIFIED FORM] Connected Platform:', connectedPlatform);
-          console.log('🔵 [UNIFIED FORM] Success:', success);
-          console.log('🔵 [UNIFIED FORM] Setting connection status for:', connectedPlatform);
-          console.log('🔵 [UNIFIED FORM] ===========================================');
-          
-          // Find the index of the connected platform
-          const platformIndex = requestedPlatforms.findIndex((p: any) => p.id === connectedPlatform);
-          if (platformIndex !== -1) {
-            // Set the current platform index to the connected platform
-            setCurrentPlatformIndex(platformIndex);
-          }
-          
-          // Mark platform as connected
+          console.log('🔵 [UNIFIED FORM] OAUTH CALLBACK DETECTED — platform:', connectedPlatform);
+
+          // Mark the newly connected platform (may already be set from DB restore above)
           setConnectionStatus(prev => ({
             ...prev,
             [connectedPlatform]: { connected: true }
           }));
-          
-          // Show asset selection for this platform
+
+          // Determine which platform to show: the first still-unconnected one,
+          // or the newly connected one if all are done.
+          const firstUnconnected = requestedPlatforms.findIndex(
+            (p: any) => p.id !== connectedPlatform && !initialStatus[p.id]?.connected
+          );
+          const targetIndex = firstUnconnected !== -1
+            ? firstUnconnected
+            : requestedPlatforms.findIndex((p: any) => p.id === connectedPlatform);
+
+          if (targetIndex !== -1) {
+            setCurrentPlatformIndex(targetIndex);
+          }
+
+          // Show asset selection for the newly connected platform
           setShowAssetSelection(prev => ({ ...prev, [connectedPlatform]: true }));
-          
-          console.log('🔵 [UNIFIED FORM] Initiating asset fetch for:', connectedPlatform);
-          
-          // Fetch assets for this platform
+
+          // Fetch assets for the newly connected platform
           await fetchPlatformAssets(connectedPlatform);
-          
-          // Ensure we're on the platforms step
+
           setCurrentStep('platforms');
-          
           console.log('🔵 [UNIFIED FORM] OAuth callback processing complete');
+        } else if (Object.values(initialStatus).some(s => s.connected)) {
+          // No OAuth callback but some platforms already connected (e.g. page refresh)
+          // — drop the user back on the platforms step at the first unconnected platform
+          const firstUnconnected = requestedPlatforms.findIndex(
+            (p: any) => !initialStatus[p.id]?.connected
+          );
+          setCurrentPlatformIndex(firstUnconnected !== -1 ? firstUnconnected : 0);
+          setCurrentStep('platforms');
         }
         
       } catch (error) {
